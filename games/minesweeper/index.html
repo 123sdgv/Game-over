@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>扫雷</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="pill" id="mines" aria-label="剩余地雷">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.5 2.6l7 3.1-7 3.1z" fill="var(--signal)"/></svg>
+      <span>0</span>
+    </div>
+    <div class="clock" id="clock">0:00</div>
+    <button class="pill round" id="restart" aria-label="新一局">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10a5.5 5.5 0 1 1-1.7-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.6 2.6v3.8h-3.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
+  <div class="notice" id="notice" hidden>新设置会在下一局生效</div>
+
+  <main class="stage" id="stage">
+    <div class="board" id="board" role="grid" aria-label="雷区"></div>
+  </main>
+
+  <footer class="foot">
+    <div class="mode" id="mode" role="radiogroup" aria-label="点按方式">
+      <i class="mode-knob"></i>
+      <button role="radio" data-mode="dig" aria-checked="true">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="4" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="1.8" fill="currentColor"/></svg>挖开
+      </button>
+      <button role="radio" data-mode="flag" aria-checked="false">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5v13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7.2 3.6l8 3.6-8 3.6z" fill="currentColor"/></svg>插旗
+      </button>
+    </div>
+    <p class="tip" id="tip">长按格子可以插旗</p>
+  </footer>
+
+  <div class="result" id="result" hidden>
+    <div class="result-card">
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-time" id="resultTime"></div>
+      <div class="result-meta" id="resultMeta"></div>
+      <button class="result-btn" id="next">下一局</button>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
