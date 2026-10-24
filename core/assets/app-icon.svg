@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="bg-app-icon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCFCFD"/><stop offset="1" stop-color="#E9EBEE"/></linearGradient>
+<linearGradient id="sc-app-icon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F6F7F8"/></linearGradient></defs>
+<rect width="120" height="120" fill="url(#bg-app-icon)"/>
+<rect x="38" y="20" width="44" height="80" rx="12" fill="#1C1D20" opacity=".08" transform="translate(0 3)"/>
+<rect x="38.6" y="20.6" width="42.8" height="78.8" rx="11.4" fill="url(#sc-app-icon)" stroke="#1C1D20" stroke-width="3.2"/>
+<rect x="47" y="34" width="11" height="11" rx="3.2" fill="#1C1D20"/>
+<rect x="62" y="34" width="11" height="11" rx="3.2" fill="#1C1D20"/>
+<rect x="47" y="49" width="11" height="11" rx="3.2" fill="#1C1D20"/>
+<rect x="63.9" y="49.3" width="7.2" height="11.4" rx="2.2" fill="none" stroke="#1C1D20" stroke-width="1.8"/>
+<line x1="54" y1="89" x2="66" y2="89" stroke="#1C1D20" stroke-width="2.4" stroke-linecap="round"/></svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="bg-mine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCFCFD"/><stop offset="1" stop-color="#ECEEF1"/></linearGradient></defs>
+<rect width="120" height="120" fill="url(#bg-mine)"/>
+<g stroke="#1C1D20" stroke-width="7" stroke-linecap="round"><line x1="78.00" y1="60.00" x2="94.00" y2="60.00"/><line x1="72.73" y1="72.73" x2="84.04" y2="84.04"/><line x1="60.00" y1="78.00" x2="60.00" y2="94.00"/><line x1="47.27" y1="72.73" x2="35.96" y2="84.04"/><line x1="42.00" y1="60.00" x2="26.00" y2="60.00"/><line x1="47.27" y1="47.27" x2="35.96" y2="35.96"/><line x1="60.00" y1="42.00" x2="60.00" y2="26.00"/><line x1="72.73" y1="47.27" x2="84.04" y2="35.96"/></g>
+<circle cx="60" cy="60" r="22" fill="#1C1D20"/>
+<circle cx="52.5" cy="52.5" r="5.5" fill="#fff" opacity=".92"/></svg>
