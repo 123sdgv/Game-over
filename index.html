@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- 标题和主屏幕名称用的是"盲文空白"字符 U+2800，看起来是空的 -->
+  <title>⠀</title>
+  <meta name="apple-mobile-web-app-title" content="⠀">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#F4F5F7">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="core/assets/app-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="core/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="core/css/base.css">
+  <link rel="stylesheet" href="core/css/home.css">
+  <link rel="stylesheet" href="core/css/window.css">
+  <link rel="stylesheet" href="core/css/settings.css">
+  <link rel="stylesheet" href="core/css/overlay.css">
+</head>
+<body>
+  <div id="device">
+    <div id="wallpaper"></div>
+    <i class="island" aria-hidden="true"></i>
+    <main id="home">
+      <button id="done">完成</button>
+      <div id="pages"></div>
+      <div id="dots"></div>
+      <div id="dock"></div>
+    </main>
+    <div id="windows"></div>
+    <div id="overlay"></div>
+  </div>
+  <script type="module" src="core/js/main.js"></script>
+</body>
+</html>
