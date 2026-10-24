@@ -1,0 +1,19 @@
+#windows { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+.window {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: auto;
+  background: var(--paper); transform-origin: 0 0;
+  border-radius: var(--radius-device);
+  will-change: transform;
+}
+.window-body, .window-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.splash { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: var(--white); }
+.splash img { width: 100%; height: 100%; display: block; }
+
+/* 底部横条：轻点或上滑回到主屏幕 */
+.home-bar {
+  position: absolute; left: 50%; bottom: 0; z-index: 5; width: 200px; margin-left: -100px;
+  height: calc(var(--safe-b) + 22px); display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: calc(var(--safe-b) + 6px); touch-action: none; cursor: grab;
+}
+.home-bar i { width: 136px; height: 5px; border-radius: 3px; background: var(--ink); opacity: .82; transition: transform .2s var(--ease); }
+.home-bar:active i { transform: scaleX(1.06); }

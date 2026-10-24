@@ -1,0 +1,42 @@
+:root {
+  --paper: #F4F5F7;
+  --white: #FFFFFF;
+  --ink: #1C1D20;
+  --ink-2: #5E626A;
+  --ink-3: #9EA2A9;
+  --line: #E1E3E7;
+  --fill: #EBEDF0;
+  --signal: #FF4A1C;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --radius-device: 0px;
+  --ease: cubic-bezier(.2, .85, .25, 1);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { background: #E7E9EC; font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input { font: inherit; -webkit-user-select: text; user-select: text; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+#device { position: fixed; inset: 0; overflow: hidden; background: var(--paper); isolation: isolate; }
+#wallpaper { position: absolute; inset: -6%; z-index: 0; transition: filter .35s var(--ease), transform .35s var(--ease); }
+.island { display: none; }
+
+/* 电脑上打开时，显示成一台手机 */
+@media (min-width: 640px) and (min-height: 760px) {
+  body { display: grid; place-items: center; background: radial-gradient(80% 70% at 50% 40%, #F4F5F7, #DDE0E4); }
+  #device {
+    position: relative; width: 393px; height: 852px; border-radius: 58px;
+    --radius-device: 48px; --safe-t: 54px; --safe-b: 22px;
+    box-shadow: 0 0 0 11px #1C1D20, 0 0 0 12.5px #4A4D53, 0 50px 90px -30px rgba(20, 22, 26, .45);
+  }
+  .island { display: block; position: absolute; z-index: 90; top: 11px; left: 50%; width: 122px; height: 35px; margin-left: -61px; border-radius: 20px; background: #0E0E10; pointer-events: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

@@ -1,0 +1,24 @@
+/* 所有小游戏共用的基础样式：字体、颜色、安全区域（--safe-t / --safe-b 由 hub.js 从大厅读取） */
+:root {
+  --paper: #F4F5F7;
+  --white: #FFFFFF;
+  --ink: #1C1D20;
+  --ink-2: #5E626A;
+  --ink-3: #9EA2A9;
+  --line: #E1E3E7;
+  --signal: #FF4A1C;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --ease: cubic-bezier(.2, .85, .25, 1);
+  --home-bar: 26px; /* 给大厅底部横条留的位置 */
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; touch-action: manipulation; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
