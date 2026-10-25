@@ -112,3 +112,102 @@ export function generate(colors, cap, empty, rnd = Math.random) {
   if (best) fallback.push([]);
   return { bottles: fallback, steps: null };
 }
+
+/* ---------- 无限模式 ---------- */
+const doneCount = (bottles, cap) => bottles.filter((b) => b.length === cap && topRun(b) === cap).length;
+
+/** 从当前局面出发，能不能再倒好至少一瓶（全知视角搜索） */
+export function canComplete(start, cap, limit = 40000) {
+  const base = doneCount(start, cap);
+  const seen = new Set();
+  let nodes = 0;
+  const stack = [start.map((b) => b.slice())];
+  while (stack.length) {
+    const st = stack.pop();
+    if (doneCount(st, cap) > base) return true;
+    if (++nodes > limit) return false;
+    const k = key(st);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    for (let a = 0; a < st.length; a++) {
+      const src = st[a];
+      if (!src.length || isDone(src, cap)) continue;
+      const run = topRun(src);
+      let emptyTried = false;
+      for (let b = 0; b < st.length; b++) {
+        const n = pourAmount(st, a, b, cap);
+        if (!n) continue;
+        const toEmpty = !st[b].length;
+        if (toEmpty && (run === src.length || emptyTried)) continue;
+        if (toEmpty) emptyTried = true;
+        const next = st.map((x) => x.slice());
+        for (let i = 0; i < n; i++) next[b].push(next[a].pop());
+        stack.push(next);
+      }
+    }
+  }
+  return false;
+}
+
+/** 按"凑整"的思路挑颜色：差几格就能凑满一瓶的颜色更容易来 */
+function drawUnits(counts, cap, colors, n, rnd) {
+  const c = counts.slice();
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    const w = [];
+    let sum = 0;
+    for (let i = 0; i < colors; i++) {
+      const r = c[i] % cap;
+      const wi = r ? 1 + (cap - r) : c[i] ? 0.35 : 0.7;
+      w.push(wi); sum += wi;
+    }
+    let x = rnd() * sum, pick = 0;
+    while (x > w[pick]) { x -= w[pick]; pick++; }
+    out.push(pick); c[pick]++;
+  }
+  return out;
+}
+
+const countColors = (bottles, colors) => {
+  const c = new Array(colors).fill(0);
+  bottles.forEach((b) => b.forEach((x) => c[x]++));
+  return c;
+};
+
+/** 无限模式开局：filled 瓶满的 + empty 个空瓶 */
+export function infiniteStart(colors, cap, filled, empty, rnd = Math.random) {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    // 先保证每种颜色都整瓶出现，多出来的瓶数随机重复
+    const sets = [];
+    for (let i = 0; i < filled; i++) sets.push(i < colors ? i : Math.floor(rnd() * colors));
+    const units = [];
+    sets.forEach((c) => { for (let i = 0; i < cap; i++) units.push(c); });
+    shuffle(units, rnd);
+    const bottles = [];
+    for (let i = 0; i < filled; i++) bottles.push(units.slice(i * cap, (i + 1) * cap));
+    if (bottles.some((b) => topRun(b) >= Math.max(2, cap - 1))) continue;
+    for (let i = 0; i < empty; i++) bottles.push([]);
+    shuffle(bottles, rnd);
+    if (canComplete(bottles, cap)) return bottles;
+  }
+  return infiniteStart(colors, cap, filled, empty + 1, rnd);
+}
+
+/** 倒好的瓶子拿走以后，补一个新瓶子（放在 slot）；保证之后还能再倒好一瓶 */
+export function infiniteNext(bottles, slot, colors, cap, rnd = Math.random) {
+  const rest = bottles.map((b, i) => (i === slot ? [] : b));
+  const counts = countColors(rest, colors);
+  let last = null;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const nb = drawUnits(counts, cap, colors, cap, rnd);
+    if (topRun(nb) >= Math.max(2, cap - 1)) continue;
+    const next = rest.map((b) => b.slice());
+    next[slot] = nb;
+    last = nb;
+    if (canComplete(next, cap, 25000)) return nb;
+  }
+  // 局面已经很乱、怎么补都救不回来：这次送一个空瓶，给玩家腾地方
+  const withEmpty = rest.map((b) => b.slice());
+  if (canComplete(withEmpty, cap, 25000)) return [];
+  return last || drawUnits(counts, cap, colors, cap, rnd);
+}
