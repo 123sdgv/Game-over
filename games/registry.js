@@ -63,4 +63,27 @@ export const games = [
       { key: 'last', label: '上一局' },
     ],
   },
+  {
+    id: 'watersort',
+    name: '倒水',
+    path: 'games/watersort/',
+    icons: ['icons/layers.svg', 'icons/full.svg'],
+    settingsNote: '改动从下一关开始生效；如果当前这关还没倒过，会立刻换成新的。',
+    settings: [
+      { key: 'hidden', label: '下层颜色先藏起来', type: 'toggle', default: true },
+      { key: 'extra', label: '每关可以加一个空瓶', type: 'toggle', default: true },
+      { key: 'capacity', label: '每瓶几格', type: 'stepper', min: 3, max: 6, default: 4, unit: ' 格' },
+      { key: 'empty', label: '空瓶', type: 'stepper', min: 1, max: 3, default: 2, unit: ' 个', sub: '只有 1 个时颜色一多会出不了题，会自动多给一个' },
+      { key: 'maxColors', label: '最多颜色', type: 'stepper', min: 4, max: 12, default: 10, unit: ' 种', sub: '关卡越往后颜色越多，到这里封顶' },
+    ],
+    presets: [
+      { label: '轻松', values: { hidden: false, capacity: 4, empty: 2, maxColors: 7 }, note: '不藏颜色，最多 7 种' },
+      { label: '标准', values: { hidden: true, capacity: 4, empty: 2, maxColors: 10 }, note: '藏颜色，最多 10 种' },
+      { label: '烧脑', values: { hidden: true, capacity: 5, empty: 2, maxColors: 12 }, note: '每瓶 5 格，最多 12 种' },
+    ],
+    stats: [
+      { key: 'level', label: '当前关卡' },
+      { key: 'cleared', label: '已通关' },
+    ],
+  },
 ];

@@ -5,6 +5,7 @@
  *   h.settings()          读取设置（已合并默认值并校正范围）
  *   h.onSettings(fn)      设置页改动后回调
  *   h.stats() / h.saveStats(obj)
+ *   h.load(name, d) / h.save(name, v)   游戏自己的存档，比如进行到一半的局面
  *   h.onPause(fn) / h.onResume(fn)   回到主屏幕 / 重新打开
  *   h.haptic()            轻微震动（支持的设备上）
  */
@@ -69,6 +70,8 @@ export function hub(id) {
     onSettings: (f) => listeners.settings.push(f),
     stats: () => read(statsKey(id), {}),
     saveStats: (obj) => write(statsKey(id), obj),
+    load: (name, d) => read(`game.${id}.${name}`, d),   // 游戏自己的存档（会跟着导出 / 导入）
+    save: (name, v) => write(`game.${id}.${name}`, v),
     onPause: (f) => listeners.pause.push(f),
     onResume: (f) => listeners.resume.push(f),
     haptic: (ms = 8) => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} },
