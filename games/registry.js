@@ -87,4 +87,29 @@ export const games = [
       { key: 'infBest', label: '无限模式最多' },
     ],
   },
+  {
+    id: 'blocks',
+    name: '方块',
+    path: 'games/blocks/',
+    icons: ['icons/stack.svg', 'icons/night.svg'],
+    settingsNote: '改动从下一局生效；这一局还没开始的话会立刻换。闯关会随关卡慢慢加颜色、加速度，这里的颜色和速度是起点和上限。',
+    settings: [
+      { key: 'cols', label: '每行几格', type: 'stepper', min: 6, max: 10, default: 8, unit: ' 格' },
+      { key: 'rows', label: '一共几行', type: 'stepper', min: 12, max: 20, default: 16, unit: ' 行' },
+      { key: 'speed', label: '下落速度', type: 'stepper', min: 1, max: 10, default: 3, sub: '无限模式每消 8 行还会再快一档' },
+      { key: 'colors', label: '颜色种类', type: 'stepper', min: 2, max: 5, default: 3, unit: ' 种' },
+      { key: 'layers', label: '无限模式开局彩色行', type: 'stepper', min: 2, max: (s) => Math.min(10, s.rows - 6), default: 4, unit: ' 行' },
+      { key: 'ghost', label: '显示落点', type: 'toggle', default: true },
+    ],
+    presets: [
+      { label: '轻松', values: { speed: 2, colors: 2 }, note: '慢一点，2 种颜色' },
+      { label: '标准', values: { speed: 3, colors: 3 }, note: '3 种颜色' },
+      { label: '烧脑', values: { speed: 5, colors: 4 }, note: '快，4 种颜色' },
+    ],
+    stats: [
+      { key: 'level', label: '当前关卡' },
+      { key: 'cleared', label: '已通关' },
+      { key: 'infBest', label: '无限模式最高分' },
+    ],
+  },
 ];

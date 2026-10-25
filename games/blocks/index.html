@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>方块</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="pill" id="score">第 1 关</div>
+    <div class="seg" id="seg" role="radiogroup" aria-label="玩法">
+      <i class="seg-knob"></i>
+      <button role="radio" id="segLevels" aria-checked="true">闯关</button>
+      <button role="radio" id="segInf" aria-checked="false">无限</button>
+    </div>
+    <button class="pill round" id="pause" aria-label="暂停">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/><rect x="11.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/></svg>
+    </button>
+  </header>
+
+  <div class="sub">
+    <div class="info">
+      <div class="goal" id="goal"></div>
+      <div class="meter"><i id="meter"></i></div>
+    </div>
+    <div class="next">
+      <span>下一个</span>
+      <canvas id="nextCanvas" width="56" height="40"></canvas>
+    </div>
+  </div>
+
+  <main class="stage" id="stage"><canvas id="board"></canvas></main>
+
+  <footer class="foot">
+    <div class="pad">
+      <button class="key" id="kLeft" aria-label="左移"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="key" id="kRot" aria-label="旋转"><svg viewBox="0 0 24 24"><path d="M18.5 12a6.5 6.5 0 1 1-2-4.7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M17.5 3.5v4.5H13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="key" id="kRight" aria-label="右移"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="key drop" id="kDrop" aria-label="直接落下"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20h12" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <p class="tip" id="tip">拖动左右移动 · 轻点旋转 · 往下一甩直接落下</p>
+  </footer>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
