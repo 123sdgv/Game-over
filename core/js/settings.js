@@ -445,7 +445,7 @@ function gamePage(ctx, gm) {
         return row({ title: st.label, detail: String(v ?? 0) });
       });
 
-      c.append(head,
+      c.append(...[head,
         ...(gm.icons.length > 1 ? [h('div', { class: 'sgroup' }, h('div', { class: 'sgroup-h' }, '图标'), h('div', { class: 'scard' }, iconPicker(gm)))] : []),
         presets && group({ header: '快速设置' }, presets),
         rows.length && group({ header: '游戏设置', footer: gm.settingsNote || '改动会在下一局生效；如果这一局还没开始，会立刻换成新棋盘。' }, rows),
@@ -459,7 +459,7 @@ function gamePage(ctx, gm) {
             page.refresh();
           },
         })),
-      );
+      ].filter(Boolean));
     },
   };
 }

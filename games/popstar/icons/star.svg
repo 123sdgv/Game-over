@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="bg-star" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F1F2F5"/></linearGradient><linearGradient id="star-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE68A"/><stop offset=".45" stop-color="#FFC531"/><stop offset="1" stop-color="#F59B0C"/></linearGradient><clipPath id="star-clip"><polygon points="60.00,24.00 69.99,48.25 96.14,50.26 76.17,67.25 82.34,92.74 60.00,79.00 37.66,92.74 43.83,67.25 23.86,50.26 50.01,48.25"/></clipPath></defs>
+<rect width="120" height="120" fill="url(#bg-star)"/>
+<ellipse cx="60" cy="100" rx="30" ry="4" fill="#1C1D20" opacity=".08"/>
+<polygon points="60.00,28.00 69.99,52.25 96.14,54.26 76.17,71.25 82.34,96.74 60.00,83.00 37.66,96.74 43.83,71.25 23.86,54.26 50.01,52.25" fill="#D98306" stroke="#D98306" stroke-width="9" stroke-linejoin="round"/>
+<polygon points="60.00,24.00 69.99,48.25 96.14,50.26 76.17,67.25 82.34,92.74 60.00,79.00 37.66,92.74 43.83,67.25 23.86,50.26 50.01,48.25" fill="url(#star-body)" stroke="url(#star-body)" stroke-width="9" stroke-linejoin="round"/>
+<g clip-path="url(#star-clip)"><ellipse cx="50" cy="44" rx="22" ry="11" transform="rotate(-28 50 44)" fill="#fff" opacity=".55"/></g>
+<circle cx="44" cy="58" r="2.6" fill="#fff" opacity=".85"/>
+</svg>
