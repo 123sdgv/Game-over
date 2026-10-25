@@ -7,7 +7,7 @@
  *   id        唯一英文名，也用作存档的键
  *   name      主屏幕上显示的名字
  *   path      文件夹路径（以 / 结尾），入口固定是 index.html
- *   icons     可选图标（相对 path），第一个是默认图标；设置里可以切换
+ *   icons     图标（相对 path）；写一个就够，写多个时设置里可以切换
  *   settings  可调设置，设置 → App 里会自动生成对应的界面
  *             type: 'stepper'（加减）| 'toggle'（开关）| 'choice'（选项）
  *             max 可以写成函数，根据其他设置算出上限
@@ -19,7 +19,7 @@ export const games = [
     id: 'minesweeper',
     name: '扫雷',
     path: 'games/minesweeper/',
-    icons: ['icons/mine.svg', 'icons/tiles.svg', 'icons/flag.svg', 'icons/night.svg'],
+    icons: ['icons/mine.svg'],
     settings: [
       { key: 'cols', label: '列数', type: 'stepper', min: 6, max: 12, default: 9 },
       { key: 'rows', label: '行数', type: 'stepper', min: 6, max: 16, default: 12 },
@@ -43,7 +43,7 @@ export const games = [
     id: 'colorspot',
     name: '色感',
     path: 'games/colorspot/',
-    icons: ['icons/grid.svg', 'icons/sunset.svg', 'icons/mono.svg'],
+    icons: ['icons/grid.svg'],
     settingsNote: '改动从下一局开始生效。难度会随答对的次数慢慢上升：格子变多、颜色差别变小。',
     settings: [
       { key: 'time', label: '开始时间', type: 'stepper', min: 10, max: 120, step: 5, default: 30, unit: ' 秒' },
@@ -67,7 +67,7 @@ export const games = [
     id: 'watersort',
     name: '倒水',
     path: 'games/watersort/',
-    icons: ['icons/layers.svg', 'icons/full.svg'],
+    icons: ['icons/layers.svg'],
     settingsNote: '闯关：改动从下一关开始生效。无限模式：固定 15 个瓶子，改动在重新开始后生效。还没倒过的话会立刻换成新的。',
     settings: [
       { key: 'hidden', label: '下层颜色先藏起来', type: 'toggle', default: true },
@@ -91,7 +91,7 @@ export const games = [
     id: 'blocks',
     name: '方块',
     path: 'games/blocks/',
-    icons: ['icons/stack.svg', 'icons/night.svg'],
+    icons: ['icons/tee.svg'],
     settingsNote: '改动从下一局生效；这一局还没开始的话会立刻换。闯关会随关卡慢慢加颜色、加速度，这里的颜色和速度是起点和上限。',
     settings: [
       { key: 'cols', label: '每行几格', type: 'stepper', min: 6, max: 10, default: 8, unit: ' 格' },

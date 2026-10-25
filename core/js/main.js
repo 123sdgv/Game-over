@@ -3,11 +3,15 @@ import { registerSettings } from './apps.js';
 import { createSettings } from './settings.js';
 import { initHome } from './home.js';
 import { initGuard } from './guard.js';
+import { applyFill } from './fill.js';
+import { on } from './store.js';
 
 registerSettings(createSettings);
 applyWallpaper();
 initHome();
 initGuard();
+applyFill();
+on('fill', applyFill);
 
 // iOS：禁止双指缩放和双击放大，让它更像一个 App
 document.addEventListener('gesturestart', (e) => e.preventDefault());

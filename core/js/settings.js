@@ -7,6 +7,7 @@ import { APPS, iconOf, destroyWindow, goHome } from './apps.js';
 import { WALLPAPERS, getWallpaper, setWallpaper, setCustomImage, wallpaperCSS, customImageURL } from './wallpaper.js';
 import { guardState, RULES } from './guard.js';
 import { exportData, importData, factoryReset } from './backup.js';
+import { fillGap, isStandalone } from './fill.js';
 import { defaultLayout, editHomeNow } from './home.js';
 
 /* ---------- 图形 ---------- */
@@ -316,6 +317,12 @@ function wallpaperPage(ctx) {
   };
 }
 
+function fillNote() {
+  const gap = fillGap();
+  const base = '添加到主屏幕后，有些 iOS 版本会在最底下留一条空白，这是系统的问题。打开试试能不能铺满；如果底部的东西被挡住了，就关掉。';
+  return isStandalone() && gap ? `${base}（这台手机的空白约 ${gap} 点）` : base;
+}
+
 function homePage(ctx) {
   return {
     title: '主屏幕',
@@ -328,8 +335,10 @@ function homePage(ctx) {
           row({
             title: '还原主屏幕布局', tone: 'action', onClick: () => { store.set('layout', defaultLayout()); emit('layout'); },
           })),
-        group({ header: 'App 图标', footer: '每个 App 都有几款图标，在下面的 App 页面里也能换。' },
-          games.map((gm) => iconPicker(gm))),
+        group({ footer: fillNote() },
+          row({ title: '铺满屏幕底部', right: toggle(store.get('display.fill', false), (v) => { store.set('display.fill', v); emit('fill'); }) })),
+        ...(games.some((gm) => gm.icons.length > 1) ? [group({ header: 'App 图标', footer: '在下面的 App 页面里也能换。' },
+          games.filter((gm) => gm.icons.length > 1).map((gm) => iconPicker(gm)))] : []),
       );
     },
   };
@@ -437,7 +446,7 @@ function gamePage(ctx, gm) {
       });
 
       c.append(head,
-        h('div', { class: 'sgroup' }, h('div', { class: 'sgroup-h' }, '图标'), h('div', { class: 'scard' }, iconPicker(gm))),
+        ...(gm.icons.length > 1 ? [h('div', { class: 'sgroup' }, h('div', { class: 'sgroup-h' }, '图标'), h('div', { class: 'scard' }, iconPicker(gm)))] : []),
         presets && group({ header: '快速设置' }, presets),
         rows.length && group({ header: '游戏设置', footer: gm.settingsNote || '改动会在下一局生效；如果这一局还没开始，会立刻换成新棋盘。' }, rows),
         statRows.length && group({ header: '记录' }, statRows),

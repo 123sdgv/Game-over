@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="bg-tee" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F1F2F5"/></linearGradient><linearGradient id="tee-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C79BFF"/><stop offset=".5" stop-color="#A35CFF"/><stop offset="1" stop-color="#8B45F0"/></linearGradient></defs>
+<rect width="120" height="120" fill="url(#bg-tee)"/>
+<ellipse cx="60" cy="107.0" rx="33.0" ry="4" fill="#1C1D20" opacity=".08"/>
+<rect x="32.5" y="20.1" width="26" height="23.9" rx="6.8" fill="#6A2BC4"/><rect x="32.5" y="18.0" width="26" height="22.9" rx="6.8" fill="url(#tee-body)"/><rect x="36.7" y="20.6" width="17.7" height="4.2" rx="2.1" fill="#fff" opacity=".6"/><circle cx="38.2" cy="28.9" r="1.6" fill="#fff" opacity=".8"/>
+<rect x="32.5" y="49.1" width="26" height="23.9" rx="6.8" fill="#6A2BC4"/><rect x="32.5" y="47.0" width="26" height="22.9" rx="6.8" fill="url(#tee-body)"/><rect x="36.7" y="49.6" width="17.7" height="4.2" rx="2.1" fill="#fff" opacity=".6"/><circle cx="38.2" cy="57.9" r="1.6" fill="#fff" opacity=".8"/>
+<rect x="32.5" y="78.1" width="26" height="23.9" rx="6.8" fill="#6A2BC4"/><rect x="32.5" y="76.0" width="26" height="22.9" rx="6.8" fill="url(#tee-body)"/><rect x="36.7" y="78.6" width="17.7" height="4.2" rx="2.1" fill="#fff" opacity=".6"/><circle cx="38.2" cy="86.9" r="1.6" fill="#fff" opacity=".8"/>
+<rect x="61.5" y="49.1" width="26" height="23.9" rx="6.8" fill="#6A2BC4"/><rect x="61.5" y="47.0" width="26" height="22.9" rx="6.8" fill="url(#tee-body)"/><rect x="65.7" y="49.6" width="17.7" height="4.2" rx="2.1" fill="#fff" opacity=".6"/><circle cx="67.2" cy="57.9" r="1.6" fill="#fff" opacity=".8"/>
+</svg>
