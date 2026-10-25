@@ -53,6 +53,6 @@
 /* 抹掉后重启 */
 #device.resetting::after {
   content: ""; position: absolute; inset: 0; z-index: 99; border-radius: inherit;
-  background: url("../assets/app-icon.svg") center / 64px no-repeat, #fff;
+  background: url("../assets/icon-512.png") center / 64px no-repeat, #fff;
   animation: fade .5s ease-out;
 }

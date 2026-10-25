@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="bg-grid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCFCFD"/><stop offset="1" stop-color="#ECEEF1"/></linearGradient></defs>
+<rect width="120" height="120" fill="url(#bg-grid)"/>
+<rect x="22" y="22" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="49" y="22" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="76" y="22" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="22" y="49" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="49" y="49" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="76" y="49" width="22" height="22" rx="6" fill="#5CC2B3"/>
+<rect x="22" y="76" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="49" y="76" width="22" height="22" rx="6" fill="#2F9E8F"/>
+<rect x="76" y="76" width="22" height="22" rx="6" fill="#2F9E8F"/>
+</svg>

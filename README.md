@@ -14,7 +14,7 @@
 index.html              大厅入口
 manifest.webmanifest    添加到主屏幕用的配置
 core/
-  assets/               大厅图标、设置图标
+  assets/               大厅图标（apple-touch-icon / icon-192 / icon-512，换图标就替换这三张 PNG）、设置图标
   css/                  base 基础 / home 主屏幕 / window 窗口 / settings 设置 / overlay 弹窗与锁定
   js/
     main.js             启动
@@ -31,6 +31,8 @@ games/
     hub.js              游戏和大厅的连接：读设置、存记录、暂停 / 继续
     base.css            游戏通用样式
   minesweeper/          扫雷
+    index.html  style.css  game.js  icons/
+  colorspot/            色感（找出颜色不同的方块）
     index.html  style.css  game.js  icons/
 ```
 

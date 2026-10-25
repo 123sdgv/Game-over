@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>色感</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="pill" id="score" aria-label="得分">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.4" fill="currentColor" opacity=".35"/><rect x="9" y="2" width="5" height="5" rx="1.4" fill="currentColor" opacity=".35"/><rect x="2" y="9" width="5" height="5" rx="1.4" fill="currentColor" opacity=".35"/><rect x="9" y="9" width="5" height="5" rx="1.4" fill="var(--signal)"/></svg>
+      <span>0</span>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock idle" id="clock">30.0</div>
+      <div class="gain" id="gain" aria-hidden="true"></div>
+    </div>
+    <button class="pill round" id="restart" aria-label="重新开始">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10a5.5 5.5 0 1 1-1.7-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.6 2.6v3.8h-3.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
+  <div class="timebar" aria-hidden="true"><i id="timefill"></i></div>
+  <div class="notice" id="notice" hidden>新设置会在下一局生效</div>
+
+  <main class="stage" id="stage">
+    <div class="board" id="board" role="grid" aria-label="色块"></div>
+  </main>
+
+  <footer class="foot">
+    <p class="level" id="level">第 1 关 · 2×2</p>
+    <p class="tip" id="tip">找出颜色不一样的那一块，点一下就开始计时</p>
+  </footer>
+
+  <div class="result" id="paused" hidden>
+    <div class="result-card">
+      <div class="result-title">已暂停</div>
+      <div class="result-time" id="pausedTime">0.0</div>
+      <div class="result-meta">暂停时色块会藏起来</div>
+      <button class="result-btn" id="resume">继续</button>
+    </div>
+  </div>
+
+  <div class="result" id="result" hidden>
+    <div class="result-card">
+      <div class="result-title" id="resultTitle">时间到</div>
+      <div class="result-time" id="resultScore">0</div>
+      <div class="result-meta" id="resultMeta"></div>
+      <button class="result-btn" id="next">再来一局</button>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

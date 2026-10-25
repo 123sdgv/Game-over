@@ -52,7 +52,7 @@ function toggle(value, onChange) {
   return el;
 }
 
-function stepper(value, min, max, onChange) {
+function stepper(value, min, max, onChange, inc = 1) {
   const minus = h('button', { 'aria-label': '减少' }, '−');
   const plus = h('button', { 'aria-label': '增加' }, '+');
   const sync = () => { minus.disabled = value <= min; plus.disabled = value >= max; };
@@ -62,7 +62,7 @@ function stepper(value, min, max, onChange) {
     btn.addEventListener('pointerdown', () => { step(d); let n = 0; rep = setInterval(() => step(d * (++n > 8 ? 2 : 1)), 140); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => btn.addEventListener(ev, () => clearInterval(rep)));
   };
-  hold(minus, -1); hold(plus, 1);
+  hold(minus, -inc); hold(plus, inc);
   sync();
   return h('span', { class: 'stepper' }, minus, h('i'), plus);
 }
@@ -185,7 +185,7 @@ function rootPage(ctx) {
       const g = guardState();
       c.append(
         h('button', { class: 'scard me', onclick: () => ctx.push(aboutPage(ctx)) },
-          h('img', { src: 'core/assets/app-icon.svg', alt: '' }),
+          h('img', { src: 'core/assets/icon-512.png', alt: '' }),
           h('span', { class: 'me-text' },
             h('span', { class: 'me-name' }, store.get('device.name', '小手机')),
             h('span', { class: 'me-sub' }, `${games.length} 款游戏，共玩了 ${totalPlayed()} 局`)),
@@ -231,7 +231,7 @@ function aboutPage(ctx) {
       let bytes = 0;
       for (const k of store.keys()) bytes += (localStorage.getItem('pp.' + k) || '').length * 2;
       c.append(
-        h('div', { class: 'about-hero' }, h('img', { src: 'core/assets/app-icon.svg', alt: '' })),
+        h('div', { class: 'about-hero' }, h('img', { src: 'core/assets/icon-512.png', alt: '' })),
         group({}, row({ title: '名称', right: name })),
         group({},
           row({ title: '游戏', detail: String(games.length) }),
@@ -407,15 +407,16 @@ function gamePage(ctx, gm) {
         if (f.type === 'toggle') return row({ title: f.label, right: toggle(s[f.key], (v) => save({ [f.key]: v })) });
         if (f.type === 'stepper') {
           const max = typeof f.max === 'function' ? f.max(s) : f.max;
-          const val = h('span', { class: 'srow-detail num' }, String(s[f.key]));
+          const show = (v) => (f.display ? f.display(v) : `${v}${f.unit || ''}`);
+          const val = h('span', { class: 'srow-detail num' }, show(s[f.key]));
           return row({
-            title: f.label, sub: typeof f.max === 'function' ? `最多 ${max}` : null, detail: val,
+            title: f.label, sub: f.sub || (typeof f.max === 'function' ? `最多 ${max}` : null), detail: val,
             right: stepper(s[f.key], f.min, max, (v) => {
               save({ [f.key]: v });
-              val.textContent = String(v);
+              val.textContent = show(v);
               clearTimeout(page.refreshTimer);
               page.refreshTimer = setTimeout(() => page.refresh(), 700);
-            }),
+            }, f.step || 1),
           });
         }
         return null;
@@ -438,7 +439,7 @@ function gamePage(ctx, gm) {
       c.append(head,
         h('div', { class: 'sgroup' }, h('div', { class: 'sgroup-h' }, '图标'), h('div', { class: 'scard' }, iconPicker(gm))),
         presets && group({ header: '快速设置' }, presets),
-        rows.length && group({ header: '游戏设置', footer: '改动会在下一局生效；如果这一局还没开始，会立刻换成新棋盘。' }, rows),
+        rows.length && group({ header: '游戏设置', footer: gm.settingsNote || '改动会在下一局生效；如果这一局还没开始，会立刻换成新棋盘。' }, rows),
         statRows.length && group({ header: '记录' }, statRows),
         group({}, row({
           title: '清除游戏记录', tone: 'danger', onClick: async () => {

@@ -39,4 +39,28 @@ export const games = [
       { key: 'best', label: '当前设置最快', format: 'best' },
     ],
   },
+  {
+    id: 'colorspot',
+    name: '色感',
+    path: 'games/colorspot/',
+    icons: ['icons/grid.svg', 'icons/sunset.svg', 'icons/mono.svg'],
+    settingsNote: '改动从下一局开始生效。难度会随答对的次数慢慢上升：格子变多、颜色差别变小。',
+    settings: [
+      { key: 'time', label: '开始时间', type: 'stepper', min: 10, max: 120, step: 5, default: 30, unit: ' 秒' },
+      { key: 'bonus', label: '答对加时', type: 'stepper', min: 0, max: 10, default: 2, unit: ' 秒' },
+      { key: 'penalty', label: '点错扣时', type: 'stepper', min: 0, max: 10, default: 3, unit: ' 秒', sub: '设为 0 就不扣' },
+      { key: 'maxSize', label: '最多格子', type: 'stepper', min: 3, max: 10, default: 8, display: (v) => `${v}×${v}`, sub: '难度上升到这里就不再加格子' },
+      { key: 'startSize', label: '起始格子', type: 'stepper', min: 2, max: (s) => Math.min(6, s.maxSize), default: 2, display: (v) => `${v}×${v}` },
+    ],
+    presets: [
+      { label: '轻松', values: { time: 45, bonus: 3, penalty: 1, startSize: 2, maxSize: 6 }, note: '45 秒，答对 +3' },
+      { label: '标准', values: { time: 30, bonus: 2, penalty: 3, startSize: 2, maxSize: 8 }, note: '30 秒，答对 +2' },
+      { label: '挑战', values: { time: 20, bonus: 1, penalty: 5, startSize: 4, maxSize: 10 }, note: '20 秒，答对 +1' },
+    ],
+    stats: [
+      { key: 'played', label: '已玩局数' },
+      { key: 'best', label: '最高分' },
+      { key: 'last', label: '上一局' },
+    ],
+  },
 ];
