@@ -8,27 +8,34 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <canvas id="canvas"></canvas>
+
   <header class="bar">
-    <div class="pill" id="level">第 1 关</div>
-    <div class="moves" id="moves">0 步</div>
-    <button class="pill round" id="restart" aria-label="重来这一关">
+    <div class="pill" id="score">第 1 关</div>
+    <div class="seg" id="seg" role="radiogroup" aria-label="玩法">
+      <i class="seg-knob"></i>
+      <button role="radio" id="segLevels" aria-checked="true">闯关</button>
+      <button role="radio" id="segInf" aria-checked="false">无限</button>
+    </div>
+    <button class="pill round" id="restart" aria-label="重新开始">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10a5.5 5.5 0 1 1-1.7-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14.6 2.6v3.8h-3.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </header>
-  <div class="notice" id="notice" hidden>新设置会在下一关生效</div>
-
-  <main class="stage" id="stage">
-    <div class="shelf" id="shelf"></div>
-  </main>
-  <i class="stream" id="stream" aria-hidden="true"></i>
+  <div class="sub">
+    <div class="info" id="info">0 步</div>
+    <div class="tray" id="tray" aria-label="收走的瓶子"></div>
+    <div class="notice" id="notice" hidden>新设置会在下一关 / 重新开始后生效</div>
+  </div>
 
   <footer class="foot">
     <div class="tools">
-      <button class="tool" id="undo" disabled>
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 5.5L4 9l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 9h7a4.5 4.5 0 0 1 0 9H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>撤销
+      <button class="tool" id="undo" disabled aria-label="撤销">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6L4.5 10.5 9 15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5h8.5a5 5 0 0 1 0 10h-3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>撤销</span>
       </button>
-      <button class="tool" id="add">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5.5" y="5" width="9" height="12.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 2.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10 8.5v5.5M7.25 11.25h5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>加空瓶
+      <button class="tool blue" id="add" aria-label="加一个空瓶">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9.5 3h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 10.5v7M8.5 14h7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <span>加空瓶</span>
       </button>
     </div>
     <p class="tip" id="tip">点一个瓶子，再点另一个瓶子倒进去</p>
@@ -40,6 +47,17 @@
       <div class="result-big" id="resultLevel">第 1 关</div>
       <div class="result-meta" id="resultMeta"></div>
       <button class="result-btn" id="next">下一关</button>
+    </div>
+  </div>
+
+  <div class="result" id="confirm" hidden>
+    <div class="result-card">
+      <div class="result-title">重新开始无限模式？</div>
+      <div class="result-meta" id="confirmMeta"></div>
+      <div class="result-row">
+        <button class="result-btn ghost" id="confirmNo">继续玩</button>
+        <button class="result-btn" id="confirmYes">重新开始</button>
+      </div>
     </div>
   </div>
 

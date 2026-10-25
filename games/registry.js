@@ -68,7 +68,7 @@ export const games = [
     name: '倒水',
     path: 'games/watersort/',
     icons: ['icons/layers.svg', 'icons/full.svg'],
-    settingsNote: '改动从下一关开始生效；如果当前这关还没倒过，会立刻换成新的。',
+    settingsNote: '闯关：改动从下一关开始生效。无限模式：固定 15 个瓶子，改动在重新开始后生效。还没倒过的话会立刻换成新的。',
     settings: [
       { key: 'hidden', label: '下层颜色先藏起来', type: 'toggle', default: true },
       { key: 'extra', label: '每关可以加一个空瓶', type: 'toggle', default: true },
@@ -84,6 +84,7 @@ export const games = [
     stats: [
       { key: 'level', label: '当前关卡' },
       { key: 'cleared', label: '已通关' },
+      { key: 'infBest', label: '无限模式最多' },
     ],
   },
 ];
