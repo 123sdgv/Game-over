@@ -489,23 +489,6 @@ function draw(dt) {
   }));
   ctx.restore();
 
-  // 选中时显示"几颗 · 多少分"
-  if (g.sel) {
-    let top = Infinity, left = 0, cnt = 0;
-    for (const [c, r] of g.sel.list) { const [px, py] = cellXY(c, r); if (py < top) top = py; left += px; cnt++; }
-    const label = `${g.sel.n} 颗 · ${scoreFor(g.sel.n)} 分`;
-    ctx.font = `800 15px -apple-system, "PingFang SC", sans-serif`;
-    const tw = ctx.measureText(label).width + 22;
-    let lx = left / cnt + cs / 2 - tw / 2;
-    lx = Math.max(bx - 4, Math.min(bx + bw - tw + 4, lx));
-    const ly = Math.max(by - 34, top - 34);
-    ctx.fillStyle = 'rgba(20, 24, 70, .92)';
-    ctx.beginPath(); ctx.roundRect(lx, ly, tw, 28, 14); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.fillStyle = '#FFD45C'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(label, lx + tw / 2, ly + 14.5);
-  }
-
   // 碎星星
   for (const p of g.particles) {
     const a = 1 - p.life / p.max;

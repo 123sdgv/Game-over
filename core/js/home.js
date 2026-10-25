@@ -1,9 +1,10 @@
-// 主屏幕：图标网格、分页、Dock、长按整理（拖动排序）
-import { store, on, emit } from './store.js';
+// 主屏幕：每页 4 列 × 6 行的格子，图标可以放在任意一格（中间留空也行）、分页、Dock、长按整理。
+// 整理时：拖到空格子就放过去；拖到别的图标上就和它交换位置；最后一页后面会多一页空白，可以拖过去开新页。
+import { store, on } from './store.js';
 import { h, toast } from './ui.js';
 import { APPS, appById, iconOf, openApp } from './apps.js';
 
-const PER_PAGE = 24;
+const COLS = 4, ROWS = 6, PER_PAGE = COLS * ROWS;
 const DOCK_MAX = 4;
 
 const $ = (id) => document.getElementById(id);
@@ -11,44 +12,91 @@ let editing = false;
 let press = null;
 let drag = null;
 
+const emptyPage = () => new Array(PER_PAGE).fill(null);
+const clone = (l) => ({ pages: l.pages.map((p) => p.slice()), dock: l.dock.slice() });
+
 export function defaultLayout() {
-  return { home: APPS.filter((a) => !a.system).map((a) => a.id), dock: APPS.filter((a) => a.system).map((a) => a.id) };
+  const pages = [emptyPage()];
+  APPS.filter((a) => !a.system).forEach((a, i) => {
+    const p = Math.floor(i / PER_PAGE);
+    (pages[p] ||= emptyPage())[i % PER_PAGE] = a.id;
+  });
+  return { pages, dock: APPS.filter((a) => a.system).map((a) => a.id) };
 }
 
 export function getLayout() {
-  const l = store.get('layout') || defaultLayout();
+  let l = store.get('layout') || defaultLayout();
+  if (!l.pages && Array.isArray(l.home)) { // 旧的格式：一串按顺序排好的图标
+    const pages = [];
+    l.home.forEach((id, i) => { (pages[Math.floor(i / PER_PAGE)] ||= emptyPage())[i % PER_PAGE] = id; });
+    l = { pages, dock: l.dock || [] };
+  }
   const known = new Set(APPS.map((a) => a.id));
   const seen = new Set();
-  const clean = (arr) => arr.filter((id) => known.has(id) && !seen.has(id) && seen.add(id));
-  const out = { home: clean(l.home || []), dock: clean(l.dock || []).slice(0, DOCK_MAX) };
-  // 新加入的游戏自动出现在主屏幕末尾
-  for (const a of APPS) if (!seen.has(a.id)) (a.system && out.dock.length < DOCK_MAX ? out.dock : out.home).push(a.id);
-  return out;
+  const ok = (id) => !!id && known.has(id) && !seen.has(id) && !!seen.add(id);
+  const pages = (l.pages || []).map((pg) => {
+    const out = emptyPage();
+    (pg || []).slice(0, PER_PAGE).forEach((id, k) => { if (ok(id)) out[k] = id; });
+    return out;
+  }).filter((pg) => pg.some(Boolean));
+  if (!pages.length) pages.push(emptyPage());
+  const dock = (l.dock || []).filter(ok).slice(0, DOCK_MAX);
+  // 新加入的游戏：放进第一个空格子
+  for (const a of APPS) {
+    if (seen.has(a.id)) continue;
+    seen.add(a.id);
+    if (a.system && dock.length < DOCK_MAX) { dock.push(a.id); continue; }
+    const pg = pages.find((p) => p.includes(null)) || (pages.push(emptyPage()), pages[pages.length - 1]);
+    pg[pg.indexOf(null)] = a.id;
+  }
+  return { pages, dock };
 }
 
-const appEl = (id) => {
-  const a = appById(id);
-  return h('button', { class: 'app', 'data-id': id, 'aria-label': a.name },
-    h('span', { class: 'icon' }, h('img', { src: iconOf(a), alt: '', draggable: 'false' })),
-    h('span', { class: 'label' }, a.name));
-};
+function saveLayout(l) {
+  const pages = l.pages.filter((pg) => pg.some(Boolean));
+  store.set('layout', { pages: pages.length ? pages : [emptyPage()], dock: l.dock });
+}
 
-export function renderHome() {
-  const l = getLayout();
+/* ---------- 画 ---------- */
+// 重画时沿用已有的图标元素：拖动途中手指按着的那个元素不能被换掉，否则手机会把手势当成滑动
+let pool = new Map();
+const appEl = (id, p, k) => {
+  const a = appById(id);
+  let el = pool.get(id);
+  if (el) {
+    pool.delete(id);
+    const img = el.querySelector('img'), src = iconOf(a);
+    if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+  } else {
+    el = h('button', { class: 'app', 'data-id': id, 'aria-label': a.name },
+      h('span', { class: 'icon' }, h('img', { src: iconOf(a), alt: '', draggable: 'false' })),
+      h('span', { class: 'label' }, a.name));
+  }
+  el.dataset.p = p; el.dataset.k = k;
+  return el;
+};
+const pageEl = (pg, p) => h('div', { class: 'page', 'data-p': p },
+  pg.map((id, k) => (id ? appEl(id, p, k) : h('div', { class: 'slot', 'data-p': p, 'data-k': k }))));
+
+function render(l) {
+  pool = new Map([...document.querySelectorAll('#home .app')].map((e) => [e.dataset.id, e]));
   const pages = $('pages');
   const keep = pages.scrollLeft;
-  pages.replaceChildren();
-  const chunks = [];
-  for (let i = 0; i < l.home.length; i += PER_PAGE) chunks.push(l.home.slice(i, i + PER_PAGE));
-  if (!chunks.length) chunks.push([]);
-  chunks.forEach((c) => pages.append(h('div', { class: 'page' }, c.map(appEl))));
-  $('dock').replaceChildren(...l.dock.map(appEl));
-  $('dots').replaceChildren(...chunks.map((_, i) => h('i', { class: 'dot', 'data-i': i })));
-  $('dots').hidden = chunks.length < 2;
+  const list = l.pages.slice();
+  if (editing && list[list.length - 1].some(Boolean)) list.push(emptyPage());
+  const pageEls = list.map(pageEl);
+  const dockEls = l.dock.map((id, i) => appEl(id, -1, i));
+  pages.replaceChildren(...pageEls);
+  $('dock').replaceChildren(...dockEls);
+  pool.clear();
+  $('dots').replaceChildren(...list.map((_, i) => h('i', { class: 'dot', 'data-i': i })));
+  $('dots').hidden = list.length < 2;
   pages.scrollLeft = keep;
   updateDots();
-  document.getElementById('device').classList.toggle('hide-labels', store.get('home.labels', true) === false);
+  $('device').classList.add('hide-labels');
 }
+
+export function renderHome() { render(getLayout()); }
 
 function updateDots() {
   const pages = $('pages');
@@ -56,52 +104,99 @@ function updateDots() {
   $('dots').querySelectorAll('.dot').forEach((d, k) => d.classList.toggle('on', k === i));
 }
 
-function saveFromDOM() {
-  store.set('layout', {
-    home: [...document.querySelectorAll('#pages .app')].map((e) => e.dataset.id),
-    dock: [...document.querySelectorAll('#dock .app')].map((e) => e.dataset.id),
-  });
+/** 整理模式：最后一页后面多一页空白 */
+function ensureExtraPage() {
+  const pages = $('pages');
+  const last = pages.lastElementChild;
+  if (last && last.querySelector('.app')) {
+    const p = pages.children.length;
+    pages.append(pageEl(emptyPage(), p));
+    $('dots').append(h('i', { class: 'dot', 'data-i': p }));
+    $('dots').hidden = false;
+  }
 }
 
 export function enterEdit() {
   if (editing) return;
   editing = true;
   $('home').classList.add('editing');
+  ensureExtraPage();
   try { navigator.vibrate && navigator.vibrate(12); } catch {}
 }
 export function exitEdit() {
   if (!editing) return;
   editing = false;
   $('home').classList.remove('editing');
+  renderHome();
 }
 
+/* ---------- 拖动 ---------- */
 function rectInDevice(el) {
   const d = $('device').getBoundingClientRect();
   const r = el.getBoundingClientRect();
   return { x: r.left - d.left, y: r.top - d.top, w: r.width, h: r.height };
 }
-
-function flip(mutate) {
-  const els = [...document.querySelectorAll('#home .app')];
-  const before = new Map(els.map((e) => [e, e.getBoundingClientRect()]));
-  mutate();
-  for (const e of els) {
-    if (drag && e === drag.el) continue;
-    const b = before.get(e), a = e.getBoundingClientRect();
-    const dx = b.left - a.left, dy = b.top - a.top;
-    if (dx || dy) e.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' });
-  }
-}
+const appNode = (id) => document.querySelector(`#home .app[data-id="${id}"]`);
+const posOf = (el) => (+el.dataset.p < 0 ? { dock: +el.dataset.k } : { p: +el.dataset.p, k: +el.dataset.k });
+const sameTarget = (a, b) => !!a && !!b && a.dock === b.dock && a.p === b.p && a.k === b.k;
 
 function startDrag() {
-  const el = press.el;
+  const el = appNode(press.id);
+  if (!el) return;
   const icon = el.querySelector('.icon');
   const r = rectInDevice(icon);
   const ghost = h('div', { class: 'ghost', style: { left: `${r.x}px`, top: `${r.y}px` } }, icon.cloneNode(true));
   $('device').append(ghost);
   el.classList.add('placeholder');
   const d = $('device').getBoundingClientRect();
-  drag = { el, ghost, offX: press.x0 - d.left - r.x, offY: press.y0 - d.top - r.y, last: null, edgeTimer: null };
+  const base = getLayout();
+  drag = { id: press.id, ghost, offX: press.x0 - d.left - r.x, offY: press.y0 - d.top - r.y, base, view: base, from: posOf(el), at: posOf(el), pending: null, timer: null, edgeTimer: null };
+}
+
+/** 从拖动开始时的布局出发，把图标挪到 to：空格子直接放，有图标就交换 */
+function moveTo(base, id, from, to) {
+  const l = clone(base);
+  if (sameTarget(from, to)) return l;
+  while (to.p !== undefined && to.p >= l.pages.length) l.pages.push(emptyPage());
+  const fromDock = from.dock !== undefined, toDock = to.dock !== undefined;
+  if (!fromDock && !toDock) {
+    const other = l.pages[to.p][to.k];
+    l.pages[to.p][to.k] = id;
+    l.pages[from.p][from.k] = other === id ? null : other;
+  } else if (fromDock && toDock) {
+    l.dock.splice(from.dock, 1);
+    l.dock.splice(Math.min(to.dock, l.dock.length), 0, id);
+  } else if (!fromDock && toDock) {
+    if (to.dock < l.dock.length && l.dock.length >= DOCK_MAX) {
+      const other = l.dock[to.dock];
+      l.dock[to.dock] = id; l.pages[from.p][from.k] = other;
+    } else if (l.dock.length < DOCK_MAX) {
+      l.pages[from.p][from.k] = null;
+      l.dock.splice(Math.min(to.dock, l.dock.length), 0, id);
+    } else return null;
+  } else {
+    const other = l.pages[to.p][to.k];
+    l.pages[to.p][to.k] = id;
+    if (other) l.dock[from.dock] = other; else l.dock.splice(from.dock, 1);
+  }
+  return l;
+}
+
+function applyTarget(to) {
+  const next = moveTo(drag.base, drag.id, drag.from, to);
+  if (!next) return;
+  const before = new Map([...document.querySelectorAll('#home .app')].map((e) => [e.dataset.id, e.getBoundingClientRect()]));
+  drag.view = next;
+  render(next);
+  const el = appNode(drag.id);
+  if (el) { el.classList.add('placeholder'); drag.at = posOf(el); }
+  for (const e of document.querySelectorAll('#home .app')) {
+    if (e.dataset.id === drag.id) continue;
+    const b = before.get(e.dataset.id), a = e.getBoundingClientRect();
+    if (!b) continue;
+    const dx = b.left - a.left, dy = b.top - a.top;
+    if (dx || dy) e.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  }
 }
 
 function moveDrag(x, y) {
@@ -114,39 +209,31 @@ function moveDrag(x, y) {
   const edge = x - d.left < 22 ? -1 : d.right - x < 22 ? 1 : 0;
   if (edge && !drag.edgeTimer) {
     drag.edgeTimer = setTimeout(() => {
-      drag && pages.scrollBy({ left: edge * pages.clientWidth, behavior: 'smooth' });
-      if (drag) drag.edgeTimer = null;
+      if (drag) { pages.scrollBy({ left: edge * pages.clientWidth, behavior: 'smooth' }); drag.edgeTimer = null; }
     }, 550);
   } else if (!edge && drag.edgeTimer) { clearTimeout(drag.edgeTimer); drag.edgeTimer = null; }
 
   const hit = document.elementFromPoint(x, y);
   if (!hit) return;
-  const target = hit.closest('#home .app') || hit.closest('#dock') || hit.closest('.page');
-  if (!target || target === drag.last || target === drag.el) return;
-  drag.last = target;
-  const el = drag.el;
-  const dock = $('dock');
-
-  if (target.classList.contains('app')) {
-    const intoDock = target.parentElement === dock && el.parentElement !== dock;
-    if (intoDock && dock.children.length >= DOCK_MAX) return;
-    flip(() => {
-      const sameParent = target.parentElement === el.parentElement;
-      const sib = [...target.parentElement.children];
-      if (sameParent && sib.indexOf(el) < sib.indexOf(target)) target.after(el);
-      else target.before(el);
-    });
-  } else if (target === dock) {
-    if (el.parentElement !== dock && dock.children.length < DOCK_MAX) flip(() => dock.append(el));
-  } else if (target.classList.contains('page') && el.parentElement !== target) {
-    flip(() => target.append(el));
-  }
+  let to = null;
+  const cell = hit.closest('#home .slot, #home .app');
+  if (cell) to = posOf(cell);
+  else if (hit.closest('#dock')) to = { dock: drag.view.dock.length };
+  if (!to || sameTarget(to, drag.at) || sameTarget(to, drag.pending)) return;
+  if (to.dock !== undefined && drag.at.dock !== undefined && to.dock >= drag.view.dock.length) return;
+  drag.pending = to;
+  clearTimeout(drag.timer);
+  drag.timer = setTimeout(() => { if (drag && drag.pending) { const t = drag.pending; drag.pending = null; applyTarget(t); } }, 110);
 }
 
 function endDrag() {
-  const { el, ghost } = drag;
   clearTimeout(drag.edgeTimer);
-  const r = rectInDevice(el.querySelector('.icon'));
+  clearTimeout(drag.timer);
+  if (drag.pending) { const t = drag.pending; drag.pending = null; applyTarget(t); }
+  const { ghost, id, view } = drag;
+  saveLayout(view);
+  const el = appNode(id);
+  const r = el ? rectInDevice(el.querySelector('.icon')) : { x: 0, y: 0 };
   const a = ghost.animate([
     { left: ghost.style.left, top: ghost.style.top, transform: 'scale(1.12)' },
     { left: `${r.x}px`, top: `${r.y}px`, transform: 'scale(1)' },
@@ -154,12 +241,13 @@ function endDrag() {
   drag = null;
   a.onfinish = () => {
     ghost.remove();
-    el.classList.remove('placeholder');
-    saveFromDOM();
-    renderHome();
+    if (el) el.classList.remove('placeholder');
+    render(getLayout());
+    if (editing) ensureExtraPage();
   };
 }
 
+/* ---------- 手势 ---------- */
 function wire() {
   const home = $('home');
 
@@ -167,10 +255,10 @@ function wire() {
     if (e.button > 0) return;
     const el = e.target.closest('.app');
     if (!el) { press = { empty: true, x0: e.clientX, y0: e.clientY }; return; }
-    press = { el, id: el.dataset.id, x0: e.clientX, y0: e.clientY, armed: editing, pid: e.pointerId };
+    press = { id: el.dataset.id, x0: e.clientX, y0: e.clientY, armed: editing, pid: e.pointerId };
     if (!editing) {
       press.timer = setTimeout(() => {
-        if (!press || press.el !== el) return;
+        if (!press || press.id !== el.dataset.id) return;
         press.timer = null;
         press.armed = true;
         enterEdit();
@@ -186,7 +274,7 @@ function wire() {
     if (press.armed && dist > 5) {
       try { home.setPointerCapture(press.pid); } catch {}
       startDrag();
-      moveDrag(e.clientX, e.clientY);
+      if (drag) moveDrag(e.clientX, e.clientY);
     }
   });
 
@@ -213,7 +301,6 @@ function wire() {
 
   on('layout', renderHome);
   on('icons', renderHome);
-  on('labels', renderHome);
   on('app:open', exitEdit);
 }
 
@@ -223,9 +310,4 @@ export function initHome() {
   if (!store.get('hint.edit')) {
     setTimeout(() => { toast('长按图标可以整理主屏幕'); store.set('hint.edit', 1); }, 1400);
   }
-}
-
-export function editHomeNow() {
-  emit('home:edit');
-  enterEdit();
 }

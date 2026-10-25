@@ -7,8 +7,6 @@ import { APPS, iconOf, destroyWindow, goHome } from './apps.js';
 import { WALLPAPERS, getWallpaper, setWallpaper, setCustomImage, wallpaperCSS, customImageURL } from './wallpaper.js';
 import { guardState, RULES } from './guard.js';
 import { exportData, importData, factoryReset } from './backup.js';
-import { fillGap, isStandalone } from './fill.js';
-import { defaultLayout, editHomeNow } from './home.js';
 
 /* ---------- 图形 ---------- */
 const G = {
@@ -192,8 +190,7 @@ function rootPage(ctx) {
             h('span', { class: 'me-sub' }, `${games.length} 款游戏，共玩了 ${totalPlayed()} 局`)),
           h('span', { class: 'chev', html: '<svg viewBox="0 0 8 14"><path d="M1.5 1.5L6.5 7l-5 5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' })),
         group({},
-          row({ icon: glyph('wallpaper', 'g2'), title: '墙纸', detail: wpName(), chevron: true, onClick: () => ctx.push(wallpaperPage(ctx)) }),
-          row({ icon: glyph('home', 'g3'), title: '主屏幕', chevron: true, onClick: () => ctx.push(homePage(ctx)) })),
+          row({ icon: glyph('wallpaper', 'g2'), title: '墙纸', detail: wpName(), chevron: true, onClick: () => ctx.push(wallpaperPage(ctx)) })),
         group({},
           row({ icon: glyph('time', 'g1'), title: '屏幕使用时间', detail: g.locked ? '休息中' : `连续 ${Math.floor(g.used / 60000)} 分钟`, chevron: true, onClick: () => ctx.push(timePage(ctx)) })),
         group({ header: 'App' },
@@ -201,22 +198,6 @@ function rootPage(ctx) {
             icon: h('span', { class: 'glyph img' }, h('img', { src: iconOf(APPS.find((a) => a.id === gm.id)), alt: '' })),
             title: gm.name, chevron: true, onClick: () => ctx.push(gamePage(ctx, gm)),
           }))),
-        group({},
-          row({ icon: glyph('general', 'g4'), title: '通用', chevron: true, onClick: () => ctx.push(generalPage(ctx)) })),
-      );
-    },
-  };
-}
-
-function generalPage(ctx) {
-  return {
-    title: '通用',
-    build(c) {
-      c.append(
-        group({},
-          row({ icon: glyph('info', 'g4'), title: '关于本机', chevron: true, onClick: () => ctx.push(aboutPage(ctx)) })),
-        group({},
-          row({ icon: glyph('transfer', 'g1'), title: '传输或还原', chevron: true, onClick: () => ctx.push(transferPage(ctx)) })),
       );
     },
   };
@@ -239,27 +220,9 @@ function aboutPage(ctx) {
           row({ title: '已玩局数', detail: String(totalPlayed()) }),
           row({ title: '设置与记录', detail: `${(bytes / 1024).toFixed(1)} KB` }),
           row({ title: '版本', detail: '1.0' })),
-        group({ footer: '这是一台装在手机里的手机。所有数据只保存在这台设备的浏览器里。' }),
-      );
-    },
-  };
-}
-
-function transferPage(ctx) {
-  return {
-    title: '传输或还原',
-    build(c) {
-      c.append(
-        group({ footer: '导出的备份包含壁纸、主屏幕布局、图标和游戏记录。换手机或清理浏览器前先导出一份。' },
+        group({ footer: '所有数据只保存在这台设备的浏览器里。导出的备份包含墙纸、主屏幕布局和游戏记录，换手机或清理浏览器前先导出一份。' },
           row({ title: '导出数据', onClick: exportData, tone: 'action' }),
           row({ title: '导入数据', onClick: importData, tone: 'action' })),
-        group({},
-          row({
-            title: '还原主屏幕布局', tone: 'action', onClick: async () => {
-              const ok = await alert({ title: '还原主屏幕布局？', message: '图标会回到默认位置，其他设置不变。', buttons: [{ label: '取消', value: false }, { label: '还原', value: true, style: 'bold' }] });
-              if (ok) { store.set('layout', defaultLayout()); emit('layout'); }
-            },
-          })),
         group({}, row({ title: '抹掉所有内容和设置', onClick: factoryReset, tone: 'danger' })),
       );
     },
@@ -312,33 +275,6 @@ function wallpaperPage(ctx) {
         group({ header: '选择墙纸' }, h('div', { class: 'wp-wrap' }, grid)),
         group({ header: '模糊', footer: '照片只保存在这台设备上，导出备份时会一起带走。' },
           h('div', { class: 'srow slider-row' }, h('span', { class: 'slider-ico s' }), blur, h('span', { class: 'slider-ico l' }), blurVal)),
-      );
-    },
-  };
-}
-
-function fillNote() {
-  const gap = fillGap();
-  const base = '添加到主屏幕后，有些 iOS 版本会在最底下留一条空白，这是系统的问题。打开试试能不能铺满；如果底部的东西被挡住了，就关掉。';
-  return isStandalone() && gap ? `${base}（这台手机的空白约 ${gap} 点）` : base;
-}
-
-function homePage(ctx) {
-  return {
-    title: '主屏幕',
-    build(c) {
-      c.append(
-        group({},
-          row({ title: '显示 App 名称', right: toggle(store.get('home.labels', true) !== false, (v) => { store.set('home.labels', v); emit('labels'); }) })),
-        group({ footer: '在主屏幕长按任意图标也可以进入整理。拖到底部的 Dock 可以固定常用的 App，Dock 最多放 4 个。' },
-          row({ title: '整理主屏幕', tone: 'action', onClick: () => { goHome(); setTimeout(editHomeNow, 450); } }),
-          row({
-            title: '还原主屏幕布局', tone: 'action', onClick: () => { store.set('layout', defaultLayout()); emit('layout'); },
-          })),
-        group({ footer: fillNote() },
-          row({ title: '铺满屏幕底部', right: toggle(store.get('display.fill', false), (v) => { store.set('display.fill', v); emit('fill'); }) })),
-        ...(games.some((gm) => gm.icons.length > 1) ? [group({ header: 'App 图标', footer: '在下面的 App 页面里也能换。' },
-          games.filter((gm) => gm.icons.length > 1).map((gm) => iconPicker(gm)))] : []),
       );
     },
   };
