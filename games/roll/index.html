@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>滚滚球</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="menu-on">
+  <canvas id="cv"></canvas>
+  <canvas id="fx"></canvas>
+  <div class="flash" id="flash"></div>
+
+  <header class="hud" id="hud">
+    <div class="left">
+      <div class="score" id="score">0</div>
+      <div class="sub" id="sub">0 米</div>
+    </div>
+    <div class="right">
+      <div class="coins" id="coinBox"><i class="coin"></i><span id="coins">0</span></div>
+      <button class="pause" id="pause" aria-label="暂停"><svg viewBox="0 0 20 20"><rect x="5.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/><rect x="11.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/></svg></button>
+    </div>
+    <div class="prog" id="prog"><i id="progFill"></i><b id="progDot"></b></div>
+  </header>
+
+  <div class="tip" id="tip">
+    <div class="tip-ico">
+      <svg class="hand" viewBox="0 0 40 40" aria-hidden="true"><path d="M16 21V9.5a2.5 2.5 0 0 1 5 0V19l1.3-.4a2.4 2.4 0 0 1 3 1.6l.1.5 1.2-.3a2.3 2.3 0 0 1 2.8 1.7l3 8.6a6 6 0 0 1-3.4 7.4l-3.6 1.4a6 6 0 0 1-6.6-1.4L11 31.3a2.4 2.4 0 0 1 3.4-3.4L16 29.5z" fill="#fff" stroke="#13213f" stroke-width="2" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="tip-text" id="tipText"></div>
+  </div>
+  <div class="count" id="count"></div>
+
+  <div class="menu" id="menu">
+    <div class="menu-top">
+      <div class="menu-title">滚滚球</div>
+      <div class="menu-sub" id="menuSub"></div>
+    </div>
+    <div class="menu-bottom">
+      <button class="btn resume" id="resume" hidden>继续上一局<small id="resumeSub"></small></button>
+      <div class="lv-row">
+        <button class="lv-arrow" id="lvPrev" aria-label="上一关"><svg viewBox="0 0 20 20"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="btn main" id="goLevel">闯关 · 第 <span id="lvNum">1</span> 关</button>
+        <button class="lv-arrow" id="lvNext" aria-label="下一关"><svg viewBox="0 0 20 20"><path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <button class="btn ghost" id="goEndless">无尽模式</button>
+      <div class="help"><span><b>按住拖</b>左右挪</span><i></i><span><b>往上一划</b>跳</span><i></i><span>躲开块块和缺口</span></div>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
