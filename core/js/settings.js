@@ -364,6 +364,21 @@ function gamePage(ctx, gm) {
             }, f.step || 1),
           });
         }
+        if (f.type === 'color') {
+          // 一排小色球，点一下就换（游戏那边会通过 onSettings 立刻收到）
+          const nameOf = (v) => (f.options.find((o) => o.value === v) || f.options[0]).label;
+          const name = h('span', { class: 'srow-detail' }, nameOf(s[f.key]));
+          const list = h('div', { class: 'swatches' }, f.options.map((o) => {
+            const b = h('button', { class: `swatch ${o.value === s[f.key] ? 'on' : ''}`, 'aria-label': o.label, style: { color: o.color } });
+            b.addEventListener('click', () => {
+              save({ [f.key]: o.value });
+              name.textContent = o.label;
+              list.querySelectorAll('.swatch').forEach((x) => x.classList.toggle('on', x === b));
+            });
+            return b;
+          }));
+          return h('div', { class: 'srow swatch-row' }, h('div', { class: 'swatch-head' }, h('span', { class: 'srow-title' }, f.label), name), list);
+        }
         return null;
       });
 

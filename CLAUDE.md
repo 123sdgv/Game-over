@@ -38,10 +38,11 @@ games/
 2. 在 `games/registry.js` 的数组**末尾**加一项：
    - `id` 英文唯一名（也是存档键）、`name` 中文名、`path: 'games/<id>/'`、`icons: ['icons/xxx.svg']`（**只放一个**）
    - `settingsNote`：设置页底部的一段说明（改动什么时候生效、规则一句话）
-   - `settings`：只支持两种 `type`
+   - `settings`：支持三种 `type`
      - `toggle`：`{ key, label, type: 'toggle', default }`
      - `stepper`：`{ key, label, type: 'stepper', min, max, default, step?, unit?, display?(v)=>文字, sub?:小字说明 }`，`max` 可以写成函数 `(s) => ...` 依赖别的设置
-     - 注释里提到的 `choice` **没有实现**，要用得先去 settings.js 里写
+     - `color`：`{ key, label, type: 'color', default, options: [{ value, label, color }] }`，设置页显示一排小色球（螺旋跳跃的小球颜色用的）；存的是 `value`，不在 options 里会自动回到默认；游戏里用 `hb.meta.settings` 找 options 换算成颜色
+     - 其他 type（比如 `choice`）**没有实现**，要用得先去 settings.js 里写
    - `presets`（可选）：`{ label, values: {...}, note }` 一键套用
    - `stats`：`{ key, label, format? }`，`format: 'ratio'`（显示成 x（y%），按 played 算）或 `'best'`（扫雷那种按设置组合存的最快时间）
    - **`stats.played` 会被加进设置首页「共玩了 N 局」**，新游戏记得每局 `played + 1`
@@ -111,6 +112,9 @@ f = [x for x in pg.frames if '/<id>/' in x.url][0]                       # 游�
 - 在游戏里挂一个测试用的 `window.__<id>` 钩子方便读状态、摆局面（现有游戏都这么做）。
 - 关键界面都截图，**自己打开截图看**：开始界面、游戏中、结算弹窗、设置页。动作游戏写个自动玩的小脚本跑一段。
 - 截图放 scratchpad，不要提交进仓库。
+- 3D 游戏在软件渲染下很慢，截图常常超过 Playwright 默认的 30 秒：先 `ctx.set_default_timeout(90000)`，再用 `add_init_script` 往 `pp.game.<id>.settings` 写 `{lowPower:true}`（没阴影、低分辨率），只在最后单独开一次全画质看效果。游戏里留个 `warp` 快进钩子，自动玩脚本才跑得完。
+- 同一时间只开一个浏览器跑测试（两个一起跑会互相拖慢到超时）。别用 `pkill -f 某个词`：命令行里也有这个词，会把自己的 shell 一起杀掉（退出码 144）。
+- 游戏收到 `hb.onPause`（回主屏幕）以后最好连开始界面也停止渲染，不然藏在后台的 iframe 一直在画，又费电又把别的页面拖慢（螺旋跳跃的 `away` 就是这么做的）。
 
 ## 提交
 
@@ -139,6 +143,7 @@ git ls-remote origin refs/heads/main    # 确认远端已经是新 commit
 | leave | 假条 | Win95 风格的小工具（白底）；每周设定那天 0 点自动加假条，隔几周会补；从 gray 旧仓库 TakeTimeOff 迁移过来（会导入旧的 `jiatiao_sim_count`） |
 | merge | 合成大西瓜 | Verlet 物理；9 级：葡萄→樱桃→橙子→柠檬→猕猴桃→桃子→菠萝→半个西瓜→西瓜（art.js 全部原创重画）；合出西瓜后它消失，弹窗「恭喜」只有「继续」一个按钮；图标是一个完整西瓜 |
 | roll | 滚滚球 | three.js 3D：悬浮方块拼成的 **4 条轨道** + 蓝天白云。按住左右拖，**一格一格吸附换道**（手指挪过约 0.6 格才换，有回差防抖；球只停在轨道正中，不能卡在两格之间擦边）；躲块块、绕开洞、吃金币；**没有跳跃、没有新手引导、开始界面下面没有说明小字**（gray 真机试过后要求的）；手指划过有切水果那样的白色刀光（trail.js，读 getCoalescedEvents）；块块：方块 / 墙开口 / 高柱左右绕 / 在两三条轨道间来回滑的块（到头会停一下），每一行都留了空轨道；金币一律在格子正中；闯关（种子固定路线）+ 无尽；**开始界面只有「闯关 · 第 N 关」和「无尽模式」两个按钮**：没有选关箭头、没有「继续上一局」，中途退出下次就从当前关卡开头玩（gray 要求的，回主屏幕仍会自动暂停）；`window.__roll.step(dt)` 可以无画面快进，`__roll.setLane(n)` 换道，用自动驾驶脚本测过关卡可过 |
+| helix | 螺旋跳跃 | three.js 3D，仿 Helix Jump：柱子上一层层带缺口的圆环平台，小球一直弹；**按住左右拖转柱子**（直接跟手，没有惯性），从缺口掉下去，碰到**红色**就输（gray 选的红色区块，不做尖刺）。连穿 3 层不落地变火球，下一次落地连红色一起砸碎。穿过的平台炸开飞走、弹过的地方留颜料印子、小球正下方有影子帮瞄准。闯关（`levelLength(n)` 层，落到金色终点过关，每关换一套配色 `THEMES`）+ 无尽（每 30 层换配色、分数加成）。每次落地存档，开始界面有「继续上一局」；第一次玩有左右拖的提示。设置里能换**小球颜色**（`color` 类型）、灵敏度、弹跳速度、火球、拖尾、省电。图标是小球弹起来的状态。规则在 tower.js（12 片一圈：0 缺口 / 1 普通 / 2 红），画面在 scene.js；`window.__helix`（`warp` 可以快进、`setRot` 直接转到某个角度）|
 
 设置 App：gray 让删掉的「主屏幕」设置页（连同里面的功能）已经删了，不要再加回来；「通用」里的东西已经并进「关于本机」。主屏幕图标下面不显示名字。
 
@@ -158,4 +163,5 @@ git ls-remote origin refs/heads/main    # 确认远端已经是新 commit
 - [ ] README 一口气重写（等 gray 说）。
 - [ ] 扫雷、色感的 logo 重做（等 gray 说）。
 - [ ] 远端还留着测试用的 `claude-push-test` 分支和 PR #1，可以清理（先问 gray）。
+- [ ] 螺旋跳跃：等 gray 真机反馈（灵敏度、弹跳节奏、难度曲线、配色）再调。
 - [ ] 有些游戏的 stats 没记 `played`（倒水、方块、消灭星星、切水果、假条），所以设置首页「共玩了 N 局」偏少，以后可以补上。

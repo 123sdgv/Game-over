@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>螺旋跳跃</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="menu-on">
+  <canvas id="cv"></canvas>
+  <div class="flash" id="flash"></div>
+
+  <header class="hud" id="hud">
+    <div class="lvbar">
+      <span class="lv a" id="lvA">1</span>
+      <div class="prog"><i id="progFill"></i></div>
+      <span class="lv b" id="lvB">2</span>
+    </div>
+    <div class="score" id="score">0</div>
+    <div class="sub" id="sub"></div>
+    <button class="pause" id="pause" aria-label="暂停"><svg viewBox="0 0 20 20"><rect x="5.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/><rect x="11.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/></svg></button>
+  </header>
+
+  <div class="tip" id="tip" hidden>
+    <div class="tip-hand">
+      <svg viewBox="0 0 120 40" class="tip-arrows"><path d="M22 20H98M22 20l9-8M22 20l9 8M98 20l-9-8M98 20l-9 8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <i class="tip-dot"></i>
+    </div>
+    <div class="tip-text">按住左右拖，转动柱子</div>
+  </div>
+
+  <div class="menu" id="menu">
+    <div class="menu-top">
+      <div class="menu-title">螺旋跳跃</div>
+      <div class="menu-sub" id="menuSub"></div>
+    </div>
+    <div class="menu-bottom">
+      <button class="btn main" id="goResume" hidden>继续上一局<small id="resumeSub"></small></button>
+      <button class="btn" id="goLevel"><span>闯关 · 第 <span id="lvNum">1</span> 关</span></button>
+      <button class="btn ghost" id="goEndless">无尽模式</button>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

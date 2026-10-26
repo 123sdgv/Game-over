@@ -150,3 +150,15 @@ button.srow:active { background: #E6E8EB; }
 .st-col.today .st-colbar i { background: var(--ink); }
 .st-col span { font-size: 11px; color: var(--ink-3); }
 .st-col.today span { color: var(--ink); font-weight: 600; }
+
+/* 选颜色：一排小球（游戏设置里 type: 'color'） */
+.swatch-row { flex-direction: column; align-items: stretch; gap: 12px; padding-block: 12px 14px; }
+.swatch-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 10px 2px; justify-items: center; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; position: relative;
+  background: radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .85) 0, rgba(255, 255, 255, 0) 38%), currentColor;
+  box-shadow: inset 0 -4px 7px rgba(0, 0, 0, .22), inset 0 0 0 .5px rgba(0, 0, 0, .12), 0 2px 5px -1px rgba(0, 0, 0, .25);
+  transition: transform .2s var(--ease); }
+.swatch::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; box-shadow: 0 0 0 2px var(--ink); opacity: 0; transform: scale(.85); transition: opacity .2s, transform .2s var(--ease); }
+.swatch.on::after { opacity: 1; transform: none; }
+.swatch:active { transform: scale(.9); }

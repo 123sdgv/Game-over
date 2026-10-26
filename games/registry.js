@@ -9,7 +9,7 @@
  *   path      文件夹路径（以 / 结尾），入口固定是 index.html
  *   icons     图标（相对 path）；写一个就够，写多个时设置里可以切换
  *   settings  可调设置，设置 → App 里会自动生成对应的界面
- *             type: 'stepper'（加减）| 'toggle'（开关）| 'choice'（选项）
+ *             type: 'stepper'（加减）| 'toggle'（开关）| 'color'（一排色球，options: [{ value, label, color }]）
  *             max 可以写成函数，根据其他设置算出上限
  *   presets   一键套用的设置组合（可选），note 是显示在按钮上的说明
  *   stats     设置页里展示的记录（读取 game.<id>.stats）
@@ -209,6 +209,42 @@ export const games = [
       { key: 'best', label: '无尽最高分' },
       { key: 'bestDist', label: '无尽最远（米）' },
       { key: 'coins', label: '一共吃到金币' },
+      { key: 'played', label: '玩了几局' },
+    ],
+  },
+  {
+    id: 'helix',
+    name: '螺旋跳跃',
+    path: 'games/helix/',
+    icons: ['icons/helix.svg'],
+    settingsNote: '按住屏幕左右拖，转动柱子，让小球从缺口掉下去，别碰到红色。连着穿过 3 层不落地会变成火球，下一次落地连红色一起砸碎。闯关落到金色终点就过关；无尽模式一直往下，每 30 层换一次配色、分数也更高。改动马上生效。',
+    settings: [
+      {
+        key: 'ball', label: '小球颜色', type: 'color', default: 'orange',
+        options: [
+          { value: 'orange', label: '橙色', color: '#FF7A1A' },
+          { value: 'yellow', label: '黄色', color: '#FFC61A' },
+          { value: 'green', label: '绿色', color: '#22C55E' },
+          { value: 'blue', label: '蓝色', color: '#2F7BFF' },
+          { value: 'purple', label: '紫色', color: '#8B5CF6' },
+          { value: 'pink', label: '粉色', color: '#FF5FA2' },
+          { value: 'white', label: '白色', color: '#F2F4F8' },
+          { value: 'black', label: '黑色', color: '#2B2E36' },
+        ],
+      },
+      { key: 'sens', label: '拖动灵敏度', type: 'stepper', min: 1, max: 5, default: 3, sub: '越大，手指挪一小段柱子就转得越多' },
+      { key: 'speed', label: '弹跳速度', type: 'stepper', min: 1, max: 5, default: 3, sub: '3 是正常速度' },
+      { key: 'fire', label: '连穿三层变火球', type: 'toggle', default: true },
+      { key: 'trail', label: '下落拖尾', type: 'toggle', default: true },
+      { key: 'lowPower', label: '省电模式', type: 'toggle', default: false },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+    ],
+    stats: [
+      { key: 'cleared', label: '已通过关卡' },
+      { key: 'best', label: '无尽最高分' },
+      { key: 'bestDepth', label: '无尽最深（层）' },
+      { key: 'passed', label: '一共穿过' },
+      { key: 'smashed', label: '火球砸碎' },
       { key: 'played', label: '玩了几局' },
     ],
   },

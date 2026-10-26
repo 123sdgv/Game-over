@@ -26,6 +26,7 @@ export function resolveSettings(meta, stored = {}) {
   const s = {};
   for (const f of meta.settings || []) s[f.key] = stored[f.key] ?? f.default;
   for (const f of meta.settings || []) {
+    if (f.options && !f.options.some((o) => o.value === s[f.key])) s[f.key] = f.default;   // color：存的值不在选项里就用默认
     if (f.type !== 'stepper') continue;
     const max = typeof f.max === 'function' ? f.max(s) : f.max;
     s[f.key] = Math.min(max, Math.max(f.min, Math.round(s[f.key])));
