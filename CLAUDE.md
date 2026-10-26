@@ -27,6 +27,7 @@ games/
   registry.js      游戏清单（见下）
   _shared/hub.js   游戏 ↔ 大厅的接口
   _shared/sound.js 合成音效
+  _shared/lib/     three.js 等第三方库（3D 游戏共用）
   _shared/base.css 共用样式和颜色变量
   <id>/            每个游戏一个文件夹：index.html  style.css  game.js  icons/  （可以再拆 logic.js、art.js 等模块）
 ```
@@ -83,7 +84,7 @@ git clone --depth 1 --branch r169 --filter=blob:none --no-checkout https://githu
 cd /tmp/three && git sparse-checkout set --no-cone /build/three.module.min.js /LICENSE && git checkout
 ```
 
-- 现在已经有 three.js r169：`games/runner/lib/three.module.min.js`（约 690KB）。别的 3D 游戏可以直接 `import * as THREE from '../runner/lib/three.module.min.js'`；用的游戏多了再挪到 `_shared/lib/`。
+- three.js r169 放在 `games/_shared/lib/three.module.min.js`（约 690KB，带 LICENSE），3D 游戏直接 `import * as THREE from '../_shared/lib/three.module.min.js'`。
 
 ## 测试（推之前必须做）
 
@@ -137,7 +138,7 @@ git ls-remote origin refs/heads/main    # 确认远端已经是新 commit
 | fruit | 切水果 | 9 种精细手绘水果 + 炸弹（fruits.js），限时 / 闯关，有特殊水果；gray 要求水果尽量精致 |
 | leave | 假条 | Win95 风格的小工具（白底）；每周设定那天 0 点自动加假条，隔几周会补；从 gray 旧仓库 TakeTimeOff 迁移过来（会导入旧的 `jiatiao_sim_count`） |
 | merge | 合成大西瓜 | Verlet 物理；9 级：葡萄→樱桃→橙子→柠檬→猕猴桃→桃子→菠萝→半个西瓜→西瓜（art.js 全部原创重画）；合出西瓜后它消失，弹窗「恭喜」只有「继续」一个按钮；图标是一个完整西瓜 |
-| runner | 丛林狂奔 | three.js 真 3D 低多边形丛林神庙跑酷：路口左右滑转弯、平时换道、上滑跳、下滑铲、斜手机吃路边金币（第一次开始时请求动作传感器权限）、省电模式；**第一版，等 gray 反馈手感** |
+| roll | 滚滚球 | three.js 3D：悬浮方块拼成的轨道 + 蓝天白云，按住左右拖球跟手走、往上一划跳（手势读 getCoalescedEvents，卡顿也认得出）；手指划过有切水果那样的白色刀光（trail.js）；块块/缺口/窄桥/滑块/金币；闯关（种子固定路线）+ 无尽；track.js 同种子同轨道，存档靠种子 + 位置恢复；`window.__roll.step(dt)` 可以无画面快进，自动驾驶脚本测过关卡可过。**第一版，等 gray 真机反馈手感** |
 
 设置 App：gray 让删掉的「主屏幕」设置页（连同里面的功能）已经删了，不要再加回来；「通用」里的东西已经并进「关于本机」。主屏幕图标下面不显示名字。
 
@@ -153,7 +154,7 @@ git ls-remote origin refs/heads/main    # 确认远端已经是新 commit
 
 ## 待办 / 以后再说
 
-- [ ] 丛林狂奔：等 gray 在真机上玩完反馈手感（速度、难度、转弯灵敏度）再调。
+- [ ] 滚滚球：等 gray 真机反馈（速度、拖动灵敏度、上划跳的门槛、难度）再调。丛林狂奔已按 gray 要求删掉，不要再加回来。
 - [ ] README 一口气重写（等 gray 说）。
 - [ ] 扫雷、色感的 logo 重做（等 gray 说）。
 - [ ] 远端还留着测试用的 `claude-push-test` 分支和 PR #1，可以清理（先问 gray）。
