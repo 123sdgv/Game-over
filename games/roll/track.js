@@ -1,6 +1,7 @@
 // 轨道数据（不涉及画面）：
 //   一行 = 1 米，横着 5 格悬浮方块。缺格子就是洞，块块（障碍）和金币挂在行上。
 //   同一个种子生成出来的轨道一模一样 —— 存档只要记住种子和走到哪儿，就能原样恢复。
+//   没有跳跃：所有块块和洞都留了能左右绕过去的路。
 export const COLS = 5;
 export const BALL_R = 0.32;
 export const XMAX = COLS / 2 - BALL_R - 0.08;      // 小球中心最多能到的横向位置（两边有护栏）
@@ -9,10 +10,6 @@ export const colOf = (x) => Math.max(0, Math.min(COLS - 1, Math.floor(x + COLS /
 
 /** 块块此刻的横向位置（滑块会左右来回） */
 export const obX = (o, t) => (o.kind === 'slider' ? o.x0 + o.amp * Math.sin((t * Math.PI * 2) / o.period + o.phase) : o.x0);
-
-// 跳跃：高度固定，滞空时间随速度变（慢的时候飘一点，快的时候利落一点）
-export const JUMP_H = 1.2;
-export const jumpTime = (v) => Math.min(0.78, Math.max(0.48, 5.2 / v));
 
 export function mulberry(seed) {
   let a = seed >>> 0;
@@ -37,7 +34,7 @@ export class Track {
    * @param {number} o.seed
    * @param {'level'|'endless'} o.mode
    * @param {number} o.level
-   * @param {(row:number)=>number} o.speedAt  这一行时大概的速度（决定断口要多长）
+   * @param {(row:number)=>number} o.speedAt  这一行时大概的速度（决定块块隔多远）
    */
   constructor({ seed, mode, level = 1, speedAt }) {
     this.rand = mulberry(seed);
@@ -46,7 +43,6 @@ export class Track {
     this.speedAt = speedAt;
     this.rows = [];
     this.safe = [];        // 安全的行（一段休息区的开头），读档时退回到这里
-    this.jumps = [];       // 必须跳的地方（新手提示用）
     this.nid = 1;
     this.last = '';
     this.finish = mode === 'level' ? levelRows(level) : Infinity;
@@ -95,15 +91,6 @@ export class Track {
     this.pend.push([row, x, y]);
   }
 
-  /** 金币拱：跳过去的路线上摆一串 */
-  arc(center, x, half = 2.5) {
-    for (let k = -2; k <= 2; k++) {
-      const row = Math.round(center + k * (half / 2));
-      const u = k / 2.6;
-      this.coin(row, x, 1.05 * (1 - u * u));
-    }
-  }
-
   line(from, to, col) {
     for (let r = from; r < to; r += 2) this.coin(r, colX(col));
   }
@@ -123,16 +110,15 @@ export class Track {
     this.safe.push(s);
     if (this.r() < 0.45) this.line(s + 1, s + rest, this.int(0, 4));
 
-    const table = [
+    let table = [
       ['cubes', 3, 0],
-      ['slabs', 2, 0],
-      ['gap', 2.2, 0.03],
-      ['holes', 2, 0.1],
-      ['walls', 2, 0.15],
-      ['bridge', 2, 0.2],
-      ['sliders', 1.6, 0.3],
-      ['slalom', 1.6, 0.35],
-    ].filter(([k, , min]) => d >= min && k !== this.last);
+      ['holes', 2.2, 0],
+      ['walls', 2, 0.06],
+      ['bridge', 2, 0.1],
+      ['sliders', 1.6, 0.25],
+      ['slalom', 1.6, 0.3],
+    ].filter(([, , min]) => d >= min);
+    if (table.length > 1) table = table.filter(([k]) => k !== this.last);   // 别连着两段一样
     let total = table.reduce((a, t) => a + t[1], 0);
     let x = this.r() * total, kind = table[0][0];
     for (const [k, w] of table) { if ((x -= w) <= 0) { kind = k; break; } }
@@ -140,12 +126,12 @@ export class Track {
     this[kind](d);
     for (const [row, x, y] of this.pend) {
       const r = this.rows[row];
-      if (r && (r.t[Math.max(0, Math.min(COLS - 1, Math.round(x + 2)))] || y > 0.3)) r.coins.push({ x, y, taken: false });
+      if (r && r.t[Math.max(0, Math.min(COLS - 1, Math.round(x + 2)))]) r.coins.push({ x, y, taken: false });
     }
     this.pend = [];
   }
 
-  /** 零散的方块：左右绕开（也能跳过去） */
+  /** 零散的方块：左右绕开 */
   cubes(d) {
     const len = this.rows4(1.6) + this.int(0, 5) + Math.round(d * 8);
     const s = this.add(len, FULL);
@@ -160,34 +146,6 @@ export class Track {
       path = free[0];
       this.coin(r - 1, colX(path)); this.coin(r, colX(path)); this.coin(r + 1, colX(path));
     }
-  }
-
-  /** 横着的矮杠：要跳 */
-  slabs(d) {
-    const count = 1 + (d > 0.3 ? 1 : 0) + (d > 0.7 && this.r() < 0.5 ? 1 : 0);
-    for (let i = 0; i < count; i++) {
-      const s = this.add(i ? this.rows4(lerp(0.85, 0.55, d)) : 5, FULL);
-      const r = this.add(1, FULL);
-      this.add(1, FULL);
-      this.ob(r, { kind: 'slab', x: 0, w: 4.9, d: 0.42, h: 0.4, color: 3 });
-      this.jumps.push(r);
-      this.arc(r + 0.5, colX(this.int(0, 4)), 2.4);
-      void s;
-    }
-    this.add(3, FULL);
-  }
-
-  /** 整排断开：要跳 */
-  gap(d) {
-    const twice = d > 0.45 && this.r() < 0.4;
-    for (let i = 0; i < (twice ? 2 : 1); i++) {
-      this.add(i ? this.rows4(lerp(0.75, 0.55, d)) : 4, FULL);
-      const L = this.speedAt(this.rows.length) > 12.5 ? 3 : 2;
-      const r = this.add(L, NONE);
-      this.jumps.push(r);
-      this.arc(r + L / 2, colX(this.int(0, 4)), L + 1.6);
-    }
-    this.add(4, FULL);
   }
 
   /** 零散的洞：绕开 */

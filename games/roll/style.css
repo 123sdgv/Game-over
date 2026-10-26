@@ -34,17 +34,7 @@ body.lv .prog { display: block; }
 .prog b { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #dff4ff 60%, #9fd9ff); box-shadow: 0 0 0 2px var(--cyan), 0 2px 6px rgba(20, 100, 200, .5); }
 body.menu-on .hud { visibility: hidden; }
 
-/* ---------- 提示 / 倒数 ---------- */
-.tip { position: fixed; left: 50%; top: 31%; z-index: 4; transform: translateX(-50%) translateY(8px); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0; transition: opacity .25s, transform .25s var(--ease); }
-.tip.on { opacity: 1; transform: translateX(-50%); }
-.tip-text { white-space: nowrap; padding: 10px 18px; border-radius: 22px; font-size: 18px; font-weight: 900; color: var(--navy); background: rgba(255, 255, 255, .82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 10px 26px -10px rgba(20, 60, 140, .55), inset 0 0 0 1px #fff; }
-.tip-ico { width: 54px; height: 54px; }
-.hand { width: 54px; height: 54px; filter: drop-shadow(0 4px 6px rgba(20, 50, 110, .35)); }
-.tip[data-kind="drag"] .hand { animation: sway 1.3s ease-in-out infinite; }
-.tip[data-kind="jump"] .hand { animation: flick 1s ease-in infinite; }
-@keyframes sway { 0%, 100% { transform: translateX(-34px); } 50% { transform: translateX(34px); } }
-@keyframes flick { 0% { transform: translateY(18px); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(-26px); opacity: 1; } 100% { transform: translateY(-30px); opacity: 0; } }
-
+/* ---------- 倒数 ---------- */
 .count { position: fixed; left: 0; right: 0; top: 34%; z-index: 4; text-align: center; pointer-events: none; font-size: 104px; font-weight: 900; line-height: 1; color: var(--navy); text-shadow: 0 0 2px #fff, 0 3px 0 #fff, 0 0 30px rgba(255, 255, 255, .95); }
 .count.pop { animation: pop .5s var(--ease); }
 @keyframes pop { 0% { transform: scale(1.7); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1); opacity: .9; } }
@@ -67,9 +57,6 @@ body.menu-on .hud { visibility: hidden; }
 .lv-arrow svg { width: 20px; height: 20px; }
 .lv-arrow:disabled { opacity: .3; }
 .lv-arrow:active:not(:disabled) { transform: scale(.92); }
-.help { margin-top: 4px; display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: var(--navy-2); text-shadow: 0 0 6px #fff; }
-.help b { color: var(--blue); font-weight: 900; }
-.help i { width: 3px; height: 3px; border-radius: 50%; background: var(--navy-2); opacity: .5; }
 
 /* ---------- 结算 / 暂停 ---------- */
 .card-wrap { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px calc(var(--safe-b) + var(--home-bar) + 12px); background: linear-gradient(rgba(220, 238, 255, 0) 30%, rgba(30, 60, 120, .35)); animation: fade .3s ease-out; }

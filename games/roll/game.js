@@ -1,11 +1,10 @@
 // 滚滚球：小球在悬浮方块拼成的轨道上一直往前滚。
 //   按住屏幕左右拖：小球跟着手指左右挪（手指划过会留下一道白光）
-//   往上快速一划：跳（跳过断口、矮杠）
-//   躲开块块、别掉进缺口，顺路吃金币。
+//   躲开块块、别掉进缺口，顺路吃金币。没有跳跃（gray 真机试过，跳太难，删掉了）。
 // 闯关：每关路线固定，滚过终点线就过关。无尽：一直滚，分数 = 米数 + 金币 × 10。
 import { hub } from '../_shared/hub.js';
 import { sound } from '../_shared/sound.js';
-import { Track, COLS, BALL_R, XMAX, JUMP_H, colOf, jumpTime, obX, levelRows } from './track.js';
+import { Track, BALL_R, XMAX, colOf, obX } from './track.js';
 import { World } from './scene.js';
 import { Trail } from './trail.js';
 
@@ -13,8 +12,11 @@ const hb = hub('roll');
 const $ = (id) => document.getElementById(id);
 let cfg = hb.settings();
 sound.enabled = cfg.sound;
-// 旧的「丛林狂奔」已经删掉了，顺手清掉它留下的数据
-try { for (const k of ['settings', 'stats']) localStorage.removeItem(`pp.game.runner.${k}`); } catch {}
+// 旧的「丛林狂奔」已经删掉了，顺手清掉它留下的数据；新手提示也删了
+try {
+  for (const k of ['settings', 'stats']) localStorage.removeItem(`pp.game.runner.${k}`);
+  localStorage.removeItem('pp.game.roll.tips');
+} catch {}
 
 /* ======================================================================
    画面
@@ -37,14 +39,13 @@ const R = {
   phase: 'menu',         // menu | count | run | crash | fall | win
   paused: false,
   mode: 'level', level: 1, seed: 1, base: 11, accel: true,
-  s: S0, x: 0, tx: 0, y: 0, vy: 0, g: 40,
-  grounded: true, edgeT: 0, buffer: 0, falling: false,
+  s: S0, x: 0, tx: 0, y: 0, vy: 0,
+  grounded: true, edgeT: 0, falling: false,
   coins: 0, streak: 0, lastCoin: -9,
-  time: 0, endT: 0, countT: 0, menuT: 1, ts: 1,
+  time: 0, endT: 0, countT: 0, menuT: 1,
   speed: 11, lastRow: 0, saveT: 0, bumpT: 0,
 };
 let track = null;
-const tips = Object.assign({ drag: false, jump: false }, hb.load('tips', {}));
 
 function speedAt(row) {
   if (R.mode === 'level') return R.base * (1 + 0.03 * Math.min(R.level - 1, 15));
@@ -55,14 +56,6 @@ function speedAt(row) {
    声音
    ====================================================================== */
 const sfx = {
-  jump() {
-    sound.tone({ f: 300, to: 640, dur: 0.13, type: 'triangle', vol: 0.1 });
-    sound.hiss({ f: 700, to: 2600, dur: 0.14, vol: 0.06 });
-  },
-  land() {
-    sound.tone({ f: 170, to: 80, dur: 0.08, vol: 0.12 });
-    sound.hiss({ f: 500, to: 200, dur: 0.06, filter: 'lowpass', vol: 0.08 });
-  },
   coin(n) {
     const f = 1250 + Math.min(n, 8) * 85;
     sound.tone({ f, to: f * 1.5, dur: 0.07, type: 'triangle', vol: 0.09 });
@@ -97,7 +90,7 @@ function newTrack() {
 }
 
 function resetBall() {
-  Object.assign(R, { x: 0, tx: 0, y: 0, vy: 0, grounded: true, edgeT: 0, buffer: 0, falling: false, ts: 1, streak: 0 });
+  Object.assign(R, { x: 0, tx: 0, y: 0, vy: 0, grounded: true, edgeT: 0, falling: false, streak: 0 });
 }
 
 function start(mode, opts = {}) {
@@ -128,7 +121,6 @@ function start(mode, opts = {}) {
   document.body.classList.remove('menu-on');
   document.body.classList.toggle('lv', R.mode === 'level');
   $('menu').hidden = true;
-  setTip(null);
   shownScore = null;
   ui();
   save();
@@ -143,7 +135,7 @@ function save() {
 function clearSave() { hb.save('run', null); }
 
 /* ======================================================================
-   操作：按住拖 + 往上划
+   操作：按住左右拖
    ====================================================================== */
 const cv = $('cv');
 let drag = null;
@@ -154,10 +146,10 @@ const canSteer = () => (R.phase === 'run' || R.phase === 'count') && !R.paused &
 cv.addEventListener('pointerdown', (e) => {
   try { cv.setPointerCapture(e.pointerId); } catch {}
   if (R.phase === 'run' || R.phase === 'count') trail.down(e.pointerId, e.clientX, e.clientY);
-  drag = { id: e.pointerId, x0: e.clientX, tx0: R.tx, hist: [{ x: e.clientX, y: e.clientY, t: e.timeStamp }], armed: true, lockY: 0, lockT: 0, moved: 0, lx: e.clientX, ly: e.clientY };
+  drag = { id: e.pointerId, x0: e.clientX, tx0: R.tx, lx: e.clientX, ly: e.clientY };
 });
 cv.addEventListener('pointermove', (e) => {
-  // 掉帧的时候浏览器会把好几次移动合成一个事件，拆开一个个处理，划痕和「往上一划」才准
+  // 掉帧的时候浏览器会把好几次移动合成一个事件，拆开一个个处理，划痕更顺
   let evs = [];
   try { evs = e.getCoalescedEvents ? e.getCoalescedEvents() : []; } catch {}
   if (!evs.length) evs = [e];
@@ -171,31 +163,11 @@ function moveSample(x, y, t) {
   const dt = Math.max(1, t - (drag.lt || t - 16));
   const v = Math.hypot(x - drag.lx, y - drag.ly) / dt;
   if (v > 1.1 && trail.enabled && R.phase === 'run') swish(v);
-  drag.moved += Math.abs(x - drag.lx);
   drag.lx = x; drag.ly = y; drag.lt = t;
   if (canSteer()) {
     R.tx = Math.max(-XMAX, Math.min(XMAX, drag.tx0 + (x - drag.x0) * pxToM()));
     // 手指拖到头了：把起点挪过来，往回拖立刻就有反应
     if (Math.abs(R.tx) >= XMAX - 1e-6) drag.x0 = x - (R.tx - drag.tx0) / pxToM();
-  }
-  // 往上快速一划 = 跳
-  drag.hist.push({ x, y, t });
-  while (drag.hist.length > 4 && drag.hist[0].t < t - 200) drag.hist.shift();   // 卡顿时事件稀疏，至少留几个点
-  if (!drag.armed) {
-    drag.lockY = Math.min(drag.lockY, y);
-    if (y > drag.lockY + 10 || t > drag.lockT + 320) { drag.armed = true; drag.hist = [{ x, y, t }]; }
-    return;
-  }
-  // 从这一段里手指最低的那个点算起（前面先横着拖、再往上一划也认得出来）
-  let first = drag.hist[0];
-  for (const p of drag.hist) if (p.y >= first.y) first = p;
-  const up = first.y - y;
-  if (up > 28 && up > Math.abs(x - first.x) * 0.9) {
-    // 这一下往上划带出来的横向位移不算
-    const back = (x - first.x) * pxToM();
-    if (canSteer()) { R.tx = Math.max(-XMAX, Math.min(XMAX, R.tx - back)); drag.x0 += x - first.x; }
-    jump();
-    drag.armed = false; drag.lockY = y; drag.lockT = t;
   }
 }
 const endPtr = (e) => {
@@ -208,27 +180,9 @@ cv.addEventListener('pointercancel', endPtr);
 const keys = new Set();
 window.addEventListener('keydown', (e) => {
   keys.add(e.key);
-  if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'w') jump();
   if (e.key === 'Escape') pause();
 });
 window.addEventListener('keyup', (e) => keys.delete(e.key));
-
-function jump() {
-  if (R.phase !== 'run' || R.paused) return;
-  if (R.grounded || R.edgeT > 0) doJump();
-  else if (!R.falling) R.buffer = 0.14;          // 落地前一点点按的也算
-}
-function doJump() {
-  const T = jumpTime(R.speed);
-  R.g = (8 * JUMP_H) / (T * T);
-  R.vy = (4 * JUMP_H) / T;
-  R.grounded = false; R.edgeT = 0; R.buffer = 0;
-  R.jumps = (R.jumps || 0) + 1;
-  sfx.jump();
-  hb.haptic(6);
-  if (!tips.jump) { tips.jump = true; hb.save('tips', tips); }
-  if (R.tipJump) { R.tipJump = null; setTip(null); }
-}
 
 /* ======================================================================
    每一帧
@@ -236,7 +190,6 @@ function doJump() {
 function step(dt) {
   R.time += dt;
   R.speed = speedAt(R.s);
-  const row0 = Math.floor(R.s);
   const prevX = R.x, prevS = R.s;
 
   // 键盘（电脑上测试用）
@@ -259,24 +212,15 @@ function step(dt) {
   if (R.grounded && !ground) { R.grounded = false; R.edgeT = 0.05; R.vy = 0; }
   if (!R.grounded) {
     if (R.edgeT > 0) {
-      // 刚滚出边缘：还贴着边，给一点点反应时间起跳；又滚回方块上就算没事
+      // 刚压到洞的边：宽容一丁点，又滚回方块上就算没事
       R.edgeT -= dt;
       if (ground) { R.grounded = true; R.edgeT = 0; }
       else if (R.edgeT <= 0) { R.falling = true; R.vy = 0; }
     } else {
-      R.vy -= (R.falling ? FALL_G : R.g) * dt;
+      R.vy -= FALL_G * dt;
       R.y += R.vy * dt;
-      if (!R.falling && R.y <= 0) {
-        if (ground && R.y > -0.15) {
-          R.y = 0; R.vy = 0; R.grounded = true;
-          sfx.land();
-          world.ring(R.x, R.s);
-          if (R.buffer > 0) doJump();
-        } else R.falling = true;
-      }
     }
   }
-  if (R.buffer > 0) R.buffer -= dt;
   if (R.falling) {
     // 别穿进前面方块的侧面
     const ahead = Math.floor(R.s + BALL_R);
@@ -326,28 +270,15 @@ function step(dt) {
   // 到终点
   if (R.mode === 'level' && R.s > track.finish + 0.3) return win();
 
-  // 新手提示：第一次遇到要跳的地方，慢动作等你往上划
-  if (!tips.jump && !R.tipJump) {
-    const j = track.jumps.find((r) => r - R.s > 0 && r - R.s < 8.5);
-    if (j !== undefined) { R.tipJump = j; setTip('jump'); }
-  }
-  if (R.tipJump !== undefined && R.tipJump !== null && R.s > R.tipJump + 1) { R.tipJump = null; setTip(null); }
-  R.ts = R.tipJump ? 0.25 : 1;
-  if (!tips.drag && R.time > 0.4 && tipKind !== 'drag' && tipKind !== 'jump') setTip('drag');
-  if (!tips.drag && drag && drag.moved > 90) { tips.drag = true; hb.save('tips', tips); if (tipKind === 'drag') setTip(null); }
-
   R.saveT += dt;
   if (R.saveT > 2) { R.saveT = 0; save(); }
   ui();
-  void row0;
 }
 
 function die(kind, vx = 0, vs = 0) {
   if (R.phase !== 'run') return;
   R.phase = kind;
   R.endT = 0;
-  R.tipJump = null; R.ts = 1;
-  setTip(null);
   clearSave();
   if (kind === 'crash') {
     world.shatter(R.x, R.y + BALL_R, R.s, vx / (1 / 60), R.speed);
@@ -438,16 +369,6 @@ function ui() {
   $('coins').textContent = R.coins;
 }
 
-let tipKind = null;
-function setTip(kind) {
-  tipKind = kind;
-  const el = $('tip');
-  if (!kind) { el.classList.remove('on'); return; }
-  el.dataset.kind = kind;
-  $('tipText').textContent = kind === 'drag' ? '按住屏幕，左右拖动小球' : '往上一划，跳过去！';
-  el.classList.add('on');
-}
-
 let cardActions = {};
 function showCard({ title, big = '', meta = '', main, alt }) {
   $('cardTitle').textContent = title;
@@ -470,7 +391,6 @@ function toMenu() {
   R.phase = 'menu';
   R.paused = false;
   hideCard();
-  setTip(null);
   trail.clear();
   R.mode = 'endless'; R.level = 1; R.seed = 20261026; R.base = 10; R.accel = false;
   newTrack();
@@ -544,7 +464,7 @@ function frame(t) {
   const raw = Math.min(0.05, (t - last) / 1000);
   last = t;
   if (R.paused) { trail.draw(); return; }
-  const dt = raw * R.ts;
+  const dt = raw;
   let ds = 0, dx = 0;
   const s0 = R.s, x0 = R.x;
 
@@ -602,7 +522,6 @@ requestAnimationFrame(frame);
 
 // 自动测试用
 window.__roll = {
-  R, get track() { return track; }, world, trail, start, jump, toMenu, pause, tips, step: (dt) => step(dt),
+  R, get track() { return track; }, world, trail, start, toMenu, pause, step: (dt) => step(dt),
   setX: (x) => { R.tx = x; },
 };
-void levelRows; void COLS;

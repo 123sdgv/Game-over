@@ -395,14 +395,6 @@ export class World {
     this.shardMesh.count = 0;
     this.shardMesh.castShadow = true;
     this.scene.add(this.shardMesh);
-    this.rings = [0, 1, 2].map(() => {
-      const m = new THREE.Mesh(new THREE.RingGeometry(0.78, 1, 40), new THREE.MeshBasicMaterial({ color: 0x3ccbff, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
-      m.rotation.x = -Math.PI / 2;
-      m.visible = false;
-      m.userData.t = 1;
-      this.scene.add(m);
-      return m;
-    });
   }
 
   /* ---------- 轨道 ---------- */
@@ -482,14 +474,6 @@ export class World {
       this.parts.push({ p: new THREE.Vector3(x, y, -s), v: new THREE.Vector3(Math.cos(a) * k * v, Math.abs(u) * v + 1.2, Math.sin(a) * k * v), t: 0, life: 0.45 + Math.random() * 0.3, size: 0.05 + Math.random() * 0.05, color: new THREE.Color(color) });
     }
     if (this.parts.length > 250) this.parts.splice(0, this.parts.length - 250);
-  }
-
-  ring(x, s, big = false) {
-    const m = this.rings.find((r) => r.userData.t >= 1) || this.rings[0];
-    m.position.set(x, 0.012, -s);
-    m.userData.t = 0;
-    m.userData.big = big;
-    m.visible = true;
   }
 
   shatter(x, y, s, vx, vs) {
@@ -726,14 +710,6 @@ export class World {
     });
     this.shardMesh.count = this.shards.length;
     this.shardMesh.instanceMatrix.needsUpdate = true;
-
-    for (const r of this.rings) {
-      if (r.userData.t >= 1) { r.visible = false; continue; }
-      r.userData.t = Math.min(1, r.userData.t + dt * (r.userData.big ? 1.6 : 2.6));
-      const t = r.userData.t;
-      r.scale.setScalar((r.userData.big ? 0.4 + t * 1.8 : 0.3 + t * 0.7));
-      r.material.opacity = (1 - t) * 0.8;
-    }
   }
 
   placeCamera(st) {
