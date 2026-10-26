@@ -1,0 +1,44 @@
+/* 合成大西瓜：暖黄色的背景，水果画在 canvas 上 */
+:root { --bg: #FFE7A8; --brown: #8A5320; --text: #5A3410; }
+
+body {
+  display: flex; flex-direction: column; color: var(--text);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255,255,255,.55) 0 2px, transparent 3px) 0 0 / 34px 34px,
+    linear-gradient(#FFF3CF, #FFE09A 70%, #FFD47E);
+  background-color: var(--bg);
+}
+
+.bar { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: flex-start; padding: calc(max(var(--safe-t), 14px) + 8px) 16px 2px; }
+.scorebox { display: flex; flex-direction: column; gap: 2px; }
+.score { font-size: 40px; font-weight: 900; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 2px 0 var(--brown), 0 0 2px var(--brown), 0 -1px 0 var(--brown), 2px 0 0 var(--brown), -2px 0 0 var(--brown), 0 6px 10px rgba(120,60,0,.25); }
+.score.bump { animation: bump .3s var(--ease); }
+@keyframes bump { 40% { transform: scale(1.14); } }
+.best { font-size: 13px; font-weight: 800; color: var(--brown); padding-left: 2px; }
+.right { display: flex; align-items: center; gap: 10px; }
+.next { display: flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 14px; background: rgba(255,255,255,.55); box-shadow: inset 0 0 0 1px rgba(138,83,32,.15); font-size: 12px; font-weight: 800; color: var(--brown); }
+#nextCv { width: 44px; height: 44px; display: block; }
+.round { width: 38px; height: 38px; border-radius: 19px; display: grid; place-items: center; color: var(--brown); background: rgba(255,255,255,.6); box-shadow: inset 0 0 0 1px rgba(138,83,32,.18), 0 3px 8px -4px rgba(120,60,0,.4); }
+.round svg { width: 19px; height: 19px; }
+.round:active { transform: rotate(-60deg) scale(.94); transition: transform .3s var(--ease); }
+
+.stage { flex: 1; min-height: 0; position: relative; touch-action: none; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.foot { flex: 0 0 auto; padding: 2px 0 calc(var(--safe-b) + var(--home-bar) + 8px); }
+.tip { margin: 0; text-align: center; font-size: 12.5px; font-weight: 700; color: rgba(90,52,16,.6); min-height: 16px; }
+
+.card-wrap { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px calc(var(--safe-b) + var(--home-bar) + 12px); background: linear-gradient(transparent 30%, rgba(90,50,10,.45)); animation: fade .3s ease-out; }
+@keyframes fade { from { opacity: 0; } }
+.card { width: 100%; max-width: 360px; padding: 22px 22px 18px; border-radius: 26px; text-align: center; background: rgba(255,250,235,.95); box-shadow: 0 0 0 1px rgba(138,83,32,.15), 0 24px 50px -20px rgba(90,50,10,.55); animation: rise .45s var(--ease); }
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+.card-title { font-size: 15px; font-weight: 800; color: rgba(90,52,16,.7); }
+.card-big { font-size: 46px; font-weight: 900; margin: 2px 0; font-variant-numeric: tabular-nums; color: var(--text); }
+.card-big:empty { display: none; }
+.card-meta { font-size: 13.5px; color: rgba(90,52,16,.7); min-height: 18px; margin-top: 4px; }
+.card-meta b { color: var(--text); }
+.card-row { display: flex; gap: 10px; }
+.card-btn { margin-top: 16px; flex: 1; height: 50px; border-radius: 16px; color: #fff; font-size: 17px; font-weight: 800; background: linear-gradient(#5BC35A, #2F9A3A); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); transition: transform .15s; }
+.card-btn.ghost { color: var(--text); background: rgba(138,83,32,.1); box-shadow: none; }
+.card-btn:empty { display: none; }
+.card-btn:active { transform: scale(.97); }

@@ -173,3 +173,9 @@ function wireHomeBar(bar, w) {
 }
 
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') goHome(); });
+
+// 游戏里要求回到主屏幕（比如假条窗口右上角的 ×）
+window.addEventListener('message', (e) => {
+  if (e.origin !== location.origin || !e.data || e.data.type !== 'pp:home') return;
+  if (current && current.body.querySelector('iframe') && current.body.querySelector('iframe').contentWindow === e.source) goHome();
+});

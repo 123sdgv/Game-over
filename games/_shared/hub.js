@@ -8,6 +8,7 @@
  *   h.load(name, d) / h.save(name, v)   游戏自己的存档，比如进行到一半的局面
  *   h.onPause(fn) / h.onResume(fn)   回到主屏幕 / 重新打开
  *   h.haptic()            轻微震动（支持的设备上）
+ *   h.home()              回到主屏幕
  */
 import { games } from '../registry.js';
 
@@ -75,6 +76,7 @@ export function hub(id) {
     onPause: (f) => listeners.pause.push(f),
     onResume: (f) => listeners.resume.push(f),
     haptic: (ms = 8) => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} },
+    home: () => { try { parent.postMessage({ type: 'pp:home' }, location.origin); } catch {} }, // 回到主屏幕
   };
   return api;
 }

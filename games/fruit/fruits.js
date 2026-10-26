@@ -191,7 +191,7 @@ export const FRUITS = [
         for (let t = -1; t <= 1.0001; t += 0.025) {
           const env = Math.sqrt(Math.max(0, 1 - t * t));
           const cy = (y0 * env + Math.sin(t * 4.5 + wob) * 0.03 * env) * 0.82;
-          const w = (0.058 + 0.02 * Math.sin(t * 7 + wob * 3) + 0.01 * Math.sin(t * 13 + wob)) * env;
+          const w = (0.044 + 0.016 * Math.sin(t * 7 + wob * 3) + 0.009 * Math.sin(t * 13 + wob)) * env;
           top.push([t * r, (cy - w) * r]); bot.push([t * r, (cy + w) * r]);
         }
         x.beginPath();
@@ -648,3 +648,6 @@ export function bombSprite(r, dpr) {
   return cache.get(key);
 }
 export const clearSprites = () => cache.clear();
+
+// 给其他游戏（合成大西瓜）复用的画图小工具
+export { rng, rad, lin, gloss, rimShade, outline, leaf };

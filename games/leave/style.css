@@ -1,0 +1,183 @@
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+html { height: 100%; }
+body {
+    /* 白色背景 */
+    background-color: #ffffff;
+    -webkit-tap-highlight-color: transparent;
+    font-family: "SimSun", "宋体", "MS Sans Serif", Tahoma, sans-serif;
+    margin: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* 窗口外框：经典灰色 + 立体高光阴影 */
+.win95-window {
+    background-color: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #000000;
+    border-bottom: 2px solid #000000;
+    box-shadow: inset -1px -1px 0px #808080, inset 1px 1px 0px #dfdfdf;
+    width: 320px;
+    max-width: 92vw;
+    padding: 3px;
+    /* 白底上补一圈浅灰外框，不然左上的白色高光边看不见 */
+    outline: 1px solid #dfdfdf;
+}
+.win95-window.shake { animation: shake .3s steps(2, end); }
+@keyframes shake { 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-2px); } }
+
+/* 顶部深蓝色渐变标题栏 */
+.title-bar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #ffffff;
+    padding: 4px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.title-bar-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.title-bar-controls button {
+    background-color: #c0c0c0;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    border-right: 1px solid #000000;
+    border-bottom: 1px solid #000000;
+    width: 18px;
+    height: 16px;
+    font-size: 11px;
+    line-height: 12px;
+    font-weight: bold;
+    padding: 0;
+    color: #000000;
+    cursor: default;
+    touch-action: manipulation;
+}
+.title-bar-controls button:active {
+    border-top: 1px solid #000000;
+    border-left: 1px solid #000000;
+    border-right: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+}
+
+/* 窗口内部排版 */
+.window-body {
+    padding: 20px 16px;
+    text-align: center;
+}
+
+.label-text {
+    font-size: 14px;
+    color: #000000;
+    text-align: left;
+    margin-bottom: 8px;
+}
+
+/* 中央大数字内凹显示框 */
+.display-screen {
+    background-color: #ffffff;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    box-shadow: inset 1px 1px 0px #000000;
+    padding: 28px 10px;
+    margin-bottom: 22px;
+}
+
+#counter {
+    font-size: 76px;
+    font-weight: bold;
+    color: #000000;
+    font-family: "Courier New", Courier, monospace;
+}
+
+/* 下方加减按钮 */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.win95-btn {
+    flex: 1;
+    background-color: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #000000;
+    border-bottom: 2px solid #000000;
+    box-shadow: inset -1px -1px 0px #808080, inset 1px 1px 0px #dfdfdf;
+    padding: 14px 0;
+    font-size: 26px;
+    cursor: pointer;
+    color: #000000;
+    outline: none;
+    touch-action: manipulation;
+}
+
+/* 点击按钮时的经典下陷效果 */
+.win95-btn:active {
+    border-top: 2px solid #000000;
+    border-left: 2px solid #000000;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    box-shadow: inset 1px 1px 0px #808080;
+    padding-top: 16px;
+    padding-bottom: 12px;
+}
+
+/* 没有假条时，减号变灰 */
+.win95-btn:disabled { opacity: .45; }
+.win95-btn:disabled:active {
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #000000;
+    border-bottom: 2px solid #000000;
+    box-shadow: inset -1px -1px 0px #808080, inset 1px 1px 0px #dfdfdf;
+    padding: 14px 0;
+}
+
+/* 底部凹陷状态栏 */
+.status-bar {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.status-field {
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #ffffff;
+    border-bottom: 1px solid #ffffff;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#current-time {
+    flex: 2;
+}
+
+#rule-tip {
+    flex: 1;
+    text-align: center;
+}

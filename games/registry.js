@@ -158,4 +158,36 @@ export const games = [
       { key: 'cleared', label: '已通关' },
     ],
   },
+  {
+    id: 'leave',
+    name: '假条',
+    path: 'games/leave/',
+    icons: ['icons/leave.svg'],
+    settingsNote: '到了设定那天的 0 点自动加上；隔了几周才打开的话，会把这几周的一起补上。数量最少是 0。',
+    settings: [
+      { key: 'perWeek', label: '每周自动加', type: 'stepper', min: 1, max: 10, default: 2, unit: ' 张' },
+      { key: 'weekday', label: '在每周几加', type: 'stepper', min: 1, max: 7, default: 1, display: (v) => ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][v - 1] },
+    ],
+    stats: [
+      { key: 'granted', label: '自动加过' },
+      { key: 'used', label: '用掉过' },
+    ],
+  },
+  {
+    id: 'merge',
+    name: '合成大西瓜',
+    path: 'games/merge/',
+    icons: ['icons/melon.png'],
+    settingsNote: '两个一样的水果碰到一起会合成更大的：葡萄 → 樱桃 → 橙子 → 柠檬 → 猕猴桃 → 苹果 → 桃子 → 菠萝 → 火龙果 → 半个西瓜 → 大西瓜。堆过红线超过两秒就结束。',
+    settings: [
+      { key: 'dropMax', label: '掉下来的水果最大到', type: 'stepper', min: 3, max: 6, default: 5, display: (v) => ['葡萄', '樱桃', '橙子', '柠檬', '猕猴桃', '苹果'][v - 1] },
+      { key: 'guide', label: '显示瞄准线', type: 'toggle', default: true },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+    ],
+    stats: [
+      { key: 'best', label: '最高分' },
+      { key: 'melons', label: '合出大西瓜' },
+      { key: 'played', label: '已玩局数' },
+    ],
+  },
 ];
