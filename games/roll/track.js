@@ -1,15 +1,19 @@
 // 轨道数据（不涉及画面）：
-//   一行 = 1 米，横着 5 格悬浮方块。缺格子就是洞，块块（障碍）和金币挂在行上。
+//   一行 = 1 米，横着 4 条轨道（4 格悬浮方块）。缺格子就是洞，块块（障碍）和金币挂在行上。
 //   同一个种子生成出来的轨道一模一样 —— 存档只要记住种子和走到哪儿，就能原样恢复。
 //   没有跳跃：所有块块和洞都留了能左右绕过去的路。
-export const COLS = 5;
+export const COLS = 4;                              // 4 条轨道，小球只停在某一条的正中间
 export const BALL_R = 0.32;
-export const XMAX = COLS / 2 - BALL_R - 0.08;      // 小球中心最多能到的横向位置（两边有护栏）
-export const colX = (c) => c - (COLS - 1) / 2;      // 第 c 列中心的 x（-2 … 2）
+export const colX = (c) => c - (COLS - 1) / 2;      // 第 c 条轨道中心的 x（-1.5 … 1.5）
 export const colOf = (x) => Math.max(0, Math.min(COLS - 1, Math.floor(x + COLS / 2)));
+const LANES = [...Array(COLS).keys()];
 
-/** 块块此刻的横向位置（滑块会左右来回） */
-export const obX = (o, t) => (o.kind === 'slider' ? o.x0 + o.amp * Math.sin((t * Math.PI * 2) / o.period + o.phase) : o.x0);
+/** 块块此刻的横向位置：滑块在相邻的两三条轨道之间来回滑，到头停一下 */
+export const obX = (o, t) => {
+  if (o.kind !== 'slider') return o.x0;
+  const k = Math.max(-1, Math.min(1, 1.7 * Math.sin((t * Math.PI * 2) / o.period + o.phase)));
+  return o.x0 + o.amp * k;
+};
 
 export function mulberry(seed) {
   let a = seed >>> 0;
@@ -24,8 +28,8 @@ export function mulberry(seed) {
 /** 闯关：第 n 关有多少行（米） */
 export const levelRows = (n) => Math.min(760, 230 + n * 30);
 
-const FULL = [1, 1, 1, 1, 1];
-const NONE = [0, 0, 0, 0, 0];
+const FULL = LANES.map(() => 1);
+const NONE = LANES.map(() => 0);
 const lerp = (a, b, t) => a + (b - a) * t;
 
 export class Track {
@@ -108,7 +112,7 @@ export class Track {
     const rest = this.rows4(lerp(0.62, 0.3, d)) + (this.r() < 0.3 ? 1 : 0);
     const s = this.add(rest, FULL);
     this.safe.push(s);
-    if (this.r() < 0.45) this.line(s + 1, s + rest, this.int(0, 4));
+    if (this.r() < 0.45) this.line(s + 1, s + rest, this.int(0, COLS - 1));
 
     let table = [
       ['cubes', 3, 0],
@@ -126,7 +130,7 @@ export class Track {
     this[kind](d);
     for (const [row, x, y] of this.pend) {
       const r = this.rows[row];
-      if (r && r.t[Math.max(0, Math.min(COLS - 1, Math.round(x + 2)))]) r.coins.push({ x, y, taken: false });
+      if (r && r.t[colOf(x)]) r.coins.push({ x, y, taken: false });
     }
     this.pend = [];
   }
@@ -136,13 +140,13 @@ export class Track {
     const len = this.rows4(1.6) + this.int(0, 5) + Math.round(d * 8);
     const s = this.add(len, FULL);
     const step = this.rows4(lerp(0.5, 0.3, d));
-    let path = this.int(0, 4);
+    let path = this.int(0, COLS - 1);
     for (let r = s + 2, count = 1; r < s + len - 1; r += step + this.int(0, 1) + (count > 1 ? 1 : 0)) {
-      count = d > 0.8 && this.r() < 0.35 ? 3 : d > 0.4 && this.r() < 0.55 ? 2 : 1;
-      const cols = [0, 1, 2, 3, 4].sort(() => this.r() - 0.5).slice(0, count);
+      count = d > 0.75 && this.r() < 0.3 ? 3 : d > 0.35 && this.r() < 0.55 ? 2 : 1;
+      const cols = LANES.slice().sort(() => this.r() - 0.5).slice(0, count);
       cols.forEach((c) => this.ob(r, { kind: 'cube', x: colX(c), w: 0.8, d: 0.8, h: 0.8, color: this.pick([0, 1, 2]) }));
       // 金币走没被挡住、离上一串最近的那一列
-      const free = [0, 1, 2, 3, 4].filter((c) => !cols.includes(c)).sort((a, b) => Math.abs(a - path) - Math.abs(b - path));
+      const free = LANES.filter((c) => !cols.includes(c)).sort((a, b) => Math.abs(a - path) - Math.abs(b - path));
       path = free[0];
       this.coin(r - 1, colX(path)); this.coin(r, colX(path)); this.coin(r + 1, colX(path));
     }
@@ -152,14 +156,14 @@ export class Track {
   holes(d) {
     const len = this.rows4(1.6) + this.int(0, 6) + Math.round(d * 6);
     const s = this.add(len, FULL);
-    let path = this.int(0, 4);
+    let path = this.int(0, COLS - 1);
     const hstep = this.rows4(lerp(0.4, 0.28, d));
     for (let r = s + 1; r < s + len - 3; r += hstep + this.int(0, 1)) {
       const n = d > 0.5 && this.r() < 0.5 ? 2 : 1;
       const deep = this.r() < 0.5 ? 2 : 1;
-      const cols = [0, 1, 2, 3, 4].sort(() => this.r() - 0.5).slice(0, n);
+      const cols = LANES.slice().sort(() => this.r() - 0.5).slice(0, n);
       for (const c of cols) for (let k = 0; k < deep; k++) this.rows[r + k].t[c] = 0;
-      const free = [0, 1, 2, 3, 4].filter((c) => !cols.includes(c)).sort((a, b) => Math.abs(a - path) - Math.abs(b - path));
+      const free = LANES.filter((c) => !cols.includes(c)).sort((a, b) => Math.abs(a - path) - Math.abs(b - path));
       path = free[0];
       for (let k = 0; k < deep; k++) this.coin(r + k, colX(path));
     }
@@ -193,7 +197,7 @@ export class Track {
   /** 墙上开个口子：钻过去 */
   walls(d) {
     const count = 2 + (this.r() < 0.5 ? 1 : 0);
-    let oc = this.int(0, 3);
+    let oc = this.int(0, COLS - 1);
     for (let i = 0; i < count; i++) {
       this.add(i ? this.rows4(lerp(0.85, 0.55, d)) : 4, FULL);
       const ow = d < 0.5 ? 2 : this.r() < 0.5 ? 1 : 2;
@@ -213,28 +217,34 @@ export class Track {
     this.add(3, FULL);
   }
 
-  /** 左右来回滑的块块：看准时机 */
+  /** 在两三条轨道之间来回滑的块块：别走它滑的那几条 */
   sliders(d) {
     const count = 2 + (d > 0.6 && this.r() < 0.5 ? 1 : 0);
     for (let i = 0; i < count; i++) {
       this.add(i ? this.rows4(lerp(0.85, 0.62, d)) : 4, FULL);
       const r = this.add(1, FULL);
-      this.ob(r, { kind: 'slider', x: 0, w: 1.3, d: 0.8, h: 0.9, color: 4, amp: 1.55, period: lerp(2.6, 1.7, d), phase: this.r() * Math.PI * 2 });
+      const span = d > 0.6 && this.r() < 0.5 ? 3 : 2;           // 滑过几条轨道
+      const c = this.int(0, COLS - span);
+      this.ob(r, { kind: 'slider', x: colX(c) + (span - 1) / 2, w: 0.8, d: 0.8, h: 0.9, color: 4, amp: (span - 1) / 2, period: lerp(2.4, 1.6, d), phase: this.r() * Math.PI * 2 });
+      const free = LANES.filter((k) => k < c || k >= c + span);
+      const fc = this.pick(free);
+      this.coin(r - 1, colX(fc)); this.coin(r, colX(fc)); this.coin(r + 1, colX(fc));
     }
     this.add(4, FULL);
   }
 
-  /** 高柱子左一排右一排：来回绕 */
+  /** 高柱子左一排右一排：来回绕（难了以后一排挡 3 条，只剩最边上那条） */
   slalom(d) {
+    const wide = d > 0.6;
     const count = 3 + this.int(0, 2);
     const step = this.rows4(lerp(0.68, 0.46, d));
     let left = this.r() < 0.5;
     this.add(3, FULL);
     for (let i = 0; i < count; i++) {
       const r = this.add(1, FULL);
-      const cols = left ? [0, 1, 2] : [2, 3, 4];
+      const cols = left ? (wide ? [0, 1, 2] : [0, 1]) : (wide ? [1, 2, 3] : [2, 3]);
       cols.forEach((c) => this.ob(r, { kind: 'pillar', x: colX(c), w: 0.8, d: 0.8, h: 2.3, color: 1 + (c % 2) }));
-      const free = left ? 4 : 0;
+      const free = left ? COLS - 1 : 0;
       this.coin(r - 1, colX(free)); this.coin(r, colX(free)); this.coin(r + 1, colX(free));
       this.add(step - 1, FULL);
       left = !left;

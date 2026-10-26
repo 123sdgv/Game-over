@@ -1,10 +1,10 @@
 // 滚滚球：小球在悬浮方块拼成的轨道上一直往前滚。
-//   按住屏幕左右拖：小球跟着手指左右挪（手指划过会留下一道白光）
+//   4 条轨道。按住屏幕左右拖：手指每挪一段，小球就换到旁边一条轨道（只停在轨道正中，不会卡在两格之间）
 //   躲开块块、别掉进缺口，顺路吃金币。没有跳跃（gray 真机试过，跳太难，删掉了）。
 // 闯关：每关路线固定，滚过终点线就过关。无尽：一直滚，分数 = 米数 + 金币 × 10。
 import { hub } from '../_shared/hub.js';
 import { sound } from '../_shared/sound.js';
-import { Track, BALL_R, XMAX, colOf, obX } from './track.js';
+import { Track, COLS, BALL_R, colX, colOf, obX } from './track.js';
 import { World } from './scene.js';
 import { Trail } from './trail.js';
 
@@ -35,11 +35,12 @@ resize();
 const S0 = 3;                                   // 起点（米）
 const SPEED = (v) => 6 + (v - 1) * 1.25;        // 设置里的 1 … 10 → 米/秒
 const FALL_G = 42;
+const START_LANE = 1;
 const R = {
   phase: 'menu',         // menu | count | run | crash | fall | win
   paused: false,
   mode: 'level', level: 1, seed: 1, base: 11, accel: true,
-  s: S0, x: 0, tx: 0, y: 0, vy: 0,
+  s: S0, lane: START_LANE, x: colX(START_LANE), tx: colX(START_LANE), y: 0, vy: 0,
   grounded: true, edgeT: 0, falling: false,
   coins: 0, streak: 0, lastCoin: -9,
   time: 0, endT: 0, countT: 0, menuT: 1,
@@ -71,6 +72,7 @@ const sfx = {
   beep(go) { sound.tone({ f: go ? 1040 : 660, dur: go ? 0.2 : 0.09, type: 'triangle', vol: 0.11 }); },
   tick() { sound.hiss({ f: 260, to: 160, dur: 0.035, filter: 'lowpass', vol: 0.03 }); },
   bump() { sound.tone({ f: 240, to: 160, dur: 0.06, vol: 0.06 }); },
+  lane() { sound.tone({ f: 600, to: 820, dur: 0.05, type: 'triangle', vol: 0.05 }); },
 };
 let swishT = 0;
 function swish(speed) {
@@ -90,7 +92,7 @@ function newTrack() {
 }
 
 function resetBall() {
-  Object.assign(R, { x: 0, tx: 0, y: 0, vy: 0, grounded: true, edgeT: 0, falling: false, streak: 0 });
+  Object.assign(R, { lane: START_LANE, x: colX(START_LANE), tx: colX(START_LANE), y: 0, vy: 0, grounded: true, edgeT: 0, falling: false, streak: 0 });
 }
 
 function start(mode, opts = {}) {
@@ -135,18 +137,26 @@ function save() {
 function clearSave() { hb.save('run', null); }
 
 /* ======================================================================
-   操作：按住左右拖
+   操作：按住左右拖，一格一格吸附到轨道上
    ====================================================================== */
 const cv = $('cv');
 let drag = null;
-const SENS = [0.95, 0.8, 0.66, 0.54, 0.44];      // 拖过屏幕宽度的几成 = 从轨道一边挪到另一边
-const pxToM = () => (XMAX * 2) / (window.innerWidth * SENS[cfg.sens - 1]);
+const SENS = [0.24, 0.2, 0.16, 0.13, 0.1];       // 手指挪屏幕宽度的几成 = 换一条轨道
+const lanePx = () => window.innerWidth * SENS[cfg.sens - 1];
 const canSteer = () => (R.phase === 'run' || R.phase === 'count') && !R.paused && !R.falling;
+
+function setLane(l, quiet = false) {
+  l = Math.max(0, Math.min(COLS - 1, l));
+  if (l === R.lane) return;
+  R.lane = l;
+  R.tx = colX(l);
+  if (!quiet) { sfx.lane(); hb.haptic(4); }
+}
 
 cv.addEventListener('pointerdown', (e) => {
   try { cv.setPointerCapture(e.pointerId); } catch {}
   if (R.phase === 'run' || R.phase === 'count') trail.down(e.pointerId, e.clientX, e.clientY);
-  drag = { id: e.pointerId, x0: e.clientX, tx0: R.tx, lx: e.clientX, ly: e.clientY };
+  drag = { id: e.pointerId, x0: e.clientX, lane0: R.lane, off: 0, lx: e.clientX, ly: e.clientY };
 });
 cv.addEventListener('pointermove', (e) => {
   // 掉帧的时候浏览器会把好几次移动合成一个事件，拆开一个个处理，划痕更顺
@@ -164,11 +174,20 @@ function moveSample(x, y, t) {
   const v = Math.hypot(x - drag.lx, y - drag.ly) / dt;
   if (v > 1.1 && trail.enabled && R.phase === 'run') swish(v);
   drag.lx = x; drag.ly = y; drag.lt = t;
-  if (canSteer()) {
-    R.tx = Math.max(-XMAX, Math.min(XMAX, drag.tx0 + (x - drag.x0) * pxToM()));
-    // 手指拖到头了：把起点挪过来，往回拖立刻就有反应
-    if (Math.abs(R.tx) >= XMAX - 1e-6) drag.x0 = x - (R.tx - drag.tx0) / pxToM();
+  if (!canSteer()) return;
+  // 手指挪过 0.6 格才换道；往回要再挪回来一点才换回去，手指抖一下不会来回跳
+  const raw = (x - drag.x0) / lanePx();
+  while (raw > drag.off + 0.6) drag.off++;
+  while (raw < drag.off - 0.6) drag.off--;
+  const want = drag.lane0 + drag.off;
+  const lane = Math.max(0, Math.min(COLS - 1, want));
+  if (lane !== want) {
+    // 拖到头了：起点跟着挪，往回拖立刻就有反应
+    if (R.time - R.bumpT > 0.35) { R.bumpT = R.time; sfx.bump(); }
+    drag.off = lane - drag.lane0;
+    drag.x0 = x - drag.off * lanePx();
   }
+  setLane(lane);
 }
 const endPtr = (e) => {
   trail.up(e.pointerId);
@@ -177,12 +196,11 @@ const endPtr = (e) => {
 cv.addEventListener('pointerup', endPtr);
 cv.addEventListener('pointercancel', endPtr);
 
-const keys = new Set();
 window.addEventListener('keydown', (e) => {
-  keys.add(e.key);
+  if (canSteer() && (e.key === 'ArrowLeft' || e.key === 'a')) setLane(R.lane - 1);
+  if (canSteer() && (e.key === 'ArrowRight' || e.key === 'd')) setLane(R.lane + 1);
   if (e.key === 'Escape') pause();
 });
-window.addEventListener('keyup', (e) => keys.delete(e.key));
 
 /* ======================================================================
    每一帧
@@ -192,17 +210,8 @@ function step(dt) {
   R.speed = speedAt(R.s);
   const prevX = R.x, prevS = R.s;
 
-  // 键盘（电脑上测试用）
-  if (canSteer()) {
-    const k = (keys.has('ArrowRight') || keys.has('d') ? 1 : 0) - (keys.has('ArrowLeft') || keys.has('a') ? 1 : 0);
-    if (k) R.tx = Math.max(-XMAX, Math.min(XMAX, R.tx + k * 7 * dt));
-  }
-
-  if (!R.falling) {
-    const before = R.x;
-    R.x += (R.tx - R.x) * (1 - Math.exp(-dt * 26));
-    if (Math.abs(R.tx) >= XMAX - 0.001 && Math.abs(R.x - before) > 0.02 && R.time - R.bumpT > 0.4 && Math.abs(R.x) > XMAX - 0.03) { R.bumpT = R.time; sfx.bump(); }
-  }
+  // 往目标轨道滚过去（一条道大概 0.12 秒）
+  if (!R.falling) R.x += (R.tx - R.x) * (1 - Math.exp(-dt * 24));
   R.s += R.speed * dt * (R.falling ? 0.55 : 1);
 
   const row = Math.floor(R.s), col = colOf(R.x);
@@ -503,7 +512,6 @@ function frame(t) {
     } else if (R.phase === 'win') {
       const v = R.speed * Math.max(0, 1 - R.endT * 0.8);
       R.s += v * raw; ds = v * raw;
-      R.x += (0 - R.x) * (1 - Math.exp(-raw * 3)); dx = R.x - x0;
     }
   }
 
@@ -523,5 +531,5 @@ requestAnimationFrame(frame);
 // 自动测试用
 window.__roll = {
   R, get track() { return track; }, world, trail, start, toMenu, pause, step: (dt) => step(dt),
-  setX: (x) => { R.tx = x; },
+  setLane: (l) => setLane(l, true),
 };

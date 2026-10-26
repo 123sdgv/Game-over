@@ -195,11 +195,11 @@ export const games = [
     name: '滚滚球',
     path: 'games/roll/',
     icons: ['icons/roll.svg'],
-    settingsNote: '按住屏幕左右拖动小球，躲开块块和缺口、顺路吃金币。闯关每关路线固定、一关比一关长；无尽模式一直滚下去，分数 = 米数 + 金币 × 10。速度改了从下一局开始生效。',
+    settingsNote: '4 条轨道，按住屏幕左右拖，小球一格一格换道，躲开块块和缺口、顺路吃金币。闯关每关路线固定、一关比一关长；无尽模式一直滚下去，分数 = 米数 + 金币 × 10。速度改了从下一局开始生效。',
     settings: [
       { key: 'speed', label: '小球速度', type: 'stepper', min: 1, max: 10, default: 5, sub: '5 是正常速度' },
       { key: 'accel', label: '无尽模式越滚越快', type: 'toggle', default: true },
-      { key: 'sens', label: '拖动灵敏度', type: 'stepper', min: 1, max: 5, default: 3, sub: '越大手指挪一点球走越多' },
+      { key: 'sens', label: '拖动灵敏度', type: 'stepper', min: 1, max: 5, default: 3, sub: '越大，手指挪一小段就换一条轨道' },
       { key: 'trail', label: '手指划痕', type: 'toggle', default: true },
       { key: 'lowPower', label: '省电模式', type: 'toggle', default: false },
       { key: 'sound', label: '音效', type: 'toggle', default: true },

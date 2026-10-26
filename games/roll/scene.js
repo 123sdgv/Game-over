@@ -305,7 +305,7 @@ export class World {
     this.deco = [];
     for (let i = 0; i < 22; i++) {
       const side = i % 2 ? 1 : -1;
-      this.deco.push({ x: side * (4.2 + rand() * 9), y: -1 - rand() * 7, z: -rand() * 160 + 20, s: 0.35 + rand() * 0.7, ph: rand() * TAU, sp: 0.4 + rand() * 0.6, rx: rand() * TAU, ry: rand() * TAU });
+      this.deco.push({ x: side * (COLS / 2 + 1.7 + rand() * 9), y: -1 - rand() * 7, z: -rand() * 160 + 20, s: 0.35 + rand() * 0.7, ph: rand() * TAU, sp: 0.4 + rand() * 0.6, rx: rand() * TAU, ry: rand() * TAU });
     }
   }
 
@@ -419,16 +419,16 @@ export class World {
       g.add(p);
     }
     const tex = checkerTexture(16, 2);
-    const banner = new THREE.Mesh(roundedBox(5.9, 0.56, 0.22, 0.06), [
+    const banner = new THREE.Mesh(roundedBox(2 * RAIL_X + 0.85, 0.56, 0.22, 0.06), [
       white, white, white, white, new THREE.MeshBasicMaterial({ map: tex }), white,
     ]);
     // 圆角盒子的面分组和普通盒子一样：+z 是第 5 个
     banner.position.set(0, 7.35, 0);   // 比镜头高，穿过去的时候不会糊在屏幕上
     g.add(banner);
-    const glow = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.06, 0.06), this.stripeMat);
+    const glow = new THREE.Mesh(new THREE.BoxGeometry(2 * RAIL_X + 0.55, 0.06, 0.06), this.stripeMat);
     glow.position.set(0, 6.95, 0.12);
     g.add(glow);
-    const line = new THREE.Mesh(new THREE.PlaneGeometry(COLS - 0.06, 0.7), new THREE.MeshBasicMaterial({ map: checkerTexture(14, 2), transparent: true, opacity: 0.92, depthWrite: false }));
+    const line = new THREE.Mesh(new THREE.PlaneGeometry(COLS - 0.06, 0.7), new THREE.MeshBasicMaterial({ map: checkerTexture(COLS * 3, 2), transparent: true, opacity: 0.92, depthWrite: false }));
     line.rotation.x = -Math.PI / 2;
     line.position.set(0, 0.008, 0);
     g.add(line);
@@ -716,7 +716,7 @@ export class World {
     const cam = this.camera;
     const mt = st.menuT;                         // 1 = 开始界面的机位，0 = 游戏中
     const play = { px: st.x * 0.5, py: 5.5, pz: -st.s + 5.4, lx: st.x * 0.62, ly: 0, lz: -st.s - 6.5 };
-    const menu = { px: 2.4, py: 1.7, pz: -st.s + 3.6, lx: -0.1, ly: 0.55, lz: -st.s - 1.5 };
+    const menu = { px: st.x + 2.4, py: 1.7, pz: -st.s + 3.6, lx: st.x - 0.1, ly: 0.55, lz: -st.s - 1.5 };
     const e = mt * mt * (3 - 2 * mt);
     const P = (k) => play[k] + (menu[k] - play[k]) * e;
     const fallY = st.fallY || 0;
