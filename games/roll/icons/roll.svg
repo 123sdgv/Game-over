@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg-roll" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eef2f7"/>
+    </linearGradient>
+    <linearGradient id="top-roll" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8f0f9"/>
+    </linearGradient>
+    <linearGradient id="side-roll" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdd9e8"/>
+      <stop offset="1" stop-color="#97aac2"/>
+    </linearGradient>
+    <radialGradient id="ball-roll" cx=".34" cy=".3" r=".8">
+      <stop offset="0" stop-color="#7fb0ff"/>
+      <stop offset=".45" stop-color="#2f6bff"/>
+      <stop offset="1" stop-color="#1636b8"/>
+    </radialGradient>
+    <linearGradient id="cube-roll" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff7d7d"/>
+      <stop offset="1" stop-color="#e5414a"/>
+    </linearGradient>
+    <clipPath id="clip-roll"><circle cx="60" cy="74" r="21"/></clipPath>
+  </defs>
+  <rect width="120" height="120" fill="url(#bg-roll)"/>
+
+  <!-- 远处一排 -->
+  <path d="M37 32h14l-1.2 9.5H34.5zM53 32h14l.6 9.5H52.4zM69 32h14l2.5 9.5H70.2z" fill="url(#top-roll)" stroke="#d3dfec" stroke-width=".9"/>
+  <path d="M34.5 41.5h15.3v3.2H34.5zM52.4 41.5h15.2v3.2H52.4zM70.2 41.5h15.3v3.2H70.2z" fill="url(#side-roll)"/>
+  <path d="M34.5 41.5h15.3M52.4 41.5h15.2M70.2 41.5h15.3" stroke="#2fc4ff" stroke-width="1.2"/>
+  <!-- 中间一排 -->
+  <path d="M31 49h18.5l-1.8 13H25.5zM51.5 49h17l1 13H50.5zM70.5 49h18.5l5.5 13H72.3z" fill="url(#top-roll)" stroke="#d3dfec" stroke-width="1"/>
+  <path d="M25.5 62h22.2v4.4H25.5zM50.5 62h19v4.4h-19zM72.3 62h22.2v4.4H72.3z" fill="url(#side-roll)"/>
+  <path d="M25.5 62h22.2M50.5 62h19M72.3 62h22.2" stroke="#2fc4ff" stroke-width="1.5"/>
+  <!-- 近处一排 -->
+  <path d="M21 71h25l-2.4 18H11.5zM49 71h22l1.4 18H47.6zM74 71h25l9.5 18H76.4z" fill="url(#top-roll)" stroke="#d3dfec" stroke-width="1.1"/>
+  <path d="M11.5 89h32.1v6H11.5zM47.6 89h24.8v6H47.6zM76.4 89h32.1v6H76.4z" fill="url(#side-roll)"/>
+  <path d="M11.5 89h32.1M47.6 89h24.8M76.4 89h32.1" stroke="#2fc4ff" stroke-width="1.9"/>
+
+  <!-- 红色块块 -->
+  <path d="M69.5 21.5h12.4l2.6 3.3H72.1z" fill="#ffb7b7"/>
+  <rect x="72.1" y="24.8" width="12.4" height="12.6" rx="1.8" fill="url(#cube-roll)"/>
+  <path d="M69.5 21.5l2.6 3.3v12.6l-2.6-3z" fill="#c4323b"/>
+  <rect x="74.2" y="29.8" width="8.2" height="1.6" rx=".8" fill="#ffe3e3"/>
+
+  <!-- 影子 + 小球 -->
+  <ellipse cx="60" cy="94" rx="18" ry="4.2" fill="#1c3566" opacity=".22"/>
+  <circle cx="60" cy="74" r="21" fill="url(#ball-roll)"/>
+  <g clip-path="url(#clip-roll)">
+    <path d="M38 70c13 9 31 9 44 0" fill="none" stroke="#36d0ff" stroke-width="5.6"/>
+    <path d="M38 70c13 9 31 9 44 0" fill="none" stroke="#ffffff" stroke-width="1.8"/>
+    <path d="M54 52c-8 13-8 31 1 44" fill="none" stroke="#36d0ff" stroke-width="5"/>
+    <path d="M54 52c-8 13-8 31 1 44" fill="none" stroke="#ffffff" stroke-width="1.6"/>
+  </g>
+  <ellipse cx="52.5" cy="63" rx="6" ry="3.4" fill="#fff" opacity=".75" transform="rotate(-30 52.5 63)"/>
+</svg>
