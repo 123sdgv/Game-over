@@ -191,7 +191,8 @@ function die(kind) {
   const score = Math.floor(R.dist) + R.coins * 10;
   const st = hb.stats();
   const prev = st.best || 0;
-  st.runs = (st.runs || 0) + 1;
+  st.played = (st.played || st.runs || 0) + 1; // played 会算进设置首页的「共玩了几局」
+  delete st.runs;
   st.best = Math.max(prev, score);
   st.bestDist = Math.max(st.bestDist || 0, Math.floor(R.dist));
   st.coins = (st.coins || 0) + R.coins;
@@ -355,7 +356,7 @@ function toMenu() {
 async function start() {
   hideCard();
   R.tiltOn = await enableTilt();
-  R.runsBefore = hb.stats().runs || 0;
+  R.runsBefore = hb.stats().played || hb.stats().runs || 0;
   resetRun();
   R.phase = 'run';
   R.paused = false;

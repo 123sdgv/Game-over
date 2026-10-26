@@ -207,7 +207,7 @@ export const games = [
       { key: 'best', label: '最高分' },
       { key: 'bestDist', label: '最远（米）' },
       { key: 'coins', label: '一共吃到金币' },
-      { key: 'runs', label: '跑了几次' },
+      { key: 'played', label: '跑了几次' },
     ],
   },
 ];
