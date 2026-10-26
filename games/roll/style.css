@@ -1,0 +1,74 @@
+/* 滚滚球：3D 画面铺满，界面是浮在天上的毛玻璃 */
+:root { --sky-1: #8FC4F2; --sky-2: #CFE8FB; --ink: #17304F; }
+
+body { background: linear-gradient(var(--sky-1), var(--sky-2)); overflow: hidden; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#cv { z-index: 1; }
+#fx { z-index: 2; pointer-events: none; }
+
+.hud {
+  position: fixed; z-index: 10; left: 0; right: 0; top: 0;
+  padding: calc(var(--safe-t) + 8px) 14px 0;
+  display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+}
+.hud .row { display: flex; justify-content: space-between; align-items: flex-start; }
+.score { font-size: 34px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; text-shadow: 0 1px 0 rgba(255,255,255,.6); }
+.sub { font-size: 13px; font-weight: 600; color: rgba(23,48,79,.6); margin-top: 2px; }
+.coins { display: flex; align-items: center; gap: 5px; font-size: 17px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; background: rgba(255,255,255,.55); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 6px 12px; border-radius: 16px; box-shadow: 0 0 0 .5px rgba(23,48,79,.12); }
+.coin { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE27A, #E8A813 70%); box-shadow: inset 0 -1.5px 0 rgba(140,90,0,.4); }
+.pause { pointer-events: auto; width: 36px; height: 36px; border-radius: 18px; background: rgba(255,255,255,.55); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: var(--ink); display: grid; place-items: center; box-shadow: 0 0 0 .5px rgba(23,48,79,.12); }
+.pause svg { width: 18px; height: 18px; }
+.prog { height: 4px; border-radius: 2px; background: rgba(255,255,255,.4); position: relative; margin: 0 2px; }
+.prog i { position: absolute; inset: 0 auto 0 0; width: 0%; border-radius: 2px; background: var(--ink); }
+.prog b { position: absolute; top: 50%; left: 0%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(23,48,79,.35); }
+
+/* 提示（开始前的那只手） */
+.tip { position: fixed; z-index: 12; left: 50%; bottom: calc(var(--safe-b) + var(--home-bar) + 90px); transform: translateX(-50%); display: none; flex-direction: column; align-items: center; gap: 6px; color: var(--ink); font-size: 13.5px; font-weight: 600; }
+.tip-ico { width: 44px; height: 44px; border-radius: 22px; background: rgba(255,255,255,.6); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); display: grid; place-items: center; box-shadow: 0 8px 20px -8px rgba(23,48,79,.4); animation: hand 1.6s ease-in-out infinite; }
+.tip-ico svg { width: 26px; height: 26px; }
+@keyframes hand { 0%, 100% { transform: translateY(6px); } 50% { transform: translateY(-6px); } }
+body.hinting .tip { display: flex; }
+
+.count { position: fixed; z-index: 14; inset: 0; display: grid; place-items: center; pointer-events: none; font-size: 72px; font-weight: 800; color: #fff; text-shadow: 0 4px 24px rgba(23,48,79,.4); }
+
+/* 菜单 */
+.menu { position: fixed; z-index: 20; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: calc(var(--safe-t) + 30px) 22px calc(var(--safe-b) + var(--home-bar) + 24px); background: linear-gradient(rgba(207,232,251,.25), rgba(143,196,242,.55)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: opacity .3s, transform .3s; }
+body:not(.menu-on) .menu { opacity: 0; pointer-events: none; transform: translateY(12px); }
+.menu-title { font-size: 44px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); text-shadow: 0 2px 0 rgba(255,255,255,.5); }
+.menu-sub { font-size: 14px; font-weight: 600; color: rgba(23,48,79,.65); margin-top: 6px; }
+.menu-bottom { display: flex; flex-direction: column; gap: 10px; }
+.btn { height: 54px; border-radius: 18px; font-size: 17px; font-weight: 700; color: var(--ink); background: rgba(255,255,255,.75); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 0 0 .5px rgba(23,48,79,.14), 0 10px 24px -12px rgba(23,48,79,.4); transition: transform .15s; }
+.btn:active { transform: scale(.97); }
+.btn.main { background: var(--ink); color: #fff; }
+.btn.resume small { display: block; font-size: 12px; font-weight: 600; opacity: .65; margin-top: 1px; }
+.btn.ghost { background: rgba(255,255,255,.45); }
+.lv-row { display: flex; gap: 10px; }
+.lv-row .btn.main { flex: 1; }
+.lv-arrow { width: 54px; border-radius: 18px; background: rgba(255,255,255,.55); color: var(--ink); display: grid; place-items: center; box-shadow: 0 0 0 .5px rgba(23,48,79,.14); }
+.lv-arrow:disabled { opacity: .35; }
+.lv-arrow svg { width: 20px; height: 20px; }
+.help { display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(23,48,79,.7); }
+.help b { font-weight: 800; }
+.help i { width: 3px; height: 3px; border-radius: 50%; background: rgba(23,48,79,.4); }
+
+/* 结算 / 暂停卡片 */
+.card-wrap { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; background: rgba(143,196,242,.35); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: fade .25s ease-out; }
+@keyframes fade { from { opacity: 0; } }
+.card { width: min(320px, calc(100% - 48px)); padding: 24px 22px 20px; border-radius: 26px; text-align: center; background: rgba(255,255,255,.85); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); box-shadow: 0 0 0 .5px rgba(23,48,79,.1), 0 30px 60px -24px rgba(23,48,79,.5); animation: rise .4s var(--ease); }
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+.card-title { font-size: 15px; font-weight: 600; color: rgba(23,48,79,.6); }
+.card-big { font-size: 44px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.card-meta { font-size: 13.5px; color: rgba(23,48,79,.65); min-height: 18px; }
+.card-row { display: flex; gap: 10px; margin-top: 18px; }
+.card-btn { flex: 1; height: 48px; border-radius: 15px; font-size: 16px; font-weight: 700; color: #fff; background: var(--ink); transition: transform .15s; }
+.card-btn:active { transform: scale(.97); }
+.card-btn.ghost { background: rgba(23,48,79,.1); color: var(--ink); }
+
+/* 撞块时的白闪 */
+.flash { position: fixed; inset: 0; z-index: 40; background: #fff; opacity: 0; pointer-events: none; }
+.flash.go { animation: flash .5s ease-out; }
+@keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tip-ico { animation: none; }
+}
