@@ -190,4 +190,24 @@ export const games = [
       { key: 'played', label: '已玩局数' },
     ],
   },
+  {
+    id: 'runner',
+    name: '丛林狂奔',
+    path: 'games/runner/',
+    icons: ['icons/path.svg'],
+    settingsNote: '跑得越远越快。分数 = 跑的米数 + 金币 × 10。倾斜吃金币第一次会请你允许使用手机的动作传感器。',
+    settings: [
+      { key: 'tilt', label: '倾斜手机吃金币', type: 'toggle', default: true },
+      { key: 'tiltSens', label: '倾斜灵敏度', type: 'stepper', min: 1, max: 5, default: 3 },
+      { key: 'startSpeed', label: '起跑速度', type: 'stepper', min: 1, max: 5, default: 3, sub: '3 是正常速度' },
+      { key: 'lowPower', label: '省电模式', type: 'toggle', default: false },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+    ],
+    stats: [
+      { key: 'best', label: '最高分' },
+      { key: 'bestDist', label: '最远（米）' },
+      { key: 'coins', label: '一共吃到金币' },
+      { key: 'runs', label: '跑了几次' },
+    ],
+  },
 ];

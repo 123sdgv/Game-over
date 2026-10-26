@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>丛林狂奔</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="cv"></canvas>
+
+  <header class="hud" id="hud">
+    <div class="left">
+      <div class="score" id="score">0</div>
+      <div class="dist" id="dist">0 米</div>
+    </div>
+    <div class="right">
+      <div class="coins"><i class="coin"></i><span id="coins">0</span></div>
+      <button class="pause" id="pause" aria-label="暂停"><svg viewBox="0 0 20 20"><rect x="5.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/><rect x="11.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/></svg></button>
+    </div>
+  </header>
+
+  <div class="hint" id="hint"></div>
+
+  <div class="menu" id="menu">
+    <div class="menu-title">丛林狂奔</div>
+    <div class="menu-sub" id="menuSub"></div>
+    <button class="go" id="go">开始奔跑</button>
+    <div class="help">
+      <span><b>左右滑</b>换道，到路口<b>左右滑</b>转弯</span>
+      <span><b>上滑</b>跳过去 · <b>下滑</b>滑过去</span>
+      <span id="tiltHelp"><b>斜一斜手机</b>，吃路边的金币</span>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
