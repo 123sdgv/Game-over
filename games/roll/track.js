@@ -1,6 +1,6 @@
 // 轨道数据（不涉及画面）：
 //   一行 = 1 米，横着 4 条轨道（4 格悬浮方块）。缺格子就是洞，块块（障碍）和金币挂在行上。
-//   同一个种子生成出来的轨道一模一样 —— 存档只要记住种子和走到哪儿，就能原样恢复。
+//   同一个种子生成出来的轨道一模一样（闯关每关路线固定）。金币都在格子正中。
 //   没有跳跃：所有块块和洞都留了能左右绕过去的路。
 export const COLS = 4;                              // 4 条轨道，小球只停在某一条的正中间
 export const BALL_R = 0.32;
@@ -46,13 +46,11 @@ export class Track {
     this.level = level;
     this.speedAt = speedAt;
     this.rows = [];
-    this.safe = [];        // 安全的行（一段休息区的开头），读档时退回到这里
     this.nid = 1;
     this.last = '';
     this.finish = mode === 'level' ? levelRows(level) : Infinity;
     this.pend = [];
     this.add(14, FULL);
-    this.safe.push(0);
   }
 
   r() { return this.rand(); }
@@ -111,7 +109,6 @@ export class Track {
     // 休息区
     const rest = this.rows4(lerp(0.62, 0.3, d)) + (this.r() < 0.3 ? 1 : 0);
     const s = this.add(rest, FULL);
-    this.safe.push(s);
     if (this.r() < 0.45) this.line(s + 1, s + rest, this.int(0, COLS - 1));
 
     let table = [
@@ -211,7 +208,7 @@ export class Track {
       if (oc > 0) this.ob(r, { kind: 'wall', x: colX(0) - 0.5 + oc / 2, w: oc - 0.04, d: 0.5, h: H, color: 0 });
       const rightCols = COLS - oc - ow;
       if (rightCols > 0) this.ob(r, { kind: 'wall', x: colX(COLS - 1) + 0.5 - rightCols / 2, w: rightCols - 0.04, d: 0.5, h: H, color: 0 });
-      const cx = colX(oc) + (ow - 1) / 2;
+      const cx = colX(oc + this.int(0, ow - 1));   // 开口里的某一条轨道正中
       this.coin(r - 2, cx); this.coin(r - 1, cx); this.coin(r, cx);
     }
     this.add(3, FULL);

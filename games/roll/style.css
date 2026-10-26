@@ -48,15 +48,8 @@ body.menu-on .hud { visibility: hidden; }
 .menu-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .btn { height: 56px; border-radius: 18px; font-size: 19px; font-weight: 900; transition: transform .12s; }
 .btn:active { transform: scale(.96); }
-.btn.main { flex: 1; color: #fff; background: linear-gradient(135deg, #2f6bff, #20c3ff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -3px 0 rgba(10, 60, 170, .25), 0 12px 26px -10px rgba(30, 110, 255, .75); }
+.btn.main { width: 252px; color: #fff; background: linear-gradient(135deg, #2f6bff, #20c3ff); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -3px 0 rgba(10, 60, 170, .25), 0 12px 26px -10px rgba(30, 110, 255, .75); }
 .btn.ghost { width: 252px; color: var(--navy); background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px #fff, 0 10px 24px -12px rgba(20, 60, 140, .5); }
-.btn.resume { width: 252px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; color: #fff; background: linear-gradient(135deg, #12b886, #20d0a8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 12px 26px -10px rgba(10, 160, 120, .7); }
-.btn.resume small { font-size: 12px; font-weight: 700; opacity: .9; }
-.lv-row { width: 252px; display: flex; align-items: center; gap: 8px; }
-.lv-arrow { width: 40px; height: 56px; border-radius: 14px; display: grid; place-items: center; color: var(--navy); background: rgba(255, 255, 255, .6); box-shadow: inset 0 0 0 1px #fff; transition: opacity .2s, transform .12s; }
-.lv-arrow svg { width: 20px; height: 20px; }
-.lv-arrow:disabled { opacity: .3; }
-.lv-arrow:active:not(:disabled) { transform: scale(.92); }
 
 /* ---------- 结算 / 暂停 ---------- */
 .card-wrap { position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-end; justify-content: center; padding: 0 16px calc(var(--safe-b) + var(--home-bar) + 12px); background: linear-gradient(rgba(220, 238, 255, 0) 30%, rgba(30, 60, 120, .35)); animation: fade .3s ease-out; }

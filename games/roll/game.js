@@ -16,6 +16,7 @@ sound.enabled = cfg.sound;
 try {
   for (const k of ['settings', 'stats']) localStorage.removeItem(`pp.game.runner.${k}`);
   localStorage.removeItem('pp.game.roll.tips');
+  localStorage.removeItem('pp.game.roll.run');   // 「继续上一局」也删了
 } catch {}
 
 /* ======================================================================
@@ -44,7 +45,7 @@ const R = {
   grounded: true, edgeT: 0, falling: false,
   coins: 0, streak: 0, lastCoin: -9,
   time: 0, endT: 0, countT: 0, menuT: 1,
-  speed: 11, lastRow: 0, saveT: 0, bumpT: 0,
+  speed: 11, lastRow: 0, bumpT: 0,
 };
 let track = null;
 
@@ -98,22 +99,13 @@ function resetBall() {
 function start(mode, opts = {}) {
   hideCard();
   R.mode = mode;
-  R.level = mode === 'level' ? opts.level || menuLevel : 1;
+  R.level = mode === 'level' ? opts.level || maxLevel() : 1;
   R.seed = opts.seed ?? (mode === 'level' ? 1000 + R.level * 7919 : (Math.random() * 1e9) | 0);
   R.base = opts.base ?? SPEED(cfg.speed);
   R.accel = opts.accel ?? cfg.accel;
   newTrack();
   resetBall();
   R.s = S0; R.coins = 0; R.time = 0;
-  if (opts.resume) {
-    const sv = opts.resume;
-    track.ensure(Math.ceil(sv.s) + 80);
-    const safe = Math.max(0, ...track.safe.filter((r) => r <= sv.s - 0.5));
-    R.s = Math.max(S0, safe + 0.6);
-    for (let r = 0; r <= Math.floor(sv.s) + 1; r++) track.rows[r]?.coins.forEach((c) => (c.taken = true));
-    R.coins = sv.coins || 0;
-    R.time = sv.time || 0;
-  }
   R.lastRow = Math.floor(R.s);
   R.runStart = R.s;
   R.phase = 'count';
@@ -125,16 +117,8 @@ function start(mode, opts = {}) {
   $('menu').hidden = true;
   shownScore = null;
   ui();
-  save();
 }
 
-function snapshot() {
-  return { v: 1, mode: R.mode, level: R.level, seed: R.seed, base: R.base, accel: R.accel, s: R.s, coins: R.coins, time: R.time };
-}
-function save() {
-  if (R.phase === 'run' || R.phase === 'count') hb.save('run', snapshot());
-}
-function clearSave() { hb.save('run', null); }
 
 /* ======================================================================
    操作：按住左右拖，一格一格吸附到轨道上
@@ -279,8 +263,6 @@ function step(dt) {
   // 到终点
   if (R.mode === 'level' && R.s > track.finish + 0.3) return win();
 
-  R.saveT += dt;
-  if (R.saveT > 2) { R.saveT = 0; save(); }
   ui();
 }
 
@@ -288,7 +270,6 @@ function die(kind, vx = 0, vs = 0) {
   if (R.phase !== 'run') return;
   R.phase = kind;
   R.endT = 0;
-  clearSave();
   if (kind === 'crash') {
     world.shatter(R.x, R.y + BALL_R, R.s, vx / (1 / 60), R.speed);
     sfx.crash();
@@ -320,12 +301,10 @@ function die(kind, vx = 0, vs = 0) {
 function win() {
   R.phase = 'win';
   R.endT = 0;
-  clearSave();
   sfx.win();
   world.confetti(R.s + 1.5);
   hb.haptic([15, 40, 15]);
   record(true);
-  menuLevel = Math.min(maxLevel(), R.level + 1);
   setTimeout(() => {
     showCard({
       title: '过关啦！', big: `第 ${R.level} 关`,
@@ -393,8 +372,8 @@ $('cardMain').addEventListener('click', () => { const f = cardActions.main; hide
 $('cardAlt').addEventListener('click', () => { const f = cardActions.alt; hideCard(); if (f) f(); });
 
 /* ---------- 开始界面 ---------- */
+// 只有两个按钮：「闯关 · 第 N 关」（打到哪关就是哪关，从头开始）和「无尽模式」
 const maxLevel = () => Math.max(1, hb.stats().level || 1);
-let menuLevel = maxLevel();
 
 function toMenu() {
   R.phase = 'menu';
@@ -407,37 +386,20 @@ function toMenu() {
   R.s = S0; R.time = 0; R.coins = 0;
   document.body.classList.add('menu-on');
   $('menu').hidden = false;
-  menuLevel = Math.min(menuLevel, maxLevel());
   const st = hb.stats();
   const bits = [];
   if (st.cleared) bits.push(`已过 ${st.cleared} 关`);
   if (st.best) bits.push(`无尽最高 ${st.best}`);
   $('menuSub').textContent = bits.join(' · ');
-  const sv = hb.load('run', null);
-  $('resume').hidden = !sv;
-  if (sv) $('resumeSub').textContent = sv.mode === 'level' ? `第 ${sv.level} 关` : `无尽 · ${Math.max(0, Math.floor(sv.s - S0))} 米`;
-  menuLevelUi();
+  $('lvNum').textContent = maxLevel();
 }
-function menuLevelUi() {
-  $('lvNum').textContent = menuLevel;
-  $('lvPrev').disabled = menuLevel <= 1;
-  $('lvNext').disabled = menuLevel >= maxLevel();
-}
-$('lvPrev').addEventListener('click', () => { menuLevel = Math.max(1, menuLevel - 1); menuLevelUi(); sfx.beep(); });
-$('lvNext').addEventListener('click', () => { menuLevel = Math.min(maxLevel(), menuLevel + 1); menuLevelUi(); sfx.beep(); });
-$('goLevel').addEventListener('click', () => start('level', { level: menuLevel }));
+$('goLevel').addEventListener('click', () => start('level', { level: maxLevel() }));
 $('goEndless').addEventListener('click', () => start('endless'));
-$('resume').addEventListener('click', () => {
-  const sv = hb.load('run', null);
-  if (!sv) return toMenu();
-  start(sv.mode, { level: sv.level, seed: sv.seed, base: sv.base, accel: sv.accel, resume: sv });
-});
 
 /* ---------- 暂停 ---------- */
 function pause() {
   if (R.paused || !(R.phase === 'run' || R.phase === 'count')) return;
   R.paused = true;
-  save();
   trail.clear();
   drag = null;
   const lv = R.mode === 'level';
@@ -446,13 +408,12 @@ function pause() {
     big: lv ? `第 ${R.level} 关` : `${Math.max(0, Math.floor(R.s - S0)) + R.coins * 10}`,
     meta: lv ? `进度 <b>${Math.floor(((R.s - S0) / (track.finish - S0)) * 100)}%</b> · 金币 <b>${R.coins}</b>` : `滚了 <b>${Math.max(0, Math.floor(R.s - S0))}</b> 米 · 金币 <b>${R.coins}</b>`,
     main: ['继续', () => { R.paused = false; R.phase = 'count'; R.countT = 0; lastShown = -1; last = performance.now(); }],
-    alt: ['结束这局', () => { clearSave(); if (R.phase === 'run' || R.phase === 'count') { if (R.mode === 'endless' && R.s - S0 > 5) record(false); } toMenu(); }],
+    alt: ['结束这局', () => { if (R.mode === 'endless' && R.s - S0 > 5) record(false); toMenu(); }],
   });
 }
 $('pause').addEventListener('click', pause);
 hb.onPause(pause);
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
-window.addEventListener('pagehide', save);
 
 hb.onSettings((next) => {
   cfg = next;
