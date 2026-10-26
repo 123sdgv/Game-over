@@ -4,7 +4,6 @@
 import { hub } from '../_shared/hub.js';
 import { sound } from '../_shared/sound.js';
 import { LEVELS, LAST, drawLevel, clearArt } from './art.js';
-import { clearSprites } from '../fruit/fruits.js';
 
 const hb = hub('merge');
 const $ = (id) => document.getElementById(id);
@@ -50,7 +49,7 @@ function layout() {
       b.px = b.x; b.py = b.y; b.r = b.tr = R(b.t);
     }
   }
-  clearArt(); clearSprites();
+  clearArt();
   drawNext();
 }
 window.addEventListener('resize', layout);
@@ -70,7 +69,7 @@ function pickDrop() {
 function newGame() {
   balls = [];
   fx.drops = []; fx.rings = []; fx.texts = []; fx.confetti = [];
-  S.phase = 'play'; S.score = 0; S.shown = 0; S.melons = 0; S.maxMade = 1; S.overT = 0; S.paused = false;
+  S.phase = 'play'; S.score = 0; S.shown = 0; S.melons = 0; S.maxMade = 1; S.overT = 0; S.paused = false; S.modal = false;
   S.best = hb.stats().best || 0;
   S.cur = { t: 0, x: (F.x0 + F.x1) / 2, appear: 0 };
   S.next = pickDrop();
@@ -183,8 +182,8 @@ function doMerges(list) {
     sound.tone({ f, to: f * 1.6, dur: 0.1, vol: 0.16 });
     sound.hiss({ f: 1400, to: 300, dur: 0.12, filter: 'lowpass', vol: 0.12 });
     hb.haptic(t >= 7 ? [10, 30, 10] : 8);
-    if (t === LAST) celebrate(nb);
-    else if (t >= 8) fx.texts.push({ text: LEVELS[t].name + '！', x: nb.x, y: nb.y - nb.tr, t: 0, life: 1.1, size: 26, color: '#fff' });
+    if (t === LAST) { nb.vanishAt = 0.65; S.dirty = true; }
+    else if (t >= 6) fx.texts.push({ text: LEVELS[t].name + '！', x: nb.x, y: nb.y - nb.tr, t: 0, life: 1.1, size: 26, color: '#fff' });
   }
   ui(true);
 }
@@ -198,10 +197,12 @@ function splash(b, color) {
 }
 
 function celebrate(b) {
+  balls = balls.filter((x) => x !== b);
+  splash(b, '#F23B4E');
+  splash(b, '#4CAF50');
   S.melons++;
   const st = hb.stats(); st.melons = (st.melons || 0) + 1; hb.saveStats(st);
-  fx.texts.push({ text: '大西瓜！', x: F.sw / 2, y: F.sh * 0.35, t: 0, life: 1.8, size: 46, color: '#4CD964', big: true });
-  fx.texts.push({ text: '+100', x: F.sw / 2, y: F.sh * 0.35 + 48, t: 0, life: 1.8, size: 26, color: '#FFD45C', big: true });
+  fx.texts.push({ text: '西瓜！', x: b.x, y: b.y, t: 0, life: 1.2, size: 40, color: '#4CD964', big: true });
   const cols = ['#FF5C8D', '#FFC531', '#3DD06B', '#3C9BFF', '#B35CFF', '#FF8A3D'];
   for (let i = 0; i < 90; i++) {
     const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, v = 300 + Math.random() * 600;
@@ -209,6 +210,16 @@ function celebrate(b) {
   }
   sound.arp([523, 659, 784, 1046, 1318], { gap: 0.08, vol: 0.16 });
   hb.haptic([20, 40, 20, 40, 60]);
+  save();
+  // 弹窗：只有「继续」
+  later(0.9, () => {
+    S.modal = true; S.paused = true;
+    showCard({
+      title: '恭喜合成一个西瓜！', big: '+100', art: LAST,
+      meta: `这一局已经合出 <b>${S.melons}</b> 个西瓜了，还要继续吗？`,
+      main: ['继续', () => { S.modal = false; S.paused = false; last = performance.now(); }],
+    });
+  });
 }
 
 /* ======================================================================
@@ -230,7 +241,7 @@ function gameOver() {
   order.forEach((b, i) => later(0.3 + i * 0.07, () => { if (!b.gone) { b.gone = true; splash(b, LEVELS[b.t].color); balls = balls.filter((x) => x !== b); } }));
   later(0.6 + order.length * 0.07 + 0.3, () => showCard({
     title: S.score > prev && prev > 0 ? '新纪录！' : '堆满了', big: `${S.score}`,
-    meta: `最大合出了 <b>${LEVELS[S.maxMade].name}</b>${S.melons ? ` · 大西瓜 <b>${S.melons}</b> 个` : ''} · 最高 <b>${Math.max(prev, S.score)}</b>`,
+    meta: `最大合出了 <b>${LEVELS[S.maxMade].name}</b>${S.melons ? ` · 西瓜 <b>${S.melons}</b> 个` : ''} · 最高 <b>${Math.max(prev, S.score)}</b>`,
     main: ['再来一局', newGame],
   }));
 }
@@ -244,8 +255,10 @@ function later(sec, fn) { timers.push({ at: clock + sec, fn }); }
    ====================================================================== */
 function save() {
   if (S.phase !== 'play') return;
+  const st = hb.stats();
+  if (S.score > (st.best || 0)) { st.best = S.score; hb.saveStats(st); }
   hb.save('state', {
-    v: 1, score: S.score, melons: S.melons, maxMade: S.maxMade, next: S.next,
+    v: 2, score: S.score, melons: S.melons, maxMade: S.maxMade, next: S.next,
     cur: S.cur ? S.cur.t : null,
     balls: balls.map((b) => ({ t: b.t, x: (b.x - F.x0) / F.W, y: (F.floor - b.y) / F.W, rot: +b.rot.toFixed(2) })),
   });
@@ -253,9 +266,9 @@ function save() {
 }
 function load() {
   const s = hb.load('state', null);
-  if (!s || s.v !== 1 || !Array.isArray(s.balls)) { newGame(); return; }
+  if (!s || s.v !== 2 || !Array.isArray(s.balls)) { newGame(); return; }
   balls = [];
-  for (const b of s.balls) addBall(b.t, F.x0 + b.x * F.W, F.floor - b.y * F.W, { rot: b.rot });
+  for (const b of s.balls) if (b.t < LAST) addBall(b.t, F.x0 + b.x * F.W, F.floor - b.y * F.W, { rot: b.rot });
   balls.forEach((b) => { b.age = 1; });
   Object.assign(S, { phase: 'play', score: s.score, shown: s.score, melons: s.melons || 0, maxMade: s.maxMade || 1, next: s.next ?? pickDrop(), overT: 0 });
   S.best = hb.stats().best || 0;
@@ -267,7 +280,15 @@ function load() {
    画面
    ====================================================================== */
 let cardActions = {};
-function showCard({ title, big = '', meta = '', main, alt }) {
+function showCard({ title, big = '', meta = '', main, alt, art = null }) {
+  const ac = $('cardArt');
+  ac.hidden = art === null;
+  if (art !== null) {
+    const d = Math.min(2, window.devicePixelRatio || 1);
+    ac.width = 96 * d; ac.height = 96 * d;
+    const x = ac.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, 96, 96);
+    x.translate(48, 52); x.rotate(-0.2); drawLevel(x, art, 36, 36, d);
+  }
   $('cardTitle').textContent = title;
   $('cardBig').textContent = big;
   $('cardMeta').innerHTML = meta;
@@ -426,6 +447,7 @@ function update(dt) {
     if (n === 4) acc = 0;
   }
   for (const b of balls) { b.age += dt; if (b.pop > 0) b.pop = Math.max(0, b.pop - dt * 4); }
+  for (const b of balls.filter((b) => b.vanishAt && b.age >= b.vanishAt)) celebrate(b);
   // 下一个水果
   if (S.phase === 'play' && !S.cur) {
     S.cooldown -= dt;
@@ -486,7 +508,7 @@ $('restart').addEventListener('click', () => {
 
 /* ---------- 和大厅的联动 ---------- */
 hb.onPause(() => { save(); S.paused = true; });
-hb.onResume(() => { S.paused = false; last = performance.now(); });
+hb.onResume(() => { S.paused = !!S.modal; last = performance.now(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 hb.onSettings((next) => {
   const relayout = next.dropMax !== cfg.dropMax;

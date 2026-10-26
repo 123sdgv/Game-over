@@ -32,6 +32,9 @@ body {
 @keyframes fade { from { opacity: 0; } }
 .card { width: 100%; max-width: 360px; padding: 22px 22px 18px; border-radius: 26px; text-align: center; background: rgba(255,250,235,.95); box-shadow: 0 0 0 1px rgba(138,83,32,.15), 0 24px 50px -20px rgba(90,50,10,.55); animation: rise .45s var(--ease); }
 @keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+.card-art { display: block; width: 96px; height: 96px; margin: -60px auto 2px; filter: drop-shadow(0 8px 12px rgba(90,50,10,.25)); animation: pop .5s var(--ease); }
+.card-art[hidden] { display: none; }
+@keyframes pop { from { transform: scale(.3) rotate(-40deg); opacity: 0; } }
 .card-title { font-size: 15px; font-weight: 800; color: rgba(90,52,16,.7); }
 .card-big { font-size: 46px; font-weight: 900; margin: 2px 0; font-variant-numeric: tabular-nums; color: var(--text); }
 .card-big:empty { display: none; }
