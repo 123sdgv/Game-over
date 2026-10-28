@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>别踩白块</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="menu-on">
+  <canvas id="cv"></canvas>
+  <div class="probe" id="probe"></div>
+  <div class="flash" id="flash"></div>
+
+  <header class="hud" id="hud">
+    <div class="prog"><i id="progFill"></i></div>
+    <div class="score" id="score">0.000″</div>
+    <div class="sub" id="sub"></div>
+    <button class="pause" id="pause" aria-label="暂停"><svg viewBox="0 0 20 20"><rect x="5.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/><rect x="11.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/></svg></button>
+  </header>
+
+  <div class="tip" id="tip" hidden>
+    <div class="tip-text" id="tipText"></div>
+    <div class="tip-sub" id="tipSub"></div>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <div class="done-t" id="doneT"></div>
+    <div class="done-s" id="doneS"></div>
+  </div>
+
+  <div class="menu" id="menu">
+    <div class="menu-top">
+      <div class="logo" aria-hidden="true"><i></i><i class="k"></i><i></i><i></i></div>
+      <div class="menu-title">别踩白块</div>
+      <div class="menu-sub" id="menuSub"></div>
+    </div>
+    <div class="menu-bottom">
+      <button class="btn light" id="goResume" hidden><span>继续上一局</span><small id="resumeSub"></small></button>
+      <button class="btn" id="goClassic"><span>经典</span><small id="classicSub">踩完 50 块，越快越好</small></button>
+      <button class="btn" id="goArcade"><span>街机</span><small>越掉越快，漏一块就输</small></button>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

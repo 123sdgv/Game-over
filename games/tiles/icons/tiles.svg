@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg-tiles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f1f2f5"/>
+    </linearGradient>
+    <linearGradient id="board-tiles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9ecf0"/>
+      <stop offset="1" stop-color="#dde1e6"/>
+    </linearGradient>
+    <linearGradient id="cell-tiles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f6f7f9"/>
+    </linearGradient>
+    <linearGradient id="face-tiles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b4f58"/>
+      <stop offset=".22" stop-color="#2b2e34"/>
+      <stop offset=".65" stop-color="#17191d"/>
+      <stop offset="1" stop-color="#0d0e11"/>
+    </linearGradient>
+    <linearGradient id="gloss-tiles" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".24"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="ground-tiles" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#1b2230" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#1b2230" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sh-tiles" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="1.6" stdDeviation="1.2" flood-color="#0b0d12" flood-opacity=".35"/>
+    </filter>
+    <symbol id="key-tiles" viewBox="0 0 17 24">
+      <rect x="0" y="0" width="17" height="24" rx="3" fill="#040405"/>
+      <rect x="0" y="0" width="17" height="21.5" rx="3" fill="url(#face-tiles)"/>
+      <rect x="0" y="0" width="17" height="21.5" rx="3" fill="url(#gloss-tiles)"/>
+      <path d="M10 0h3.2L6.4 21.5H3.2z" fill="#fff" opacity=".07"/>
+    </symbol>
+  </defs>
+  <rect width="120" height="120" fill="url(#bg-tiles)"/>
+  <ellipse cx="60" cy="104" rx="44" ry="5" fill="url(#ground-tiles)"/>
+  <g transform="translate(60 58.5) scale(1.1) translate(-60 -58.5)">
+  <!-- 棋盘 -->
+  <rect x="18" y="17" width="84" height="83" rx="9" fill="url(#board-tiles)"/>
+  <rect x="18" y="17" width="84" height="83" rx="9" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1"/>
+  <g fill="url(#cell-tiles)">
+    <rect x="21" y="20" width="18" height="24.5" rx="3"/><rect x="41" y="20" width="18" height="24.5" rx="3"/><rect x="61" y="20" width="18" height="24.5" rx="3"/><rect x="81" y="20" width="18" height="24.5" rx="3"/>
+    <rect x="21" y="46.5" width="18" height="24.5" rx="3"/><rect x="41" y="46.5" width="18" height="24.5" rx="3"/><rect x="61" y="46.5" width="18" height="24.5" rx="3"/><rect x="81" y="46.5" width="18" height="24.5" rx="3"/>
+    <rect x="21" y="73" width="18" height="24.5" rx="3"/><rect x="41" y="73" width="18" height="24.5" rx="3"/><rect x="61" y="73" width="18" height="24.5" rx="3"/><rect x="81" y="73" width="18" height="24.5" rx="3"/>
+  </g>
+  <!-- 黑块：一行一块 -->
+  <g filter="url(#sh-tiles)">
+    <use href="#key-tiles" x="61" y="20" width="18" height="24.5"/>
+    <use href="#key-tiles" x="21" y="46.5" width="18" height="24.5"/>
+    <use href="#key-tiles" x="81" y="73" width="18" height="24.5"/>
+  </g>
+  </g>
+</svg>

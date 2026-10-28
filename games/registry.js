@@ -248,4 +248,31 @@ export const games = [
       { key: 'played', label: '玩了几局' },
     ],
   },
+  {
+    id: 'tiles',
+    name: '别踩白块',
+    path: 'games/tiles/',
+    icons: ['icons/tiles.svg'],
+    settingsNote: '只踩黑块，踩到白块就输。经典：踩完设定的块数，比谁用时最短。街机：黑块一直往下掉、越踩越快，漏掉一块也算输。暂停或者回主屏幕以后，踩一下标着「继续」的那块接着玩。改动从下一局开始生效（音效马上生效）。',
+    settings: [
+      { key: 'count', label: '经典模式块数', type: 'stepper', min: 20, max: 200, step: 10, default: 50, unit: ' 块' },
+      { key: 'speed', label: '街机起始速度', type: 'stepper', min: 1, max: 10, default: 4, sub: '4 是正常速度' },
+      { key: 'accel', label: '街机越来越快', type: 'stepper', min: 0, max: 5, default: 3, display: (v) => (v === 0 ? '不加速' : String(v)), sub: '越大加速越猛' },
+      { key: 'cols', label: '每行几格', type: 'stepper', min: 3, max: 5, default: 4, unit: ' 格' },
+      { key: 'rows', label: '一屏几行', type: 'stepper', min: 3, max: 6, default: 4, unit: ' 行', sub: '行越少，块越高越好踩' },
+      { key: 'sound', label: '敲击音效', type: 'toggle', default: true },
+    ],
+    presets: [
+      { label: '轻松', values: { speed: 2, accel: 2, cols: 4, rows: 4 }, note: '街机慢一点' },
+      { label: '标准', values: { speed: 4, accel: 3, cols: 4, rows: 4 }, note: '原版手感' },
+      { label: '挑战', values: { speed: 6, accel: 4, cols: 4, rows: 5 }, note: '更快、块更矮' },
+    ],
+    stats: [
+      { key: 'classicBest', label: '经典最快' },
+      { key: 'arcadeBest', label: '街机最多（块）' },
+      { key: 'arcadeFastest', label: '街机最快（块/秒）' },
+      { key: 'tiles', label: '一共踩了（块）' },
+      { key: 'played', label: '玩了几局' },
+    ],
+  },
 ];
