@@ -1,5 +1,5 @@
 {
-  "regions": ["hkg1"],
+  "regions": ["sin1"],
   "rewrites": [
     { "source": "/open/:path*", "destination": "/api/open?__p=:path*" },
     { "source": "/edge/:path*", "destination": "/api/edge?__p=:path*" }

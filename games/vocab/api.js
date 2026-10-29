@@ -7,7 +7,7 @@
 //   路径：现在的文档是 /api/v1/memo/...，以前的是 /api/v1/...；404 时换另一个。哪条路能用就记住哪条。
 export const DEFAULT_BASE = 'https://open.maimemo.com/open';
 export const RELAY_BASE = 'https://game-over-memo-123sdgv.vercel.app/open';
-export const RELAY_EDGE = 'https://game-over-memo-123sdgv.vercel.app/edge'; // 同一个中转的边缘网络版本，出口不同
+export const RELAY_EDGE = 'https://game-over-memo-123sdgv.vercel.app/edge'; // 同一个中转的边缘网络版本（默认走这个）
 const PREFIXES = ['/api/v1/memo', '/api/v1'];
 
 export class ApiError extends Error {
@@ -50,14 +50,15 @@ export function normalizeBase(input) {
   let path = u.pathname.replace(/\/+$/, '');
   if (!path) path = '/open';
   const out = `${u.origin}${path}`;
-  return out === RELAY_BASE ? '' : out;
+  return out === RELAY_BASE || out === RELAY_EDGE ? '' : out;
 }
 
 /**
  * @param {{ token: string, base?: string, route?: {root:string,prefix:string}, onRoute?: (r) => void }} o
  */
 export function client({ token, base, route, onRoute }) {
-  const roots = base ? [base.replace(/\/+$/, '')] : [RELAY_BASE, RELAY_EDGE, DEFAULT_BASE];
+  // 边缘版（新加坡）实测连得上墨墨；香港的 Node 函数连墨墨会超时（墨墨在阿里云杭州，挡了香港机房），所以边缘版排第一
+  const roots = base ? [base.replace(/\/+$/, '')] : [RELAY_EDGE, RELAY_BASE, DEFAULT_BASE];
   let cur = route && roots.includes(route.root) && PREFIXES.includes(route.prefix) ? { ...route } : null;
   let settled = false;
 

@@ -6,7 +6,8 @@
 //   Vercel 项目连着这个仓库（Root Directory = relay），改完推到 main 就会自动重新部署。
 const dns = require('node:dns');
 const net = require('node:net');
-// 有的机房 IPv6 出不去，先用 IPv4（gray 第一次部署在香港时 10 秒连不上墨墨）
+// 先用 IPv4。注意：墨墨（阿里云杭州 47.97.211.202）挡了 Vercel 香港 hkg1 的出口，TCP 都连不上，所以函数改放新加坡 sin1；
+// App 默认先走 edge.js（边缘版在 sin1 实测能连上），这个 Node 版当备用。
 try { dns.setDefaultResultOrder('ipv4first'); } catch {}
 
 const UPSTREAM = 'https://open.maimemo.com/open';
