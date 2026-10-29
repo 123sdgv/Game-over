@@ -1,12 +1,12 @@
 // 导出 / 导入 / 还原
-import { store, files, PROTECTED, blobToDataURL, dataURLToBlob } from './store.js';
+import { store, files, PROTECTED, SECRET, blobToDataURL, dataURLToBlob } from './store.js';
 import { alert, toast, h } from './ui.js';
 
 const FORMAT = 'phone-in-phone';
 
 export async function exportData() {
   const data = {};
-  for (const k of store.keys()) if (!PROTECTED.includes(k)) data[k] = store.get(k);
+  for (const k of store.keys()) if (!PROTECTED.includes(k) && !SECRET.includes(k)) data[k] = store.get(k);
   const img = await files.get('wallpaper');
   const payload = { format: FORMAT, version: 1, exportedAt: new Date().toISOString(), data, wallpaper: img ? await blobToDataURL(img) : null };
   const d = new Date();
@@ -42,8 +42,8 @@ export function importData() {
       buttons: [{ label: '取消', value: false }, { label: '导入', value: true, style: 'bold' }],
     });
     if (!ok) return;
-    for (const k of store.keys()) if (!PROTECTED.includes(k)) store.del(k);
-    for (const [k, v] of Object.entries(payload.data)) if (!PROTECTED.includes(k)) store.set(k, v);
+    for (const k of store.keys()) if (!PROTECTED.includes(k) && !SECRET.includes(k)) store.del(k);
+    for (const [k, v] of Object.entries(payload.data)) if (!PROTECTED.includes(k) && !SECRET.includes(k)) store.set(k, v);
     await files.del('wallpaper');
     if (payload.wallpaper) await files.set('wallpaper', await dataURLToBlob(payload.wallpaper));
     location.reload();

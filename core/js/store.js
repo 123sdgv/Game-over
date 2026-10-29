@@ -3,6 +3,8 @@ const PREFIX = 'pp.';
 
 // 这些键不参与导出 / 导入 / 还原（防沉迷不能被"还原"绕过）
 export const PROTECTED = ['guard'];
+// 这些键是密钥：不跟着导出，导入时也保留本机原来的；「抹掉所有内容」照常清掉
+export const SECRET = ['game.vocab.token'];
 
 export const store = {
   get(k, d) {

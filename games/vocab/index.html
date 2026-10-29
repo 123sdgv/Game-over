@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>单词</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page" id="page">
+    <header class="top">
+      <div>
+        <h1>单词</h1>
+        <div class="date" id="date"></div>
+      </div>
+      <div class="top-btns">
+        <button class="round" id="refreshBtn" aria-label="刷新">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.6 4.2v3.6H16"/></svg>
+        </button>
+        <button class="round" id="keyBtn" aria-label="墨墨 Token">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15.5" r="4"/><path d="M11 12.6l8.2-8.2M16.4 7.2l2.3 2.3M14.2 9.4l1.8 1.8"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="updated" id="updated"></div>
+    <div class="banner" id="banner" hidden></div>
+
+    <section class="hero" id="hero">
+      <div class="rings">
+        <canvas id="rings"></canvas>
+        <div class="rings-mid" id="ringsMid"></div>
+      </div>
+      <ul class="legend" id="legend"></ul>
+    </section>
+    <p class="hero-foot" id="heroFoot"></p>
+
+    <div id="sections"></div>
+    <footer class="foot" id="foot"></footer>
+  </main>
+
+  <div class="sheet-wrap" id="keySheet" hidden>
+    <div class="sheet" role="dialog" aria-labelledby="keyTitle">
+      <i class="grab"></i>
+      <div class="sheet-head">
+        <h3 id="keyTitle">连接墨墨</h3>
+        <button class="x" data-close aria-label="关闭"><svg viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <p class="sheet-p">在墨墨背单词 App 里打开「我的 › 更多设置 › 实验功能 › 开放 API」，复制 Token 粘贴到这里。</p>
+      <label class="field">
+        <input id="tokenInput" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="粘贴 Token">
+        <button class="eye" id="eyeBtn" type="button" aria-label="显示 Token"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </label>
+      <p class="sheet-note">Token 只存在这台手机上，导出备份时不会带上。</p>
+      <details class="adv" id="adv">
+        <summary>连不上墨墨？</summary>
+        <p class="sheet-note">网页直接访问墨墨有时会被拦下。可以搭一个中转服务，把它的地址填在这里；留空就是墨墨官方地址。</p>
+        <label class="field"><input id="baseInput" type="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.maimemo.com/open"></label>
+      </details>
+      <div class="sheet-row">
+        <button class="btn ghost" id="disconnectBtn">断开</button>
+        <button class="btn" id="saveBtn">保存并刷新</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-wrap" id="npSheet" hidden>
+    <div class="sheet" role="dialog" aria-labelledby="npTitle">
+      <i class="grab"></i>
+      <div class="sheet-head">
+        <h3 id="npTitle"></h3>
+        <button class="x" data-close aria-label="关闭"><svg viewBox="0 0 20 20"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      </div>
+      <div id="npBody"></div>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

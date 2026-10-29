@@ -349,7 +349,7 @@ function gamePage(ctx, gm) {
       const head = h('div', { class: 'game-head' }, h('img', { src: iconOf(app), alt: '' }), h('div', { class: 'game-head-name' }, gm.name));
 
       const rows = (gm.settings || []).map((f) => {
-        if (f.type === 'toggle') return row({ title: f.label, right: toggle(s[f.key], (v) => save({ [f.key]: v })) });
+        if (f.type === 'toggle') return row({ title: f.label, sub: f.sub, right: toggle(s[f.key], (v) => save({ [f.key]: v })) });
         if (f.type === 'stepper') {
           const max = typeof f.max === 'function' ? f.max(s) : f.max;
           const show = (v) => (f.display ? f.display(v) : `${v}${f.unit || ''}`);

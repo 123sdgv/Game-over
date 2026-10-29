@@ -275,4 +275,24 @@ export const games = [
       { key: 'played', label: '玩了几局' },
     ],
   },
+  {
+    id: 'vocab',
+    name: '单词',
+    path: 'games/vocab/',
+    icons: ['icons/abc.svg'],
+    settingsNote: '数据来自墨墨背单词开放 API，只读不写。Token 在 App 右上角的钥匙里填，只存在这台手机上，导出备份时不会带上。墨墨没有按日期查的接口，「最近几天」是每次打开时在本机记下来的。',
+    settings: [
+      { key: 'autoRefresh', label: '打开时自动刷新', type: 'toggle', default: true, sub: '离上次刷新超过 5 分钟才会再读' },
+      { key: 'days', label: '复习预报看几天', type: 'stepper', min: 3, max: 10, default: 7, unit: ' 天' },
+      { key: 'stickyN', label: '顽固词先显示几个', type: 'stepper', min: 5, max: 30, step: 5, default: 10, unit: ' 个' },
+      { key: 'historyDays', label: '最近记录看几天', type: 'stepper', min: 7, max: 28, step: 7, default: 14, unit: ' 天' },
+      { key: 'speak', label: '点单词时朗读', type: 'toggle', default: true },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+    ],
+    stats: [
+      { key: 'days', label: '记录了几天' },
+      { key: 'bestStreak', label: '最长连续背完（天）' },
+      { key: 'minutes', label: '记下的学习时长（分钟）' },
+    ],
+  },
 ];
