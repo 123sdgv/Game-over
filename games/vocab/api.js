@@ -7,12 +7,13 @@
 //   路径：现在的文档是 /api/v1/memo/...，以前的是 /api/v1/...；404 时换另一个。哪条路能用就记住哪条。
 export const DEFAULT_BASE = 'https://open.maimemo.com/open';
 export const RELAY_BASE = 'https://game-over-memo-123sdgv.vercel.app/open';
+export const RELAY_EDGE = 'https://game-over-memo-123sdgv.vercel.app/edge'; // 同一个中转的边缘网络版本，出口不同
 const PREFIXES = ['/api/v1/memo', '/api/v1'];
 
 export class ApiError extends Error {
   constructor(kind, message = '', status = 0) {
     super(message || kind);
-    this.kind = kind; // network / timeout / auth / rate / server / notfound / bad
+    this.kind = kind; // network / timeout / relay（中转连不上墨墨）/ auth / rate / server / notfound / bad
     this.status = status;
   }
 }
@@ -56,7 +57,7 @@ export function normalizeBase(input) {
  * @param {{ token: string, base?: string, route?: {root:string,prefix:string}, onRoute?: (r) => void }} o
  */
 export function client({ token, base, route, onRoute }) {
-  const roots = base ? [base.replace(/\/+$/, '')] : [RELAY_BASE, DEFAULT_BASE];
+  const roots = base ? [base.replace(/\/+$/, '')] : [RELAY_BASE, RELAY_EDGE, DEFAULT_BASE];
   let cur = route && roots.includes(route.root) && PREFIXES.includes(route.prefix) ? { ...route } : null;
   let settled = false;
 
@@ -87,6 +88,8 @@ export function client({ token, base, route, onRoute }) {
     let json = null;
     try { json = text ? JSON.parse(text) : {}; } catch {}
     const msg = json && Array.isArray(json.errors) && json.errors[0] ? json.errors[0].msg || json.errors[0].code || '' : '';
+    const code = json && Array.isArray(json.errors) && json.errors[0] ? json.errors[0].code : '';
+    if (!res.ok && /^relay_(upstream|timeout)$/.test(code)) throw new ApiError('relay', msg, res.status);
     if (!res.ok) throw new ApiError(kindOf(res.status), msg, res.status);
     if (!json) throw new ApiError('bad', '墨墨返回的不是 JSON');
     if (json.success === false || (Array.isArray(json.errors) && json.errors.length)) throw new ApiError('bad', msg);
@@ -107,9 +110,9 @@ export function client({ token, base, route, onRoute }) {
           if (onRoute) onRoute(cur);
           return out;
         } catch (e) {
-          if (!firstErr || (firstErr.kind === 'notfound' && e.kind !== 'notfound')) firstErr = e;
+          if (!firstErr || (firstErr.kind === 'notfound' && e.kind !== 'notfound') || (firstErr.kind === 'network' && e.kind === 'relay')) firstErr = e;
           if (e.kind === 'notfound') continue;
-          if (e.kind === 'network' || e.kind === 'timeout') break;
+          if (e.kind === 'network' || e.kind === 'timeout' || e.kind === 'relay') break;
           throw e;
         }
       }

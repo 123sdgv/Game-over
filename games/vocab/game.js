@@ -153,6 +153,7 @@ function updatedText() {
 const ERR = {
   network: '连不上中转服务。可能是网络不通，或者 vercel.app 在现在的网络下打不开，开代理再试试。墨墨不让网页直接访问，离不开中转。',
   networkCustom: '连不上你填的中转地址。检查一下地址对不对、那边的服务还在不在。',
+  relay: '中转服务连不上墨墨，可能是墨墨不让海外机房访问。',
   auth: '墨墨说 Token 不对或者过期了，去墨墨 App 里重新复制一个。',
   rate: '刷新得太勤，墨墨让歇一会儿，过一分钟再试。',
   timeout: '墨墨 20 秒没有回应，稍后再刷新。',
@@ -165,7 +166,7 @@ function renderBanner() {
   const b = $('banner');
   let tone = '', text = '', btn = null;
   if (err) {
-    tone = err.kind === 'auth' || err.kind === 'network' || err.kind === 'timeout' ? 'bad' : 'warn';
+    tone = err.kind === 'auth' || err.kind === 'network' || err.kind === 'timeout' || err.kind === 'relay' ? 'bad' : 'warn';
     const k = err.kind === 'network' && err.custom ? 'networkCustom' : err.kind;
     text = err.kind === 'bad' ? `${ERR.bad}${err.msg ? `：${err.msg}` : '。'}` : ERR[k] || ERR.bad;
     btn = err.kind === 'auth' ? ['检查 Token', openKey] : err.kind === 'network' ? ['再试一次', refresh] : ['再试一次', refresh];
@@ -520,7 +521,7 @@ function render(animate) {
   ].filter(Boolean));
   const r = hb.load('route', null);
   $('foot').textContent = snap.demo ? '示例数据，填好 Token 以后换成你自己的。'
-    : `数据来自墨墨背单词开放 API${r && !/open\.maimemo\.com/.test(r.root) ? `，经过中转 ${r.root.replace(/^https:\/\//, '').replace(/\/open$/, '')}` : ''}`;
+    : `数据来自墨墨背单词开放 API${r && !/open\.maimemo\.com/.test(r.root) ? `，经过中转 ${r.root.replace(/^https:\/\//, '')}` : ''}`;
 }
 
 /* ======================================================================
