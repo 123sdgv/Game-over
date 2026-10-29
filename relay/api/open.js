@@ -3,7 +3,7 @@
 //   做的事很少：只接受 Game Over 的网页发来的请求，只转发几个只读接口，原样带上 Authorization，
 //   把墨墨的状态码和内容原样返回并补上跨域头（这样 App 能看到真正的错误，比如 Token 不对）。
 //   不记录、不缓存、不保存 Token。
-//   改完以后用 Vercel 重新部署（见仓库 CLAUDE.md「单词」那一行）。
+//   Vercel 项目连着这个仓库（Root Directory = relay），改完推到 main 就会自动重新部署。
 const UPSTREAM = 'https://open.maimemo.com/open';
 const ORIGINS = ['https://123sdgv.github.io', 'http://localhost:8765'];
 const ALLOW = [
