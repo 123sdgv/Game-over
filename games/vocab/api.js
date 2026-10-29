@@ -1,9 +1,12 @@
 // 墨墨背单词开放 API（只读）。
 //   文档：https://open.maimemo.com/api_bundle.yaml   Token：墨墨 App → 我的 → 更多设置 → 实验功能 → 开放 API
 //   频控：10 秒 20 次 / 60 秒 40 次 / 5 小时 2000 次，这里在本地先排队，留一点余量。
-//   墨墨出错时的响应不带跨域头，浏览器里只能看到「网络错误」，分不出是 Token 错还是跨域被拦，所以错误分类里有个 'network'。
-//   路径：现在的文档是 /api/v1/memo/...，以前的是 /api/v1/...；第一次请求失败时会换旧路径再试一次，哪个能用就记住哪个。
+//   墨墨只让「审核通过的应用」的网站跨域访问，github.io 直连会被浏览器拦下（gray 真机试过），
+//   所以默认先走中转（仓库 relay/，部署在 gray 的 Vercel），中转连不上再试直连。
+//   中转会把墨墨的错误原样带上跨域头返回，所以走中转时能分清 Token 错还是别的；直连时只能看到「网络错误」。
+//   路径：现在的文档是 /api/v1/memo/...，以前的是 /api/v1/...；404 时换另一个。哪条路能用就记住哪条。
 export const DEFAULT_BASE = 'https://open.maimemo.com/open';
+export const RELAY_BASE = 'https://game-over-memo-123sdgv.vercel.app/open';
 const PREFIXES = ['/api/v1/memo', '/api/v1'];
 
 export class ApiError extends Error {
@@ -35,17 +38,31 @@ function kindOf(status) {
   return 'bad';
 }
 
+/** 用户填的地址 → 规范成 https://host/path（没写路径就补 /open）；空字符串表示用默认 */
+export function normalizeBase(input) {
+  let b = String(input || '').trim();
+  if (!b) return '';
+  if (!/^[a-z]+:\/\//i.test(b)) b = `https://${b}`;
+  let u;
+  try { u = new URL(b); } catch { return null; }
+  if (u.protocol !== 'https:') return null;
+  let path = u.pathname.replace(/\/+$/, '');
+  if (!path) path = '/open';
+  const out = `${u.origin}${path}`;
+  return out === RELAY_BASE ? '' : out;
+}
+
 /**
- * @param {{ token: string, base?: string, prefix?: string, onPrefix?: (p: string) => void }} o
+ * @param {{ token: string, base?: string, route?: {root:string,prefix:string}, onRoute?: (r) => void }} o
  */
-export function client({ token, base, prefix, onPrefix }) {
-  const root = (base || DEFAULT_BASE).trim().replace(/\/+$/, '');
-  let pre = PREFIXES.includes(prefix) ? prefix : PREFIXES[0];
+export function client({ token, base, route, onRoute }) {
+  const roots = base ? [base.replace(/\/+$/, '')] : [RELAY_BASE, DEFAULT_BASE];
+  let cur = route && roots.includes(route.root) && PREFIXES.includes(route.prefix) ? { ...route } : null;
   let settled = false;
 
-  async function raw(p, path, { method = 'GET', body, query } = {}) {
+  async function raw({ root, prefix }, path, { method = 'GET', body, query } = {}) {
     await slot();
-    const url = new URL(root + p + path);
+    const url = new URL(root + prefix + path);
     for (const [k, v] of Object.entries(query || {})) {
       if (Array.isArray(v)) v.forEach((x) => url.searchParams.append(k, x));
       else if (v != null) url.searchParams.set(k, v);
@@ -76,24 +93,42 @@ export function client({ token, base, prefix, onPrefix }) {
     return json.data && typeof json.data === 'object' && !Array.isArray(json.data) ? json.data : json;
   }
 
-  async function req(path, opts) {
-    if (settled) return raw(pre, path, opts);
-    try {
-      const out = await raw(pre, path, opts);
-      settled = true;
-      return out;
-    } catch (e) {
-      if (e.kind !== 'network' && e.kind !== 'notfound') throw e;
-      const other = PREFIXES.find((x) => x !== pre);
-      const out = await raw(other, path, opts).catch(() => { throw e; });
-      pre = other; settled = true;
-      if (onPrefix) onPrefix(pre);
-      return out;
+  // 第一次请求时找一条能用的路：先试上次成功的，再按 中转 → 直连 的顺序；
+  // 连不上（network / timeout）就换下一个地址，404 就换另一种路径，其他错误（Token 不对、太频繁……）说明已经连到墨墨了，直接报。
+  async function find(path, opts) {
+    const rootOrder = cur ? [cur.root, ...roots.filter((r) => r !== cur.root)] : roots;
+    let firstErr = null;
+    for (const root of rootOrder) {
+      const preOrder = cur && cur.root === root ? [cur.prefix, ...PREFIXES.filter((p) => p !== cur.prefix)] : PREFIXES;
+      for (const prefix of preOrder) {
+        try {
+          const out = await raw({ root, prefix }, path, opts);
+          cur = { root, prefix }; settled = true;
+          if (onRoute) onRoute(cur);
+          return out;
+        } catch (e) {
+          if (!firstErr || (firstErr.kind === 'notfound' && e.kind !== 'notfound')) firstErr = e;
+          if (e.kind === 'notfound') continue;
+          if (e.kind === 'network' || e.kind === 'timeout') break;
+          throw e;
+        }
+      }
     }
+    if (firstErr) firstErr.custom = !!base;
+    throw firstErr || new ApiError('network');
+  }
+
+  let finding = null;
+  async function req(path, opts) {
+    if (settled) return raw(cur, path, opts);
+    // 同时发出的几个请求只让第一个去找路，其余的等它
+    if (finding) { await finding.catch(() => {}); if (settled) return raw(cur, path, opts); }
+    finding = find(path, opts);
+    try { return await finding; } finally { finding = null; }
   }
 
   return {
-    get prefix() { return pre; },
+    get route() { return cur; },
     progress: () => req('/study/get_study_progress', { method: 'POST', body: {} }).then((d) => d.progress || {}),
     today: () => req('/study/get_today_items', { method: 'POST', body: { limit: 1000 } }).then((d) => d.today_items || []),
     records: (body) => req('/study/query_study_records', { method: 'POST', body }),
@@ -120,7 +155,8 @@ const tagList = (t) => (Array.isArray(t) ? t : typeof t === 'string' && t ? [t] 
  */
 export async function fetchAll(c, { days = 7, onPart } = {}) {
   const today = bjDay();
-  const [progress, items] = await Promise.all([c.progress(), c.today()]);
+  const progress = await c.progress();
+  const items = await c.today();
   const snap = {
     at: Date.now(), day: today, demo: false,
     progress: { finished: +progress.finished || 0, total: +progress.total || 0, ms: +progress.study_time || 0 },

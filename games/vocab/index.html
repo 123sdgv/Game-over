@@ -53,9 +53,9 @@
       </label>
       <p class="sheet-note">Token 只存在这台手机上，导出备份时不会带上。</p>
       <details class="adv" id="adv">
-        <summary>连不上墨墨？</summary>
-        <p class="sheet-note">网页直接访问墨墨有时会被拦下。可以搭一个中转服务，把它的地址填在这里；留空就是墨墨官方地址。</p>
-        <label class="field"><input id="baseInput" type="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.maimemo.com/open"></label>
+        <summary>中转地址</summary>
+        <p class="sheet-note">墨墨不让网页直接访问，所以请求会经过一个只转发只读接口的中转（部署在 Vercel，不保存 Token）。留空就用默认的；你自己另搭了中转，把地址填在这里。</p>
+        <label class="field"><input id="baseInput" type="url" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder=""></label>
       </details>
       <div class="sheet-row">
         <button class="btn ghost" id="disconnectBtn">断开</button>

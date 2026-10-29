@@ -4,7 +4,7 @@
 //   只读：不往墨墨写任何东西。Token 存在 game.vocab.token，导出备份时会跳过（core/js/store.js 的 SECRET）。
 import { hub } from '../_shared/hub.js';
 import { sound } from '../_shared/sound.js';
-import { client, fetchAll, bjDay, addDays, weekday, chaptersOf } from './api.js';
+import { client, fetchAll, bjDay, addDays, weekday, chaptersOf, normalizeBase, RELAY_BASE } from './api.js';
 import { demoSnapshot, demoNotepad } from './demo.js';
 
 const hb = hub('vocab');
@@ -62,7 +62,7 @@ let paused = false;
 const view = { filter: 'all', mode: hb.load('view', 'grid') === 'list' ? 'list' : 'grid', sel: null, stickyAll: false };
 const npCache = new Map();
 
-const api = () => client({ token, base, prefix: hb.load('prefix', null), onPrefix: (p) => hb.save('prefix', p) });
+const api = () => client({ token, base, route: hb.load('route', null), onRoute: (r) => hb.save('route', r) });
 
 /* ======================================================================
    读数据
@@ -87,7 +87,7 @@ async function refresh() {
     sfx.done();
   } catch (e) {
     loading = false;
-    err = { kind: (e && e.kind) || 'bad', msg: (e && e.kind === 'bad' && e.message) || '' };
+    err = { kind: (e && e.kind) || 'bad', msg: (e && e.kind === 'bad' && e.message) || '', custom: !!(e && e.custom) };
     render(false);
     sfx.err();
   }
@@ -151,7 +151,8 @@ function updatedText() {
 }
 
 const ERR = {
-  network: '没连上墨墨。可能是 Token 不对、网络不通，或者墨墨不让网页直接访问，浏览器分不出是哪一种。',
+  network: '连不上中转服务。可能是网络不通，或者 vercel.app 在现在的网络下打不开，开代理再试试。墨墨不让网页直接访问，离不开中转。',
+  networkCustom: '连不上你填的中转地址。检查一下地址对不对、那边的服务还在不在。',
   auth: '墨墨说 Token 不对或者过期了，去墨墨 App 里重新复制一个。',
   rate: '刷新得太勤，墨墨让歇一会儿，过一分钟再试。',
   timeout: '墨墨 20 秒没有回应，稍后再刷新。',
@@ -164,9 +165,10 @@ function renderBanner() {
   const b = $('banner');
   let tone = '', text = '', btn = null;
   if (err) {
-    tone = err.kind === 'auth' || err.kind === 'network' ? 'bad' : 'warn';
-    text = err.kind === 'bad' ? `${ERR.bad}${err.msg ? `：${err.msg}` : '。'}` : ERR[err.kind] || ERR.bad;
-    btn = tone === 'bad' ? ['检查 Token', openKey] : ['再试一次', refresh];
+    tone = err.kind === 'auth' || err.kind === 'network' || err.kind === 'timeout' ? 'bad' : 'warn';
+    const k = err.kind === 'network' && err.custom ? 'networkCustom' : err.kind;
+    text = err.kind === 'bad' ? `${ERR.bad}${err.msg ? `：${err.msg}` : '。'}` : ERR[k] || ERR.bad;
+    btn = err.kind === 'auth' ? ['检查 Token', openKey] : err.kind === 'network' ? ['再试一次', refresh] : ['再试一次', refresh];
   } else if (!token) {
     text = '现在是示例数据。填上墨墨的 Token，就能看到你自己的。';
     btn = ['填 Token', openKey];
@@ -516,7 +518,9 @@ function render(animate) {
   box.replaceChildren(...[
     firstSection(animate), wordsSection(), forecastSection(animate), stickySection(animate), notepadSection(), historySection(animate),
   ].filter(Boolean));
-  $('foot').textContent = snap.demo ? '示例数据，填好 Token 以后换成你自己的。' : '数据来自墨墨背单词开放 API';
+  const r = hb.load('route', null);
+  $('foot').textContent = snap.demo ? '示例数据，填好 Token 以后换成你自己的。'
+    : `数据来自墨墨背单词开放 API${r && !/open\.maimemo\.com/.test(r.root) ? `，经过中转 ${r.root.replace(/^https:\/\//, '').replace(/\/open$/, '')}` : ''}`;
 }
 
 /* ======================================================================
@@ -560,7 +564,8 @@ function openKey() {
   $('tokenInput').type = 'password';
   $('eyeBtn').setAttribute('aria-pressed', 'false');
   $('baseInput').value = base;
-  $('adv').open = !!base || (err && err.kind === 'network');
+  $('adv').open = !!base;
+  $('baseInput').placeholder = RELAY_BASE.replace(/^https:\/\//, '');
   $('disconnectBtn').hidden = !token;
   $('saveBtn').textContent = token ? '保存并刷新' : '连接';
   openSheet($('keySheet'));
@@ -573,14 +578,13 @@ $('eyeBtn').addEventListener('click', () => {
 });
 $('saveBtn').addEventListener('click', () => {
   const t = $('tokenInput').value.trim().replace(/^Bearer\s+/i, '');
-  let b = $('baseInput').value.trim();
+  const b = normalizeBase($('baseInput').value);
   if (!t) { $('tokenInput').focus(); return; }
-  if (b && !/^https:\/\/\S+$/i.test(b)) { $('adv').open = true; $('baseInput').focus(); $('baseInput').select(); return; }
-  if (b.replace(/\/+$/, '') === 'https://open.maimemo.com/open') b = '';
+  if (b == null) { $('adv').open = true; $('baseInput').focus(); $('baseInput').select(); return; }
   const changed = t !== token || b !== base;
   token = t; base = b;
   hb.save('token', token); hb.save('base', base);
-  if (changed) { hb.save('cache', null); hb.save('prefix', null); snap = null; npCache.clear(); }
+  if (changed) { hb.save('cache', null); hb.save('route', null); snap = null; npCache.clear(); }
   err = null;
   $('tokenInput').blur(); $('baseInput').blur();
   closeSheet($('keySheet'));
@@ -588,7 +592,7 @@ $('saveBtn').addEventListener('click', () => {
 });
 $('disconnectBtn').addEventListener('click', () => {
   token = ''; base = '';
-  hb.save('token', ''); hb.save('base', ''); hb.save('cache', null); hb.save('prefix', null);
+  hb.save('token', ''); hb.save('base', ''); hb.save('cache', null); hb.save('route', null);
   npCache.clear(); err = null;
   snap = demoSnapshot();
   closeSheet($('keySheet'));

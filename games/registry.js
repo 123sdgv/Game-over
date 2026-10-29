@@ -280,7 +280,7 @@ export const games = [
     name: '单词',
     path: 'games/vocab/',
     icons: ['icons/abc.svg'],
-    settingsNote: '数据来自墨墨背单词开放 API，只读不写。Token 在 App 右上角的钥匙里填，只存在这台手机上，导出备份时不会带上。墨墨没有按日期查的接口，「最近几天」是每次打开时在本机记下来的。',
+    settingsNote: '数据来自墨墨背单词开放 API，只读不写。墨墨不让网页直接访问，请求会经过一个只转发只读接口的中转（部署在 Vercel，不保存 Token）。Token 在 App 右上角的钥匙里填，只存在这台手机上，导出备份时不会带上。墨墨没有按日期查的接口，「最近几天」是每次打开时在本机记下来的。',
     settings: [
       { key: 'autoRefresh', label: '打开时自动刷新', type: 'toggle', default: true, sub: '离上次刷新超过 5 分钟才会再读' },
       { key: 'days', label: '复习预报看几天', type: 'stepper', min: 3, max: 10, default: 7, unit: ' 天' },

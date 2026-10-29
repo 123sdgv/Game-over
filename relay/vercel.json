@@ -1,0 +1,6 @@
+{
+  "regions": ["hkg1"],
+  "rewrites": [
+    { "source": "/open/:path*", "destination": "/api/open?__p=:path*" }
+  ]
+}
