@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>便便超人</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div class="hud" id="hud">
+      <button class="pill" id="btnWash" aria-label="洗澡">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V7a4 4 0 0 1 8 0" fill="none" stroke="#1F130C" stroke-width="2.4" stroke-linecap="round"/><path d="M7.5 9h9l-1 3h-7z" fill="#7FD6FF" stroke="#1F130C" stroke-width="2" stroke-linejoin="round"/><path d="M9.5 15v2M12 15v4M14.5 15v2" stroke="#2F9BE0" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <span>洗澡</span>
+      </button>
+      <button class="pill" id="btnAuto" aria-pressed="false" aria-label="自动放招">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="#FFD23F" stroke="#1F130C" stroke-width="2.2" stroke-linejoin="round"/></svg>
+        <span>自动</span>
+      </button>
+    </div>
+  </main>
+  <section class="panel" id="panel" aria-label="招式"></section>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <form class="card" id="cardForm" autocomplete="off">
+      <div class="card-title" id="cardTitle">给小人起个名字</div>
+      <input class="name-input" id="nameInput" type="text" maxlength="8" enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="名字">
+      <div class="card-meta" id="cardMeta">最多 8 个字，只存在这台手机上</div>
+      <div class="card-row">
+        <button type="button" class="card-btn ghost" id="cardAlt">算了</button>
+        <button type="submit" class="card-btn" id="cardMain">就叫这个</button>
+      </div>
+    </form>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

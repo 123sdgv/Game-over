@@ -321,4 +321,33 @@ export const games = [
       { key: 'played', label: '玩了几局' },
     ],
   },
+  {
+    id: 'poop',
+    name: '便便超人',
+    path: 'games/poop/',
+    icons: ['icons/poop.svg'],
+    settingsNote: '没有输赢也没有关卡，想怎么糊就怎么糊。点招式放招，按住招式连放；点超人唱歌；拖小人可以把它扔出去，点一下是戳它；点空地往那儿扔一坨；点墙上的牌子给小人起名。「洗澡」把小人和房间洗干净，洗一次算一局。改动马上生效。',
+    settings: [
+      { key: 'color', label: '便便颜色', type: 'color', default: 'choco', options: [
+        { value: 'choco', label: '巧克力', color: '#8E5B2F' },
+        { value: 'gold', label: '黄金', color: '#E8B425' },
+        { value: 'berry', label: '草莓', color: '#EE7DA2' },
+        { value: 'matcha', label: '抹茶', color: '#8FB356' },
+      ] },
+      { key: 'speed', label: '动画速度', type: 'stepper', min: 1, max: 3, default: 2, display: (v) => ['慢一点', '正常', '快一点'][v - 1] },
+      { key: 'particles', label: '飞溅数量', type: 'stepper', min: 1, max: 3, default: 2, display: (v) => ['少', '正常', '多'][v - 1], sub: '手机发烫的话调少' },
+      { key: 'shake', label: '屏幕震动', type: 'toggle', default: true },
+      { key: 'lines', label: '台词气泡', type: 'toggle', default: true },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+    ],
+    stats: [
+      { key: 'hits', label: '一共糊了（坨）' },
+      { key: 'moves', label: '放了几招' },
+      { key: 'favorite', label: '最爱的招式' },
+      { key: 'throws', label: '扔了几次小人' },
+      { key: 'sings', label: '唱了几首歌' },
+      { key: 'washes', label: '洗了几次澡' },
+      { key: 'played', label: '玩了几局' },
+    ],
+  },
 ];

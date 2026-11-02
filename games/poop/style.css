@@ -1,0 +1,73 @@
+/* 便便超人：Flash 老游戏的粗描边按钮 */
+:root { --ink-t: #1F130C; --btn: #FFD54A; --btn-d: #E9A91F; }
+body { background: #2C1A10; display: flex; flex-direction: column; }
+
+.stage { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: #A9E0D9; touch-action: none; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+.hud { position: absolute; left: 10px; top: calc(var(--safe-t) + 7px); display: flex; gap: 7px; }
+.pill {
+  display: flex; align-items: center; gap: 3px; height: 34px; padding: 0 11px 0 6px; border-radius: 17px;
+  background: #fff; border: 2.5px solid var(--ink-t); box-shadow: 0 3px 0 var(--ink-t);
+  font-size: 13px; font-weight: 900; color: var(--ink-t);
+  transition: transform .08s, box-shadow .08s, background .12s;
+}
+.pill svg { width: 22px; height: 22px; display: block; }
+.pill:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink-t); }
+.pill[aria-pressed="true"] { background: var(--btn); }
+.pill[aria-pressed="true"] svg path { fill: #E5493E; }
+
+.panel {
+  flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
+  padding: 9px 9px calc(var(--safe-b) + var(--home-bar) + 2px);
+  background: #2C1A10; border-top: 3.5px solid var(--ink-t);
+}
+.mv {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  height: min(60px, 7.4vh); min-height: 46px; border-radius: 13px;
+  background: var(--btn); border: 2.5px solid var(--ink-t); box-shadow: 0 4px 0 var(--btn-d), 0 4px 0 2.5px var(--ink-t);
+  color: var(--ink-t); font-size: 11.5px; font-weight: 900; letter-spacing: .01em; line-height: 1.1;
+  transition: transform .07s, box-shadow .07s, background .1s;
+  touch-action: manipulation;
+}
+.mv svg { width: 30px; height: 30px; display: block; pointer-events: none; }
+.mv span { pointer-events: none; }
+.mv.down, .mv:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-d), 0 1px 0 2.5px var(--ink-t); }
+.mv.on { background: #FFF1B0; }
+.mv .q {
+  position: absolute; right: -4px; top: -6px; min-width: 19px; height: 19px; padding: 0 4px; border-radius: 10px;
+  background: #E5493E; color: #fff; border: 2px solid var(--ink-t); font-size: 11px; font-weight: 900; line-height: 15px; text-align: center;
+  font-style: normal;
+}
+.mv .q:empty { display: none; }
+@media (max-height: 700px) {
+  .mv svg { width: 24px; height: 24px; }
+  .mv { font-size: 10.5px; }
+}
+
+/* 起名字弹窗 */
+.card-wrap {
+  position: fixed; inset: 0; z-index: 10; display: flex; align-items: flex-start; justify-content: center; padding: calc(var(--safe-t) + 14vh) 22px 0;
+  background: rgba(31, 19, 12, .55); animation: fade .18s ease-out;
+}
+@keyframes fade { from { opacity: 0; } }
+.card {
+  width: 100%; max-width: 330px; padding: 18px 16px 16px; border-radius: 20px; background: #FBF2D3;
+  border: 3.5px solid var(--ink-t); box-shadow: 0 7px 0 var(--ink-t); text-align: center;
+  animation: pop .26s cubic-bezier(.2, 1.5, .4, 1);
+}
+@keyframes pop { from { transform: scale(.82); opacity: 0; } }
+.card-title { font-size: 18px; font-weight: 900; color: var(--ink-t); }
+.name-input {
+  display: block; width: 100%; height: 48px; margin: 12px 0 6px; padding: 0 12px; border-radius: 12px; text-align: center;
+  font: inherit; font-size: 20px; font-weight: 900; color: var(--ink-t); background: #fff; border: 3px solid var(--ink-t); outline: none;
+  -webkit-user-select: text; user-select: text; -webkit-appearance: none; appearance: none;
+}
+.card-meta { font-size: 12.5px; font-weight: 700; color: #7A5A36; min-height: 17px; }
+.card-row { display: flex; gap: 10px; margin-top: 14px; }
+.card-btn {
+  flex: 1; height: 46px; border-radius: 13px; font-size: 16px; font-weight: 900; color: var(--ink-t);
+  background: var(--btn); border: 3px solid var(--ink-t); box-shadow: 0 3px 0 var(--ink-t); transition: transform .07s, box-shadow .07s;
+}
+.card-btn.ghost { background: #fff; }
+.card-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink-t); }
