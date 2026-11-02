@@ -356,14 +356,13 @@ export const games = [
     path: 'games/prank/',
     icons: ['icons/prank.svg'],
     wide: true,
-    settingsNote: '没有输赢也没有关卡，道具不限量，横屏玩。点右边选道具，再点画布；长按画布道具变大；选中的道具再点一下，直接用在他身上。他死了可以留着尸体接着玩，也可以点「重画」。画一个新的算一局。改动马上生效。',
+    settingsNote: '没有输赢也没有关卡，道具不限量，横屏玩。点右边选道具，再点画布用。死了一个自动画一个；点「停止」就不再自动画，点「重画」接着画。活着的时候点「重画」多一个人，最多 5 个，血条共用。尸体不点「清场」或者不用橡皮擦就一直留着。改动马上生效。',
     settings: [
-      { key: 'tough', label: '他有多抗揍', type: 'stepper', min: 1, max: 3, default: 2, display: (v) => ['脆皮', '正常', '抗揍'][v - 1] },
+      { key: 'hpMax', label: '血条厚度', type: 'stepper', min: 100, max: 500, step: 50, default: 300, sub: '越厚越不容易死，几个人共用这一条' },
       { key: 'particles', label: '飞溅数量', type: 'stepper', min: 1, max: 3, default: 2, display: (v) => ['少', '正常', '多'][v - 1], sub: '手机发烫的话调少' },
       { key: 'shake', label: '画面震动', type: 'toggle', default: true },
-      { key: 'flash', label: '黑白闪屏', type: 'toggle', default: true, sub: '爆炸和闪电时整个画面反色，觉得晃眼可以关' },
+      { key: 'flash', label: '黑白闪屏', type: 'toggle', default: true, sub: '闪电和黑洞时整个画面反色，觉得晃眼可以关' },
       { key: 'lines', label: '台词气泡', type: 'toggle', default: true },
-      { key: 'deathCard', label: '死了弹窗', type: 'toggle', default: true, sub: '关掉以后他死了就留着尸体，想画新的点菜单「重画」' },
       { key: 'sound', label: '音效', type: 'toggle', default: true },
     ],
     stats: [

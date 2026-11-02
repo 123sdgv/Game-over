@@ -20,7 +20,7 @@
       <nav id="menu">
         <button id="mNew"><u>重</u>画</button>
         <button id="mClear"><u>清</u>场</button>
-        <button id="mSlow"><u>慢</u>放</button>
+        <button id="mStop"><u>停</u>止</button>
         <button id="mHelp"><u>帮</u>助</button>
         <span id="menuInfo"></span>
       </nav>
@@ -28,7 +28,6 @@
         <section id="left">
           <div id="stage">
             <canvas id="cv"></canvas>
-            <div id="bubble" hidden><span id="bubbleText"></span></div>
           </div>
           <div id="status">
             <svg id="fig" viewBox="0 0 40 60" aria-hidden="true">
@@ -43,7 +42,7 @@
             <div id="bars">
               <div class="bar"><b>生命</b><div class="track"><i id="bHp"></i></div><em id="nHp">100</em></div>
               <div class="bar"><b>疼痛</b><div class="track"><i id="bPain" class="half"></i></div><em id="nPain">0</em></div>
-              <div class="bar"><b>恐惧</b><div class="track"><i id="bFear" class="quarter"></i></div><em id="nFear">0</em></div>
+              <div class="bar"><b id="lFear">恐惧</b><div class="track"><i id="bFear" class="quarter"></i></div><em id="nFear">0</em></div>
             </div>
             <dl id="info">
               <div><dt>状态</dt><dd id="iState">发呆</dd></div>
@@ -57,7 +56,13 @@
           <div id="desc">
             <strong id="dName"></strong>
             <p id="dText"></p>
+            <div id="penMode" hidden>
+              <button id="penFree" class="seg">自由</button><button id="penLine" class="seg">直线</button>
+            </div>
             <small id="dHow"></small>
+          </div>
+          <div id="padWrap" hidden>
+            <div id="pad" role="application" aria-label="鼠标圆盘"><i id="padDot"></i><b id="padKnob"></b></div>
           </div>
           <div id="log" hidden></div>
         </section>

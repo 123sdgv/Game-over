@@ -48,13 +48,13 @@ html, body { background: #000; }
 #cv { display: block; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: pixelated; touch-action: none; }
 
 /* 台词气泡 */
-#bubble {
+.bubble {
   position: absolute; left: 0; top: 0; max-width: 62%; padding: 2px 7px; background: var(--w); border: 2px solid var(--k);
   font-weight: 600; white-space: nowrap; pointer-events: none; box-shadow: 2px 2px 0 var(--k); --tail: 50%;
 }
-#bubble::before, #bubble::after { content: ''; position: absolute; left: var(--tail); width: 0; height: 0; border-style: solid; border-color: transparent; }
-#bubble::before { bottom: -9px; margin-left: -5px; border-width: 9px 5px 0; border-top-color: var(--k); }
-#bubble::after { bottom: -5px; margin-left: -3px; border-width: 5px 3px 0; border-top-color: var(--w); }
+.bubble::before, .bubble::after { content: ''; position: absolute; left: var(--tail); width: 0; height: 0; border-style: solid; border-color: transparent; }
+.bubble::before { bottom: -9px; margin-left: -5px; border-width: 9px 5px 0; border-top-color: var(--k); }
+.bubble::after { bottom: -5px; margin-left: -3px; border-width: 5px 3px 0; border-top-color: var(--w); }
 
 /* 状态 */
 #status { flex: none; height: var(--stb); display: flex; align-items: stretch; border-top: 2px solid var(--k); gap: 8px; padding: 3px 8px 3px 4px; }
@@ -82,6 +82,32 @@ html, body { background: #000; }
 .tool { position: relative; display: grid; place-items: center; background: var(--w); border-right: 2px solid var(--k); border-bottom: 2px solid var(--k); touch-action: manipulation; }
 .tool:nth-child(4n) { border-right: 0; }
 .tool:nth-last-child(-n+4) { border-bottom: 0; }
+.tool.blank { background-image: var(--check25); background-size: 4px 4px; image-rendering: pixelated; }
+
+/* 选中鼠标：道具缩成两排小格子，圆盘占下面一大半 */
+#right.mini #grid { grid-template-columns: repeat(8, calc(var(--cell) / 2)); grid-auto-rows: calc(var(--cell) / 2); }
+#right.mini .tool:nth-child(4n) { border-right: 2px solid var(--k); }
+#right.mini .tool:nth-child(8n) { border-right: 0; }
+#right.mini .tool:nth-last-child(-n+4) { border-bottom: 2px solid var(--k); }
+#right.mini .tool:nth-last-child(-n+8) { border-bottom: 0; }
+#right.mini #desc, #right.mini #log { display: none; }
+#padWrap { flex: 1; min-height: 0; display: grid; place-items: center; }
+#pad {
+  position: relative; width: var(--pad); height: var(--pad); border-radius: 50%; border: 2px solid var(--k);
+  background-color: #fff; background-image: var(--check25); background-size: 4px 4px; image-rendering: pixelated;
+  box-shadow: 3px 3px 0 var(--k); touch-action: none;
+}
+#pad.on { box-shadow: 1px 1px 0 var(--k); transform: translate(2px, 2px); }
+#padDot { position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; margin: -15% 0 0 -15%; border-radius: 50%; background: var(--w); border: 2px solid var(--k); pointer-events: none; }
+#padKnob { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--k); pointer-events: none; opacity: 0; }
+#pad.on #padKnob { opacity: 1; }
+
+/* 铅笔：自由 / 直线 */
+#penMode { display: flex; margin: 3px 0 2px; }
+#penMode[hidden] { display: none; }
+.seg { flex: 1; height: calc(var(--fs) * 2); border: 2px solid var(--k); font-weight: 700; touch-action: manipulation; background: var(--w); }
+.seg + .seg { border-left: 0; }
+.seg.on { background: var(--k); color: var(--w); }
 .tool canvas { display: block; image-rendering: pixelated; pointer-events: none; }
 .tool:active canvas { transform: translate(1px, 1px); }
 .tool.on { background: var(--k); }
@@ -91,6 +117,7 @@ html, body { background: #000; }
 #log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
 #dName { font-size: 1.14em; font-weight: 800; }
 #desc p { margin: 0; }
+#desc small:empty { display: none; }
 #desc small { margin-top: auto; font-size: .92em; border-top: 1px dotted var(--k); padding-top: 3px; }
 
 /* 对话框 */

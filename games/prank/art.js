@@ -55,41 +55,6 @@ export function anvil(c, x, y, s = 1) {
   c.restore();
 }
 
-/** 炸弹。x,y 是球心；lit=引线在烧，danger=快炸了 */
-export function bomb(c, x, y, s = 1, t = 0, lit = false, danger = 0) {
-  const pulse = danger > 0 ? 1 + Math.abs(Math.sin(t * 22)) * 0.12 * danger : 1;
-  begin(c, x, y, s * pulse);
-  c.fillStyle = INK; c.fillRect(-4, -15, 8, 5);
-  ink(c, 2 / s);
-  c.beginPath(); c.moveTo(0, -15); c.quadraticCurveTo(2, -22, 9, -21); c.stroke();
-  c.beginPath(); c.arc(0, 0, 12, 0, Math.PI * 2);
-  c.fillStyle = rad(c, -4, -5, 1, 15, danger > 0.5 && Math.sin(t * 22) > 0 ? 255 : 170, 0);
-  c.fill(); c.stroke();
-  c.strokeStyle = PAPER; c.lineWidth = 2 / s;
-  c.beginPath(); c.arc(-1, -1, 7.5, Math.PI * 1.05, Math.PI * 1.45); c.stroke();
-  if (lit) {
-    const r = 3.5 + Math.sin(t * 40) * 1.6;
-    ink(c, 1.5 / s);
-    for (let i = 0; i < 6; i++) {
-      const a = i / 6 * Math.PI * 2 + t * 9;
-      c.beginPath(); c.moveTo(9 + Math.cos(a) * 1, -21 + Math.sin(a) * 1); c.lineTo(9 + Math.cos(a) * r, -21 + Math.sin(a) * r); c.stroke();
-    }
-  }
-  c.restore();
-}
-
-/** 地雷。x,y 是地面中点 */
-export function mine(c, x, y, s = 1, blink = false) {
-  begin(c, x, y, s);
-  c.beginPath(); c.ellipse(0, -1, 16, 8, 0, Math.PI, 0);
-  c.fillStyle = lin(c, -10, -9, 12, 0, 190, 30);
-  c.fill(); ink(c, 2 / s); c.stroke();
-  c.fillStyle = INK; c.fillRect(-18, -2, 36, 3);
-  c.beginPath(); c.arc(0, -9, 2.6, 0, Math.PI * 2);
-  c.fillStyle = blink ? INK : PAPER; c.fill(); ink(c, 1.4 / s); c.stroke();
-  c.restore();
-}
-
 /** 香蕉皮。x,y 是地面中点 */
 export function peel(c, x, y, s = 1) {
   begin(c, x, y, s);
@@ -143,26 +108,6 @@ export function spikes(c, x, y, s = 1, ang = 0, rise = 1, L = 72) {
     c.beginPath(); c.moveTo(m, -3 - h); c.lineTo(a + step, -3); c.lineTo(m, -3); c.closePath(); c.fillStyle = gray(60); c.fill();
     c.beginPath(); c.moveTo(a, -3); c.lineTo(m, -3 - h); c.lineTo(a + step, -3); ink(c, 1.5); c.stroke();
   }
-  c.restore();
-}
-
-/** 火箭。x,y 是中心，朝 ang 飞 */
-export function rocket(c, x, y, s = 1, ang = 0, t = 0, fire = false) {
-  begin(c, x, y, s, ang);
-  if (fire) {
-    const f = 12 + Math.sin(t * 50) * 4 + Math.sin(t * 31) * 2;
-    c.beginPath(); c.moveTo(-16, -5); c.lineTo(-16 - f, 0); c.lineTo(-16, 5); c.closePath();
-    c.fillStyle = PAPER; c.fill(); ink(c, 1.6 / s); c.stroke();
-    c.beginPath(); c.moveTo(-16, -2.5); c.lineTo(-16 - f * 0.5, 0); c.lineTo(-16, 2.5); c.closePath();
-    c.fillStyle = INK; c.fill();
-  }
-  c.beginPath(); c.moveTo(-15, -9); c.lineTo(-9, -5); c.lineTo(-9, 5); c.lineTo(-15, 9); c.closePath();
-  c.fillStyle = gray(50); c.fill(); ink(c, 1.6 / s); c.stroke();
-  c.beginPath(); c.moveTo(-15, -6); c.lineTo(8, -6); c.quadraticCurveTo(17, -3, 20, 0); c.quadraticCurveTo(17, 3, 8, 6); c.lineTo(-15, 6); c.closePath();
-  c.fillStyle = lin(c, 0, -6, 0, 6, 245, 70); c.fill(); ink(c, 1.8 / s); c.stroke();
-  c.beginPath(); c.moveTo(9, -5.5); c.quadraticCurveTo(17, -3, 20, 0); c.quadraticCurveTo(17, 3, 9, 5.5); c.closePath();
-  c.fillStyle = INK; c.fill();
-  c.beginPath(); c.arc(0, 0, 3, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill(); ink(c, 1.4 / s); c.stroke();
   c.restore();
 }
 
@@ -226,78 +171,57 @@ export function roller(c, x, y, s = 1, dir = 1, t = 0) {
   c.restore();
 }
 
-/** 回收站（垃圾桶）。x,y 是底边中点 */
-export function bin(c, x, y, s = 1) {
-  begin(c, x, y, s);
-  // 桶口露出来的废纸团
-  ink(c, 1.6 / s);
-  c.fillStyle = PAPER;
-  const paper = (pts) => { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.closePath(); c.fill(); c.stroke(); };
-  paper([[-12, -44], [-14, -52], [-7, -57], [-3, -52], [1, -56], [3, -48], [1, -44]]);
-  paper([[0, -44], [2, -53], [8, -58], [14, -53], [13, -44]]);
-  c.beginPath(); c.moveTo(-9, -53); c.lineTo(-6, -49); c.moveTo(7, -54); c.lineTo(9, -49); c.stroke();
-  // 桶身
-  c.beginPath(); c.moveTo(-18, -44); c.lineTo(18, -44); c.lineTo(14, 0); c.lineTo(-14, 0); c.closePath();
-  c.fillStyle = lin(c, -18, 0, 18, 0, 235, 60); c.fill(); ink(c, 2 / s); c.stroke();
-  ink(c, 1.6 / s);
-  for (const u of [-0.5, 0, 0.5]) { c.beginPath(); c.moveTo(u * 28, -39); c.lineTo(u * 21, -5); c.stroke(); }
-  // 桶沿
-  c.beginPath(); c.roundRect(-20, -47, 40, 5, 2);
-  c.fillStyle = lin(c, -20, 0, 20, 0, 245, 70); c.fill(); ink(c, 1.8 / s); c.stroke();
-  c.restore();
+/** 钉子：圆形钉帽，上面一个 ＋ 和一个 × */
+export function nail(c, x, y, s = 1) {
+  const r = 5.5 * s;
+  c.beginPath(); c.arc(x, y, r + 1.4, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill();
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+  c.fillStyle = rad(c, x - r * 0.35, y - r * 0.35, 0.5, r * 1.4, 250, 130); c.fill();
+  ink(c, 1.5 * Math.max(1, s * 0.7)); c.stroke();
+  ink(c, 1 * Math.max(1, s * 0.7));
+  const a = r * 0.62, b = r * 0.46;
+  c.beginPath();
+  c.moveTo(x - a, y); c.lineTo(x + a, y); c.moveTo(x, y - a); c.lineTo(x, y + a);
+  c.moveTo(x - b, y - b); c.lineTo(x + b, y + b); c.moveTo(x + b, y - b); c.lineTo(x - b, y + b);
+  c.stroke();
+}
+
+/** 气球。x,y 是球心 */
+export function balloon(c, x, y, s = 1) {
+  const rx = 11 * s, ry = 13 * s;
+  c.beginPath(); c.moveTo(x - 2.4, y + ry + 3); c.lineTo(x, y + ry - 1); c.lineTo(x + 2.4, y + ry + 3); c.closePath();
+  c.fillStyle = INK; c.fill();
+  c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  c.fillStyle = rad(c, x - rx * 0.35, y - ry * 0.4, 1, ry * 1.5, 255, 95); c.fill();
+  ink(c, 1.7); c.stroke();
+  c.strokeStyle = PAPER; c.lineWidth = 1.6;
+  c.beginPath(); c.ellipse(x - rx * 0.32, y - ry * 0.34, rx * 0.26, ry * 0.3, -0.5, Math.PI * 0.9, Math.PI * 1.75); c.stroke();
+}
+
+/** 水位小点：像绘图软件钢笔工具的锚点，两边带一截切线手柄 */
+export function anchor(c, x, y) {
+  const hw = 16;
+  // 虚线提示可以上下拖
+  c.strokeStyle = INK; c.lineWidth = 1; c.setLineDash([2, 3]);
+  c.beginPath(); c.moveTo(x, y - 16); c.lineTo(x, y + 16); c.stroke();
+  c.setLineDash([]);
+  c.beginPath(); c.moveTo(x - hw, y); c.lineTo(x + hw, y); c.stroke();
+  for (const dx of [-hw, hw]) { c.beginPath(); c.arc(x + dx, y, 1.9, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill(); ink(c, 1); c.stroke(); }
+  c.fillStyle = INK;
+  c.beginPath(); c.moveTo(x, y - 20); c.lineTo(x - 3, y - 15); c.lineTo(x + 3, y - 15); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(x, y + 20); c.lineTo(x - 3, y + 15); c.lineTo(x + 3, y + 15); c.closePath(); c.fill();
+  c.beginPath(); c.rect(x - 4, y - 4, 8, 8); c.fillStyle = PAPER; c.fill(); ink(c, 1.8); c.stroke();
 }
 
 /* ─────────────── 拿在手里的工具 ─────────────── */
 
-/** 大手。closed=握拳。x,y 是掌心 */
-export function hand(c, x, y, s = 1, closed = false, ang = 0) {
-  begin(c, x, y, s, ang);
-  ink(c, 2 / s);
-  c.fillStyle = PAPER;
-  // 袖口
-  c.beginPath(); c.rect(-8, 11, 16, 8); c.fillStyle = lin(c, -8, 0, 8, 0, 220, 70); c.fill(); c.stroke();
-  c.fillStyle = PAPER;
-  if (closed) {
-    for (const fx of [-7, -2.4, 2.4, 7]) { c.beginPath(); c.arc(fx, -6, 3.6, 0, Math.PI * 2); c.fill(); c.stroke(); }
-    c.beginPath(); c.roundRect(-10, -6, 20, 18, 5); c.fill(); c.stroke();
-    c.beginPath(); c.moveTo(-10, 1); c.quadraticCurveTo(-1, -1, 2, 3); c.stroke();
-  } else {
-    const fingers = [[-8.5, -8, -13, -20], [-3, -10, -4.5, -26], [3, -10, 3.5, -27], [8.5, -8, 11, -22]];
-    for (const [a, b, d, e] of fingers) {
-      c.lineWidth = 7; c.strokeStyle = INK; c.beginPath(); c.moveTo(a, b); c.lineTo(d, e); c.stroke();
-      c.lineWidth = 3.6 / 1; c.strokeStyle = PAPER; c.beginPath(); c.moveTo(a, b); c.lineTo(d, e); c.stroke();
-    }
-    ink(c, 2 / s);
-    c.lineWidth = 7; c.beginPath(); c.moveTo(-10, 4); c.lineTo(-20, -5); c.stroke();
-    c.lineWidth = 3.6; c.strokeStyle = PAPER; c.beginPath(); c.moveTo(-10, 4); c.lineTo(-20, -5); c.stroke();
-    ink(c, 2 / s);
-    c.beginPath(); c.roundRect(-11, -9, 22, 21, 6); c.fillStyle = PAPER; c.fill(); c.stroke();
-    c.fillStyle = PAPER; c.fillRect(-9, -11, 18, 5);
-  }
-  c.restore();
-}
-
-/** 电锯。x,y 是握把，朝 ang，锯条长 44 */
-export function saw(c, x, y, s = 1, ang = 0, t = 0, on = false) {
-  begin(c, x, y, s, ang);
-  // 锯条
-  c.beginPath(); c.roundRect(4, -5, 42, 10, 5);
-  c.fillStyle = lin(c, 0, -5, 0, 5, 240, 120); c.fill(); ink(c, 1.6 / s); c.stroke();
-  // 锯齿在链条上跑
-  c.fillStyle = INK;
-  const off = on ? (t * 90) % 7 : 0;
-  for (let i = 0; i < 7; i++) {
-    const u = 5 + ((i * 7 + off) % 42);
-    c.beginPath(); c.moveTo(u, -5); c.lineTo(u + 2.4, -9); c.lineTo(u + 4.4, -5); c.fill();
-    const v = 46 - ((i * 7 + off) % 42);
-    c.beginPath(); c.moveTo(v, 5); c.lineTo(v - 2.4, 9); c.lineTo(v - 4.4, 5); c.fill();
-  }
-  // 机身
-  c.beginPath(); c.roundRect(-20, -10, 25, 20, 3);
-  c.fillStyle = lin(c, 0, -10, 0, 10, 180, 15); c.fill(); ink(c, 1.8 / s); c.stroke();
-  ink(c, 3 / s); c.beginPath(); c.moveTo(-18, -10); c.quadraticCurveTo(-8, -20, 3, -10); c.stroke();
-  c.strokeStyle = PAPER; c.lineWidth = 1.4 / s;
-  c.beginPath(); c.moveTo(-14, -4); c.lineTo(-2, -4); c.moveTo(-14, 0); c.lineTo(-2, 0); c.stroke();
+/** 鼠标箭头。x,y 是箭头尖 */
+export function cursor(c, x, y, s = 1, pressed = false) {
+  begin(c, x, y, s);
+  c.beginPath();
+  c.moveTo(0, 0); c.lineTo(0, 19); c.lineTo(4.6, 14.6); c.lineTo(8, 22); c.lineTo(11.4, 20.6); c.lineTo(8, 13.4); c.lineTo(14, 13.4); c.closePath();
+  c.fillStyle = pressed ? gray(120) : PAPER; c.fill();
+  ink(c, 1.7 / s); c.lineJoin = 'miter'; c.stroke();
   c.restore();
 }
 
@@ -401,6 +325,37 @@ export function head(c, x, y, r, ang, f = {}) {
     dot(-3.2, -1, 2, 2.4); dot(3.2, -1, 2, 2.4);
     c.beginPath(); c.arc(lx, 6.2, 2.8, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
     if (f.tear) { c.fillRect(-3.8 + lx, 1 + ((f.t || 0) * 6 % 4), 1.2, 2); }
+  } else if (m === 'grit') {
+    // 疼得龇牙咧嘴
+    c.beginPath(); c.moveTo(-6 + lx, -4.6); c.lineTo(-1.6 + lx, -2.6); c.moveTo(6 + lx, -4.6); c.lineTo(1.6 + lx, -2.6); c.stroke();
+    c.beginPath(); c.moveTo(-5 + lx, -1); c.lineTo(-1.8 + lx, -1); c.moveTo(1.8 + lx, -1); c.lineTo(5 + lx, -1); c.stroke();
+    c.beginPath(); c.rect(-4 + lx, 2.8, 8, 3.4); c.fillStyle = PAPER; c.fill(); ink(c, 1.2); c.stroke();
+    c.beginPath(); c.moveTo(-1.4 + lx, 2.8); c.lineTo(-1.4 + lx, 6.2); c.moveTo(1.4 + lx, 2.8); c.lineTo(1.4 + lx, 6.2); c.stroke();
+  } else if (m === 'wow') {
+    // 吓一跳：眉毛上挑，圆嘴
+    c.beginPath(); c.arc(-3.4 + lx, -5, 2.2, Math.PI * 1.15, Math.PI * 1.85); c.moveTo(1.6 + lx, -5.6); c.arc(3.4 + lx, -5, 2.2, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
+    dot(-3.2, -1.4, 2.2, 2.6); dot(3.2, -1.4, 2.2, 2.6);
+    c.beginPath(); c.ellipse(lx, 4.6, 2, 2.6, 0, 0, Math.PI * 2); c.stroke();
+  } else if (m === 'pout') {
+    // 委屈：八字眉，眼泪汪汪，嘴抖
+    c.beginPath(); c.moveTo(-5.6 + lx, -3); c.lineTo(-1.8 + lx, -5); c.moveTo(5.6 + lx, -3); c.lineTo(1.8 + lx, -5); c.stroke();
+    for (const ax of [-3.2, 3.2]) { c.beginPath(); c.arc(ax + lx, -1, 2.2, 0, Math.PI * 2); c.fillStyle = INK; c.fill(); c.fillStyle = PAPER; c.fillRect(ax + lx - 1.3, -2.2, 1.2, 1.2); }
+    ink(c, 1.2); c.beginPath(); c.moveTo(-3 + lx, 5); c.lineTo(-1 + lx, 4); c.lineTo(1 + lx, 5); c.lineTo(3 + lx, 4); c.stroke();
+    c.fillStyle = INK;
+    if (f.tear) c.fillRect(3.4 + lx, 1.6 + ((f.t || 0) * 6 % 4), 1.2, 2);
+  } else if (m === 'smug') {
+    // 得意：一边眉毛挑起来，歪嘴笑
+    c.beginPath(); c.moveTo(-5.6 + lx, -3.2); c.lineTo(-1.8 + lx, -3.2); c.moveTo(1.8 + lx, -3.2); c.lineTo(5.6 + lx, -5.4); c.stroke();
+    dot(-3.2, -1.2, 2, 1.8); dot(3.4, -1.4, 2, 2.4);
+    c.beginPath(); c.moveTo(-2.6 + lx, 4.6); c.quadraticCurveTo(1 + lx, 5.4, 3.6 + lx, 2.8); c.stroke();
+  } else if (m === 'yawn') {
+    // 打哈欠：眼睛眯成线，大张嘴
+    c.beginPath(); c.moveTo(-5 + lx, -2); c.lineTo(-1.6 + lx, -2.6); c.moveTo(1.6 + lx, -2.6); c.lineTo(5 + lx, -2); c.stroke();
+    c.beginPath(); c.ellipse(lx, 3.8, 3.2, 3.4, 0, 0, Math.PI * 2); c.fillStyle = INK; c.fill();
+  } else if (m === 'joy') {
+    // 开心：眼睛笑成弯，大笑
+    c.beginPath(); c.arc(-3.3 + lx, -1, 2.2, Math.PI * 1.1, Math.PI * 1.9); c.moveTo(1.2 + lx, -1.6); c.arc(3.3 + lx, -1, 2.2, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+    c.beginPath(); c.arc(lx, 1.8, 3.4, 0.1, Math.PI - 0.1); c.closePath(); c.fillStyle = INK; c.fill();
   } else if (m === 'happy') {
     dot(-3.2, -1.6); dot(3.2, -1.6);
     c.beginPath(); c.arc(lx, 1.8, 3, 0.25, Math.PI - 0.25); c.stroke();
@@ -447,39 +402,41 @@ export function star(c, x, y, r) {
   c.closePath(); c.fillStyle = PAPER; c.fill(); ink(c, 1.2); c.stroke();
 }
 
-/** 爆炸的星形火球 */
-export function burst(c, x, y, r, t) {
-  const n = 11;
-  c.beginPath();
-  for (let i = 0; i < n * 2; i++) {
-    const a = i * Math.PI / n + 0.2, rr = i % 2 ? r * 0.58 : r * (0.9 + 0.12 * Math.sin(i * 7.3));
-    const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
-    if (i) c.lineTo(px, py); else c.moveTo(px, py);
-  }
-  c.closePath();
-  c.fillStyle = (() => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, gray(255)); g.addColorStop(0.5, gray(235)); g.addColorStop(1, gray(70)); return g; })();
-  c.fill(); ink(c, 2.5); c.stroke();
-}
-
 /* ─────────────── 工具栏图标（36×36） ─────────────── */
 
 const ICONS = {
-  hand: (c) => hand(c, 18, 20, 0.86),
+  mouse: (c) => cursor(c, 10, 6, 1.1),
   anvil: (c) => anvil(c, 18.5, 28, 0.82),
-  bomb: (c) => bomb(c, 16, 22, 1, 0.3, true),
-  mine: (c) => mine(c, 18, 26, 0.95, true),
   peel: (c) => peel(c, 18, 28, 1.25),
   spring: (c) => spring(c, 18, 31, 1, 0),
   spikes: (c) => spikes(c, 18, 28, 0.8, 0, 1.4, 38),
   bolt: (c) => boltIcon(c, 18, 18, 1),
-  saw: (c) => saw(c, 10, 21, 0.56, -0.5, 0, false),
   roller: (c) => roller(c, 28, 31, 0.3, 1, 0.6),
-  rocket: (c) => rocket(c, 17, 19, 0.82, -0.78, 0.4, true),
   freeze: (c) => snow(c, 18, 18, 1),
   hole: (c) => hole(c, 18, 18, 7.2, 0.6),
   eraser: (c) => eraser(c, 8, 23, 0.78),
   pencil: (c) => pencil(c, 7, 29, 0.62),
-  bin: (c) => bin(c, 18, 33, 0.53),
+  nail: (c) => nail(c, 18, 18, 2.3),
+  rope: (c) => {
+    // 一圈绳子
+    for (const [y, w] of [[25, 12], [19, 11], [13, 9]]) {
+      c.beginPath(); c.ellipse(18, y, w, 5, 0, 0, Math.PI * 2);
+      ink(c, 2.8); c.stroke();
+      c.strokeStyle = PAPER; c.lineWidth = 0.9; c.setLineDash([2, 3]); c.stroke(); c.setLineDash([]);
+    }
+    ink(c, 2.8); c.beginPath(); c.moveTo(27, 12); c.quadraticCurveTo(33, 8, 31, 3); c.stroke();
+  },
+  balloon: (c) => {
+    balloon(c, 18, 13, 0.82);
+    ink(c, 1.2); c.beginPath(); c.moveTo(18, 26); c.quadraticCurveTo(15, 29, 19, 34); c.stroke();
+  },
+  water: (c) => {
+    // 一滴水和两条波浪
+    c.beginPath(); c.moveTo(18, 3); c.bezierCurveTo(24, 11, 27, 15, 27, 19); c.arc(18, 19, 9, 0, Math.PI); c.bezierCurveTo(9, 15, 12, 11, 18, 3); c.closePath();
+    c.fillStyle = rad(c, 15, 16, 1, 13, 245, 90); c.fill(); ink(c, 2); c.stroke();
+    ink(c, 1.8);
+    c.beginPath(); c.moveTo(4, 31); c.quadraticCurveTo(8, 28, 12, 31); c.quadraticCurveTo(16, 34, 20, 31); c.quadraticCurveTo(24, 28, 28, 31); c.quadraticCurveTo(30, 32.5, 32, 31); c.stroke();
+  },
 };
 
 /** 把一个图标画成二值化的小画布 */
@@ -493,21 +450,17 @@ export function makeIcon(id, size = 36) {
   return cv;
 }
 
-/** 放道具之前手指下面那个预览 */
-export function ghost(c, id, x, y, s, t, ground) {
+/** 放道具之前手指下面那个预览。gy 是手指下面的落脚点（地面或者铅笔线） */
+export function ghost(c, id, x, y, s, t, gy) {
   switch (id) {
     case 'anvil': anvil(c, x, y, s); break;
-    case 'bomb': bomb(c, x, y, s, t, false); break;
-    case 'mine': mine(c, x, ground, s, true); break;
-    case 'peel': peel(c, x, ground, s); break;
-    case 'spring': spring(c, x, ground, s, 0); break;
+    case 'peel': peel(c, x, gy, s); break;
+    case 'spring': spring(c, x, gy, s, 0); break;
     case 'bolt': boltIcon(c, x, y, s); break;
-    case 'rocket': rocket(c, x, y, s, -Math.PI / 2, t, false); break;
     case 'freeze': snow(c, x, y, s); break;
     case 'hole': hole(c, x, y, 18 * s, t); break;
-    case 'bin': bin(c, x, y, s); break;
-    case 'spikes': spikes(c, x, ground + 1, s, 0, 1); break;
-    case 'roller': roller(c, x, ground + 1, s, 1, t); break;
+    case 'spikes': spikes(c, x, gy + 1, s, 0, 1); break;
+    case 'roller': roller(c, x, gy + 1, s, 1, t); break;
     default: break;
   }
 }
