@@ -17,3 +17,12 @@
 }
 .home-bar i { width: 136px; height: 5px; border-radius: 3px; background: var(--ink); opacity: .82; transition: transform .2s var(--ease); }
 .home-bar:active i { transform: scaleX(1.06); }
+
+/* 标了 wide 的 App：大屏上不再是一台小手机，整个屏幕都给它 */
+@media (min-width: 640px) and (min-height: 760px) {
+  body.wide-app #device {
+    position: fixed; inset: 0; width: auto; height: auto; border-radius: 0; box-shadow: none;
+    --radius-device: 0px; --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  body.wide-app .island, body.wide-app #home { visibility: hidden; }
+}

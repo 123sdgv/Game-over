@@ -45,6 +45,9 @@ const post = (w, type) => {
   if (f && f.contentWindow) f.contentWindow.postMessage({ type }, location.origin);
 };
 
+/** 标了 wide 的 App（比如要横屏玩的）在 iPad / 电脑上铺满屏幕，不显示成一台小手机 */
+const setWide = (on) => document.body.classList.toggle('wide-app', !!on);
+
 function build(app) {
   const body = h('div', { class: 'window-body' });
   if (app.system) body.append(settingsFactory());
@@ -76,6 +79,7 @@ export function openApp(id) {
   current = w;
   busy = true;
   document.body.classList.add('app-open');
+  setWide(app.wide);
   const r = iconRect(id);
   const from = shrinkTo(r);
   const R = deviceRadius();
@@ -97,7 +101,7 @@ export function goHome({ from, instant } = {}) {
   document.body.classList.remove('app-open');
   const home = document.getElementById('home');
   home.getAnimations().forEach((a) => a.cancel());
-  if (instant) { w.el.hidden = true; w.el.style.transform = ''; emit('app:close', w.app.id); return; }
+  if (instant) { w.el.hidden = true; w.el.style.transform = ''; setWide(false); emit('app:close', w.app.id); return; }
   busy = true;
   const to = shrinkTo(iconRect(w.app.id));
   const start = from || { transform: 'none', borderRadius: `${deviceRadius()}px` };
@@ -110,6 +114,7 @@ export function goHome({ from, instant } = {}) {
     w.el.style.transform = '';
     w.el.style.borderRadius = '';
     busy = false;
+    setWide(false);
     emit('app:close', w.app.id);
   };
 }
@@ -118,7 +123,7 @@ export function goHome({ from, instant } = {}) {
 export function destroyWindow(id) {
   const w = windows.get(id);
   if (!w) return;
-  if (current === w) current = null;
+  if (current === w) { current = null; setWide(false); }
   w.el.remove();
   windows.delete(id);
 }

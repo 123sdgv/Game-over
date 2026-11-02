@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>整蛊火柴人</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="desk">
+    <div id="plate" aria-hidden="true"></div>
+    <div id="win">
+      <header id="titlebar">
+        <button class="box" id="btnSys" aria-label="关于"><i></i></button>
+        <span id="titleText">整蛊火柴人 - 火柴人.exe</span>
+        <button class="box" id="btnMin" aria-label="回到主屏幕"><svg viewBox="0 0 10 10"><path d="M1 3h8L5 8z"/></svg></button>
+        <button class="box" id="btnMax" aria-label="最大化"><svg viewBox="0 0 10 10"><path d="M1 7h8L5 2z"/></svg></button>
+      </header>
+      <nav id="menu">
+        <button id="mNew"><u>重</u>画</button>
+        <button id="mClear"><u>清</u>场</button>
+        <button id="mSlow"><u>慢</u>放</button>
+        <button id="mHelp"><u>帮</u>助</button>
+        <span id="menuInfo"></span>
+      </nav>
+      <div id="panes">
+        <section id="left">
+          <div id="stage">
+            <canvas id="cv"></canvas>
+            <div id="bubble" hidden><span id="bubbleText"></span></div>
+          </div>
+          <div id="status">
+            <svg id="fig" viewBox="0 0 40 60" aria-hidden="true">
+              <circle id="fHead" cx="20" cy="9" r="6.5"/>
+              <path id="fX" d="M17 6.5l5 5M22 6.5l-5 5" hidden/>
+              <line id="fTorso" x1="20" y1="15.5" x2="20" y2="36"/>
+              <line id="fLArm" x1="20" y1="20" x2="8" y2="33"/>
+              <line id="fRArm" x1="20" y1="20" x2="32" y2="33"/>
+              <line id="fLLeg" x1="20" y1="36" x2="9" y2="56"/>
+              <line id="fRLeg" x1="20" y1="36" x2="31" y2="56"/>
+            </svg>
+            <div id="bars">
+              <div class="bar"><b>生命</b><div class="track"><i id="bHp"></i></div><em id="nHp">100</em></div>
+              <div class="bar"><b>疼痛</b><div class="track"><i id="bPain" class="half"></i></div><em id="nPain">0</em></div>
+              <div class="bar"><b>恐惧</b><div class="track"><i id="bFear" class="quarter"></i></div><em id="nFear">0</em></div>
+            </div>
+            <dl id="info">
+              <div><dt>状态</dt><dd id="iState">发呆</dd></div>
+              <div><dt>伤情</dt><dd id="iHurt">完好</dd></div>
+              <div><dt>被整</dt><dd id="iHits">0 下</dd></div>
+            </dl>
+          </div>
+        </section>
+        <section id="right">
+          <div id="grid" role="toolbar" aria-label="道具"></div>
+          <div id="desc">
+            <strong id="dName"></strong>
+            <p id="dText"></p>
+            <small id="dHow"></small>
+          </div>
+          <div id="log" hidden></div>
+        </section>
+      </div>
+    </div>
+
+    <div id="cardWrap" hidden>
+      <div class="card" role="alertdialog" aria-labelledby="cardTitle">
+        <div id="cardTitle"></div>
+        <div class="card-body">
+          <div id="cardIcon"></div>
+          <div class="card-text">
+            <div id="cardBig"></div>
+            <div id="cardMeta"></div>
+          </div>
+        </div>
+        <div class="card-row">
+          <button id="cardAlt" class="ghost"></button>
+          <button id="cardMain"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

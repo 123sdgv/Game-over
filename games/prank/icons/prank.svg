@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg-prank" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#EEF0F3"/></linearGradient>
+    <linearGradient id="anvil-prank" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5A5D63"/><stop offset="1" stop-color="#0D0E10"/></linearGradient>
+    <pattern id="dots-prank" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="1.5" height="1.5" fill="#1C1D20"/></pattern>
+  </defs>
+  <rect width="120" height="120" fill="url(#bg-prank)"/>
+  <rect x="0" y="99" width="120" height="21" fill="url(#dots-prank)" opacity=".28"/>
+  <rect x="0" y="97" width="120" height="3" fill="#000"/>
+  <!-- 铁砧 -->
+  <path d="M42 34h3l3-7-8-5c-3 0-5-1-8-3 3-3 7-5 12-5h36v9l-13 5 2 6h3v3H42z" fill="url(#anvil-prank)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M46 16.5h31" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+  <!-- 下落线 -->
+  <path d="M38 44v6M60 44v9M82 44v6" stroke="#000" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- 火柴人 -->
+  <g fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 74v14"/>
+    <path d="M60 76l-14-6M60 76l14-6"/>
+    <path d="M60 88l-11 9M60 88l11 9"/>
+  </g>
+  <circle cx="60" cy="65" r="9" fill="#fff" stroke="#000" stroke-width="4"/>
+  <circle cx="56.8" cy="64" r="2.7" fill="#fff" stroke="#000" stroke-width="1.5"/><circle cx="63.2" cy="64" r="2.7" fill="#fff" stroke="#000" stroke-width="1.5"/>
+  <circle cx="56.8" cy="63" r="1" fill="#000"/><circle cx="63.2" cy="63" r="1" fill="#000"/>
+  <ellipse cx="60" cy="69.6" rx="1.8" ry="1.6" fill="#000"/>
+</svg>
