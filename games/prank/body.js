@@ -30,6 +30,7 @@ const LINES = {
   arm: ['我胳膊呢？', '还挺凉快', '这还能接吗', '我投诉你', '手！我的手！'],
   leg: ['我的腿！', '站不住了', '这下省裤子了', '这还能接吗', '我腿呢？'],
   bomb: ['炸弹！！', '不不不不', '快跑', '谁放的！'],
+  bombOn: ['拿开！拿开！', '它粘我身上了！', '救命救命救命', '这怎么弄下来！'],
   saw: ['别过来！', '那是电锯！！', '有话好好说'],
   roller: ['刹车！', '看路啊！', '有人！有人！'],
   hole: ['这也太黑了', '好吸啊', '抓不住了'],
@@ -264,6 +265,7 @@ export class Body {
   removeIce() {
     for (const s of this.ice) this.W.removeStick(s);
     this.ice = [];
+    for (const p of this.all) if (p.pin && p.pin.by === 'ice') p.pin = null;
   }
 
   knock(dur = 0.8) {
@@ -473,6 +475,30 @@ export class Body {
     this.W.word(this.j.hip.x, this.j.hip.y - 50, '呲溜', 16);
   }
 
+  /** 慌不择路，脸朝下摔一跤 */
+  stumble() {
+    const d = this.dir, j = this.j;
+    for (const n of ['lFo', 'rFo', 'lKn', 'rKn']) { const p = j[n]; if (p) p.px += d * rnd(180, 300) * DT; }
+    for (const n of ['head', 'neck', 'chest']) { const p = j[n]; if (p) { p.px -= d * rnd(200, 280) * DT; p.py += 40 * DT; } }
+    this.knock(1.1);
+    this.say('摔了！！', 1, true);
+  }
+  /** 走到某个地方去（他不知道那儿有什么） */
+  walkTo(x) {
+    if (this.state !== 'ctrl' || this.mob === 'crawl' || this.mob === 'worm') return;
+    this.tx = clamp(x, 26, this.W.w - 26);
+    this.dir = this.tx > this.x ? 1 : -1;
+    this.act = 'walk';
+    this.actT = 8;
+  }
+  /** 把他整个人往上一颠 */
+  hop(vy = 220) {
+    if (!this.alive || this.state === 'draw' || this.state === 'frozen') return;
+    if (this.state === 'flat') this.popUp();
+    this.knock(1);
+    for (const p of this.all) { if (!p.pin && p.im !== 0 && !p.hole && !p.trap) p.py = p.y + vy * DT; }
+  }
+
   /* 冰冻 */
   freeze() {
     if (this.dead || this.gone || this.state === 'frozen' || this.state === 'draw') return;
@@ -482,6 +508,10 @@ export class Body {
     for (let i = 0; i < a.length; i++) for (let k = i + 1; k < a.length; k++) this.ice.push(this.W.addStick(a[i], a[k], 'ice'));
     this.state = 'frozen';
     this.ctrl = 0;
+    for (const n of ['lFo', 'rFo']) {
+      const p = this.j[n];
+      if (p && !p.pin && p.y > this.W.supportY(p.x, p.y - 12) - 20) p.pin = { x: p.x, y: p.y, by: 'ice' }; // 走路抬着的脚也算，免得自己倒了摔碎
+    }
     this.iceT = 8;
     this.mood = 'scared'; this.moodT = 99;
     this.W.say('', 0);
@@ -592,7 +622,7 @@ export class Body {
 
   grabbed() {
     if (this.state === 'flat') this.popUp();
-    for (const p of this.all) { p.flat = false; }
+    for (const p of this.all) { p.flat = false; if (p.pin && p.pin.by === 'ice') p.pin = null; }
     if (this.dead) return;
     this.held = true;
     if (this.state !== 'frozen') this.knock(0.5);
@@ -796,11 +826,24 @@ export class Body {
     }
     if (this.gapeO) { this.act = 'gape'; this.fear = Math.min(100, this.fear + dt * 60); return; }
 
+    // 炸弹粘在自己身上：怎么跑都甩不掉
+    if (W.props.some((o) => o.t === 'bomb' && o.on && this.all.includes(o.on))) {
+      this.fear = Math.min(100, this.fear + dt * 90);
+      if (this.act !== 'run' && this.act !== 'move') this.say(pick(LINES.bombOn), 1.2, true);
+      this.act = this.mob === 'walk' || this.mob === 'hop' ? 'run' : 'move';
+      this.actT = 0.4;
+      return;
+    }
+
     const th = W.threatNear(hip.x, hip.y);
-    if (th && th.kind === 'saw') {
+    if (th && (th.kind === 'saw' || th.kind === 'bomb')) {
       this.sawSeen = (this.sawSeen || 0) + dt;
-      if (this.sawSeen < 0.42) { this.act = 'gape'; this.dir = hip.x < th.x ? 1 : -1; this.fear = Math.min(100, this.fear + dt * 80); return; }
-    } else if (!th) this.sawSeen = 0;
+      if (this.sawSeen < (th.kind === 'bomb' ? 0.55 : 0.42)) {
+        if (th.kind === 'bomb' && this.act !== 'gape') this.say(pick(LINES.bomb), 1.2, true);
+        this.act = 'gape'; this.dir = hip.x < th.x ? 1 : -1; this.fear = Math.min(100, this.fear + dt * 80);
+        return;
+      }
+    } else if (!th) { this.sawSeen = 0; this.panic = null; }
     if (th) {
       this.fear = Math.min(100, this.fear + dt * (th.d < 60 ? 90 : 45));
       const dirAway = hip.x < th.x ? -1 : 1;
@@ -808,6 +851,14 @@ export class Body {
       const wasScared = this.act === 'run' || this.act === 'cower';
       if (!wasScared) { this.say(pick(LINES[th.kind] || LINES.bomb), 1.2, true); }
       if (this.mob !== 'walk' && this.mob !== 'hop') { this.act = 'move'; this.dir = dirAway; this.actT = 0.4; return; }
+      if (th.kind === 'bomb') {
+        if (!this.panic) { const r = Math.random(); this.panic = r < 0.45 ? 'run' : r < 0.72 ? 'trip' : 'cower'; this.panicT = rnd(0.15, 0.4); }
+        if (this.panic === 'cower') { this.act = 'cower'; this.dir = dirAway; this.actT = 0.4; return; }
+        if (this.panic === 'trip') {
+          this.panicT -= dt;
+          if (this.panicT <= 0) { this.panic = 'run'; this.dir = dirAway; this.stumble(); return; }
+        }
+      }
       this.act = edge < 14 ? 'cower' : 'run';
       this.dir = dirAway;
       this.actT = 0.4;
@@ -949,7 +1000,7 @@ export class Body {
         this.arm('l', n[0] - 18, n[1] + 10 - h * 9, 1);
         this.arm('r', n[0] + 18, n[1] + 10 - h * 9, -1);
       } else {
-        const om = (run ? 15 : 7.5) * hpK, stride = run ? 21 : 13, lift = run ? 14 : 7;
+        const om = (run ? 11.5 : 7.5) * hpK, stride = run ? 21 : 13, lift = run ? 14 : 7;
         const sp = om * stride * 0.62;
         this.x += d * sp * dt;
         this.phase += om * dt;

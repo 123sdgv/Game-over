@@ -85,13 +85,15 @@ const P = {
   bomb: {
     sub(W, o, dt) {
       if (o.held) return;
+      if (o.on) { o.x = o.on.x; o.y = o.on.y; o.vx = 0; o.vy = 0; return; }
       W.circle(o, 12 * o.s, dt);
     },
     frame(W, o, dt) {
+      if (o.on && (o.held || !W.pts.includes(o.on))) o.on = null;
       o.fuse -= dt;
       o.tick = (o.tick || 0) - dt;
       if (o.tick <= 0) { o.tick = o.fuse < 0.8 ? 0.09 : 0.26; sfx.tick(); }
-      if (o.fuse <= 0) { W.remove(o); W.explode(o.x, o.y, 92 * o.s, o.s, 'bomb'); }
+      if (o.fuse <= 0) { W.remove(o); W.explode(o.x, o.y, 125 * o.s, o.s, 'bomb'); }
     },
     draw(W, c, o) { art.bomb(c, o.x, o.y, o.s, W.t, true, o.fuse < 0.8 ? 1 : 0); },
     front: true,
@@ -666,7 +668,7 @@ export class World {
     let best = null, bd = 1e9;
     const take = (tx, r, kind) => { const d = Math.abs(tx - x); if (d < r && d < bd) { bd = d; best = { x: tx, d, kind }; } };
     for (const o of this.props) {
-      if (o.t === 'bomb') take(o.x, 115 * o.s, 'bomb');
+      if (o.t === 'bomb') { if (!o.on) take(o.x, 140 * o.s, 'bomb'); }
       else if (o.t === 'rocket' && o.st !== 'strap') take(o.x, 100, 'rocket');
       else if (o.t === 'roller') {
         const ahead = (x - o.x) * o.dir;
@@ -738,7 +740,7 @@ export class World {
 
   /* 工具效果 */
   dropAnvil(x, s) { sfx.whistle(); return this.addProp({ t: 'anvil', x: clamp(x, 25 * s, this.w - 25 * s), y: -8, s, vy: 40, life: 6.5 }); }
-  dropBomb(x, y, s) { sfx.place(); return this.addProp({ t: 'bomb', x: clamp(x, 14, this.w - 14), y: Math.min(y, this.ground - 12 * s), s, fuse: 2.1 + s * 0.2, vx: 0, vy: 0 }); }
+  dropBomb(x, y, s) { sfx.place(); return this.addProp({ t: 'bomb', x: clamp(x, 14, this.w - 14), y: Math.min(y, this.ground - 12 * s), s, fuse: 1.5 + s * 0.2, vx: 0, vy: 0 }); }
   placeMine(x, y, s) { sfx.place(); return this.addProp({ t: 'mine', x: clamp(x, 16, this.w - 16), y: Math.min(y, this.ground), s, rest: y >= this.ground }); }
   placePeel(x, y, s) { sfx.place(); return this.addProp({ t: 'peel', x: clamp(x, 14, this.w - 14), y: Math.min(y, this.ground), s, rest: y >= this.ground }); }
   placeSpring(x, y, s) { sfx.place(); return this.addProp({ t: 'spring', x: clamp(x, 18, this.w - 18), y: Math.min(y, this.ground), s, rest: y >= this.ground }); }

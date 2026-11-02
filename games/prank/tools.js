@@ -126,11 +126,11 @@ export function makeTools(W, cb = {}) {
       up() { W.sawT = null; },
     },
     eraser: {
-      down(x, y) { W.eraserT = { x, y, last: 0 }; used('eraser'); W.eraseAt(x, y, 8); },
+      down(x, y, r = 8) { W.eraserT = { x, y, last: 0, r }; used('eraser'); W.eraseAt(x, y, r); },
       move(x, y) {
         const E = W.eraserT; if (!E) return;
         const d = hyp(x - E.x, y - E.y), n = Math.ceil(d / 5) || 1;
-        for (let i = 1; i <= n; i++) W.eraseAt(E.x + (x - E.x) * i / n, E.y + (y - E.y) * i / n, 8);
+        for (let i = 1; i <= n; i++) W.eraseAt(E.x + (x - E.x) * i / n, E.y + (y - E.y) * i / n, E.r);
         E.x = x; E.y = y;
         if (d > 1) sfx.erase();
       },
@@ -171,24 +171,28 @@ export function makeTools(W, cb = {}) {
       if (!p) return null;
       const dir = p.x < W.w / 2 ? 1 : -1;
       const x0 = p.x, y0 = p.y;
-      return { dur: 0.62, path: (u) => (u < 0.55 ? { x: x0 - dir * 18 * (u / 0.55), y: y0 - 56 * (u / 0.55) } : { x: x0 - dir * 18 + dir * (W.w * 0.75) * ((u - 0.55) / 0.45), y: y0 - 56 - 44 * ((u - 0.55) / 0.45) }) };
+      return { dur: 0.62, path: (u) => (u < 0.55 ? { x: x0 - dir * 18 * (u / 0.55), y: y0 - 56 * (u / 0.55) } : { x: x0 - dir * 18 + dir * Math.min(W.w * 0.75, 215) * ((u - 0.55) / 0.45), y: y0 - 56 - 44 * ((u - 0.55) / 0.45) }) };
     },
     saw() {
       const B = W.B;
-      const list = ['lKn', 'rKn', 'lEl', 'rEl', 'chest'].map((n) => B.j[n]).filter(Boolean);
-      if (!list.length) return null;
-      const p = list[(Math.random() * list.length) | 0];
-      const dir = p.x < W.w / 2 ? 1 : -1;
-      const sx = p.x - dir * 66, ex = p.x + dir * 66, y = p.y - 2;
-      return { dur: 0.34, path: (u) => ({ x: sx + (ex - sx) * u, y }) };
+      const list = ['lKn', 'rKn', 'lEl', 'rEl'].map((n) => B.j[n]).filter(Boolean);
+      if (!list.length || Math.random() < 0.15) {
+        const c = B.j.chest, dir = c.x < W.w / 2 ? 1 : -1;
+        return { dur: 0.34, path: (u) => ({ x: c.x - dir * 66 + dir * 132 * u, y: c.y - 2 }) };
+      }
+      const p = list[(Math.random() * list.length) | 0], hip = B.j.hip;
+      const out = hip && p.x < hip.x ? -1 : 1;
+      const sx = p.x + out * 62, y = p.y - 1;
+      return { dur: 0.3, path: (u) => ({ x: sx - out * 62 * Math.min(1, u * 1.15), y }) };
     },
     eraser() {
       const B = W.B;
       const list = ['lFo', 'rFo', 'lHa', 'rHa'].map((n) => B.j[n]).filter(Boolean);
       const p = list.length ? list[(Math.random() * list.length) | 0] : B.j.head || B.j.chest;
       if (!p) return null;
-      const x0 = p.x, y0 = p.y;
-      return { dur: 0.7, path: (u) => ({ x: x0 + Math.sin(u * 14) * 9, y: y0 - 22 + u * 26 }) };
+      const hip = B.j.hip, out = hip && p.x < hip.x ? -1 : 1;
+      const x0 = p.x + out * 2, y0 = p.y;
+      return { dur: 0.24, r: 4, path: (u) => ({ x: x0 + Math.sin(u * 14) * 1.5, y: y0 - 6 + u * 8 }) };
     },
     pencil() {
       const B = W.B;
@@ -213,20 +217,33 @@ export function makeTools(W, cb = {}) {
         if (!a) { sfx.error(); return; }
         const q = a.path(0);
         auto = { id, t: 0, dur: a.dur, path: a.path };
-        drag[id].down(q.x, q.y);
+        drag[id].down(q.x, q.y, a.r);
         return;
       }
-      const g = W.ground, dir = W.B.dir || 1;
+      const g = W.ground, B = W.B;
+      // 朝有地方走的那边
+      const dir = x + (B.dir || 1) * 110 > W.w - 30 ? -1 : x + (B.dir || 1) * 110 < 30 ? 1 : (B.dir || 1);
       switch (id) {
         case 'anvil': useAt(id, x, 0, s); break;
-        case 'bomb': useAt(id, clamp(x + dir * 18, 16, W.w - 16), y - 50, s); break;
-        case 'mine': case 'peel': useAt(id, clamp(x + dir * 34, 20, W.w - 20), g, s); break;
+        case 'bomb': {
+          // 直接粘在他胸口，甩不掉
+          const o = W.dropBomb(x, y, s);
+          if (B.j.chest && !B.dead) { o.on = B.j.chest; o.fuse = 1.5; }
+          used(id);
+          break;
+        }
+        case 'mine': case 'peel': {
+          const q = clamp(x + dir * 34, 20, W.w - 20);
+          useAt(id, q, g, s);
+          B.walkTo(q + dir * 70);
+          break;
+        }
         case 'spring': useAt(id, x, g, s); break;
-        case 'spikes': useAt(id, x, g, s); break;
+        case 'spikes': useAt(id, x, g, s); B.hop(); break;
         case 'bolt': useAt(id, x, y, s); break;
         case 'roller': useAt(id, x < W.w / 2 ? 0 : W.w, g, s); break;
         case 'rocket': {
-          const B = W.B, p = B.j.chest;
+          const p = B.j.chest;
           if (p) useAt(id, p.x, p.y, s); else useAt(id, x, y, s);
           break;
         }
