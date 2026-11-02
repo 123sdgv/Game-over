@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  打罐子的「三星发数」机器人：每一枪在剩下的罐子上试十几个瞄点（每个都从头模拟一遍），挑打下最多的那枪，直到清台。
+  用法（改了关卡以后要重跑）：起个本地服务器，用 Playwright 打开这个页面，等 window.ready，然后对每一关 evaluate solve(n)，
+  拿返回的 used（开枪数减去金罐子送回的）和 cans，按 levels.js 里 PAR 上面那段注释的规则算出 PAR 表。
+-->
+<html><head><meta charset="utf-8"><title>打罐子 · 三星机器人</title></head><body>
+<script src="../../_shared/lib/ammo.wasm.js"></script>
+<script type="module">
+import { loadAmmo, Physics } from '../physics.js';
+import { level, downY, CAN_H } from '../levels.js';
+import { cameraFor } from '../scene.js';
+await loadAmmo('../../_shared/lib/');
+const phys = new Physics();
+const P = {};
+
+function sim(spec, state, dy, aim, cam, seconds = 2.6) {
+  phys.build(spec);
+  if (state.snap) phys.restore(state.snap);
+  const exploded = new Set(state.exploded);
+  const down = new Set(state.down);
+  let refunds = state.refunds;
+  const timers = [];
+  const boom = (i, delay) => {
+    if (exploded.has(i)) return;
+    exploded.add(i);
+    timers.push({ t: delay, f: () => {
+      const res = phys.explode(i);
+      if (!res) return;
+      for (const h of res.hits) { const it = spec.items[h.i]; if (it.k === 'can' && it.t === 'b' && h.d < 2.8) boom(h.i, 0.1 + h.d * 0.05); }
+    } });
+  };
+  if (aim) {
+    const o = cam.pos;
+    const d0 = [aim[0] - o[0], aim[1] - o[1], aim[2] - o[2]];
+    const L = Math.hypot(...d0);
+    const d = d0.map((v) => v / L);
+    const far = o.map((v, i) => v + d[i] * 160);
+    const hit = phys.ray(o, far);
+    let spawn;
+    if (hit) { const back = Math.min(2.6, hit.frac * 160 - 0.4); spawn = hit.point.map((v, i) => v - d[i] * back); }
+    else spawn = o.map((v, i) => v + d[i] * 1.5);
+    phys.fire(spawn, d);
+  }
+  const dt = 1 / 60;
+  for (let t = 0; t < seconds; t += dt) {
+    for (let i = timers.length - 1; i >= 0; i--) { timers[i].t -= dt; if (timers[i].t <= 0) { const f = timers[i].f; timers.splice(i, 1); f(); } }
+    const evs = phys.step(dt);
+    for (const ev of evs) if (ev.type === 'hit' && ev.item != null && spec.items[ev.item].k === 'can' && spec.items[ev.item].t === 'b') boom(ev.item, 0);
+    spec.items.forEach((it, i) => {
+      if (it.k !== 'can' || down.has(i)) return;
+      const pi = phys.items[i];
+      let isDown = pi.gone;
+      if (!isDown) { phys.pose(pi.b, P); isDown = P.y < dy || Math.abs(P.x) > 70 || P.z > 40 || P.z < -40; }
+      if (isDown) { down.add(i); if (it.t === 'g') refunds++; }
+    });
+  }
+  return { snap: phys.snapshot(), down: [...down], exploded: [...exploded], refunds };
+}
+
+function candidates(spec, state) {
+  const out = [];
+  const downs = new Set(state.down);
+  phys.build(spec);
+  if (state.snap) phys.restore(state.snap);
+  spec.items.forEach((it, i) => {
+    const pi = phys.items[i];
+    if (pi.gone) return;
+    if (it.k === 'can' && downs.has(i)) return;
+    phys.pose(pi.b, P);
+    const base = [P.x, P.y, P.z];
+    if (it.k === 'board') { out.push({ y: P.y, p: [P.x, P.y, P.z + 0.2], pri: 1 }); return; }
+    const pri = it.t === 'b' ? -10 : 0;
+    for (const [dx, dyy] of [[0, -0.32], [0, 0.25], [-0.18, -0.3], [0.18, -0.3]]) out.push({ y: P.y + pri, p: [base[0] + dx, base[1] + dyy, base[2] + 0.3], pri });
+  });
+  out.sort((a, b) => a.y - b.y);
+  return out.slice(0, 18);
+}
+
+window.solve = (n) => {
+  const spec = level(n);
+  const dy = downY(spec);
+  const cam = cameraFor(spec, 390 / 844);
+  const cans = spec.items.filter((it) => it.k === 'can').length;
+  let state = { snap: null, down: [], exploded: [], refunds: 0 };
+  state = sim(spec, state, dy, null, cam, 0.2);
+  let shots = 0;
+  const log = [];
+  while (state.down.length < cans && shots < 14) {
+    let best = null;
+    for (const c of candidates(spec, state)) {
+      const r = sim(spec, state, dy, c.p, cam);
+      const score = r.down.length + r.refunds * 0.5;
+      if (!best || score > best.score) best = { score, r, c };
+    }
+    state = best.r;
+    shots++;
+    log.push(state.down.length);
+  }
+  return { n, cans, shots, refunds: state.refunds, used: Math.max(1, shots - state.refunds), log, cleared: state.down.length >= cans };
+};
+window.ready = true;
+</script></body></html>

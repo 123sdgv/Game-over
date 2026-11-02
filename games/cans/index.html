@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>打罐子</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="menu-on">
+  <canvas id="cv"></canvas>
+  <div class="flash" id="flash"></div>
+  <div class="fade" id="fade"></div>
+
+  <div class="loading" id="loading">
+    <svg viewBox="0 0 40 56" class="load-can"><rect x="4" y="6" width="32" height="44" rx="6" fill="#ff7a3d"/><rect x="4" y="18" width="32" height="18" fill="#fff" opacity=".9"/><rect x="7" y="2" width="26" height="6" rx="3" fill="#d9dde3"/><rect x="7" y="48" width="26" height="6" rx="3" fill="#c5cad2"/></svg>
+    <div>摆罐子中…</div>
+  </div>
+
+  <header class="hud" id="hud">
+    <div class="hud-row">
+      <div class="pill lvl"><b id="lvName">第 1 关</b><span class="tag" id="modeTag">轻松</span></div>
+      <div class="pill left" id="leftPill">
+        <svg viewBox="0 0 20 28" class="mini-can"><rect x="2" y="3" width="16" height="22" rx="3" fill="currentColor"/><rect x="2" y="10" width="16" height="7" fill="#fff" opacity=".55"/><rect x="4" y="1" width="12" height="3" rx="1.5" fill="currentColor" opacity=".7"/></svg>
+        <b id="canLeft">0</b><small>/<span id="canAll">0</span></small>
+      </div>
+      <button class="pause" id="pause" aria-label="暂停"><svg viewBox="0 0 20 20"><rect x="5.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/><rect x="11.5" y="4.5" width="3" height="11" rx="1.2" fill="currentColor"/></svg></button>
+    </div>
+    <div class="ammo" id="ammo">
+      <div class="shells" id="shells"></div>
+      <div class="used" id="used"></div>
+      <div class="stars-mini" id="starsMini"><i></i><i></i><i></i></div>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden><b id="bannerBig"></b><span id="bannerSub"></span></div>
+  <div class="combo" id="combo"></div>
+
+  <div class="cross" id="cross" hidden>
+    <svg viewBox="0 0 80 80">
+      <g class="cross-shadow" fill="none" stroke="rgba(20,10,20,.55)" stroke-width="6" stroke-linecap="round">
+        <circle cx="40" cy="40" r="20"/>
+        <path d="M40 8v12M40 60v12M8 40h12M60 40h12"/>
+      </g>
+      <g class="cross-line" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+        <circle cx="40" cy="40" r="20"/>
+        <path d="M40 8v12M40 60v12M8 40h12M60 40h12"/>
+      </g>
+      <circle cx="40" cy="40" r="3.2" fill="currentColor" stroke="rgba(20,10,20,.55)" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="cancel" id="cancel" hidden>松手取消</div>
+
+  <div class="tip" id="tip" hidden>
+    <div class="tip-stage">
+      <div class="tip-cross"></div>
+      <div class="tip-finger"></div>
+    </div>
+    <div class="tip-text">按住屏幕出准星 · 拖到罐子上 · 松手开枪</div>
+  </div>
+
+  <div class="menu" id="menu" hidden>
+    <div class="menu-top">
+      <div class="menu-title">打罐子</div>
+      <div class="menu-sub" id="menuSub"></div>
+    </div>
+    <div class="menu-bottom">
+      <button class="btn main" id="goResume" hidden>继续上一局<small id="resumeSub"></small></button>
+      <button class="btn" id="goEasy"><span>轻松模式 · 第 <span id="easyNum">1</span> 关</span><small id="easySub">子弹不限</small></button>
+      <button class="btn ghost" id="goHard"><span>挑战模式 · 第 <span id="hardNum">1</span> 关</span><small id="hardSub">子弹有限</small></button>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-stars" id="cardStars" hidden><i></i><i></i><i></i></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+      <button class="card-link" id="cardLink" hidden></button>
+    </div>
+  </div>
+
+  <script src="../_shared/lib/ammo.wasm.js"></script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!doctype html>
+<!--
+  打罐子的背景画：黄昏的后院（天空、晚霞、远处的树和屋顶、电线杆、逆光的木栅栏、草丛）。
+  这是一张「画好就不再变」的图，所以不在游戏里现画：用浏览器打开这个页面，画好以后点「下载」，
+  存成 games/cans/img/backdrop.jpg。（自动测试脚本也是这么生成的：读 window.result 的 dataURL）
+  画布对应游戏里一块宽 46、高 50 的板子：x 从 -23 到 23，y 从 -1 到 49（地面 y = 0，单位分米）。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>打罐子 · 背景</title>
+<style>body { margin: 0; background: #222; color: #ddd; font: 14px sans-serif; } canvas { max-width: 100%; display: block; } a { color: #fc6; margin: 8px; display: inline-block; }</style>
+</head>
+<body>
+<a id="dl" download="backdrop.jpg">下载</a>
+<canvas id="c"></canvas>
+<script type="module">
+const W = 1400, H = 1520;
+const PW = 46, PH = 50;              // 板子的宽高（分米）
+const X = (x) => ((x + PW / 2) / PW) * W;
+const Y = (y) => (1 - (y + 1) / PH) * H;
+const U = W / PW;                    // 1 分米多少像素
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const r = rng(2026);
+const cv = document.getElementById('c');
+cv.width = W; cv.height = H;
+const g = cv.getContext('2d');
+const layer = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return [c, c.getContext('2d')]; };
+
+const SUN = { x: X(-4.6), y: Y(25.2) };
+const FENCE_TOP = 16.6;
+
+/* ---------------- 天空 ---------------- */
+{
+  const sky = g.createLinearGradient(0, 0, 0, Y(14));
+  sky.addColorStop(0, '#232c66');
+  sky.addColorStop(0.22, '#3d3f88');
+  sky.addColorStop(0.42, '#7a58a0');
+  sky.addColorStop(0.58, '#c36f9a');
+  sky.addColorStop(0.72, '#f08d84');
+  sky.addColorStop(0.84, '#ffad6e');
+  sky.addColorStop(0.94, '#ffcd82');
+  sky.addColorStop(1, '#ffe0a0');
+  g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  // 太阳的大光晕
+  g.globalCompositeOperation = 'screen';
+  let gr = g.createRadialGradient(SUN.x, SUN.y, 0, SUN.x, SUN.y, W * 0.75);
+  gr.addColorStop(0, 'rgba(255,236,180,.95)');
+  gr.addColorStop(0.12, 'rgba(255,200,130,.55)');
+  gr.addColorStop(0.4, 'rgba(255,150,110,.18)');
+  gr.addColorStop(1, 'rgba(255,120,120,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'source-over';
+}
+
+/* ---------------- 云：一条条被夕阳从下面照亮的薄云 ---------------- */
+function cloud(cx, cy, len, thick, seed, lit) {
+  const [c, cg] = layer();
+  const rr = rng(seed);
+  for (let i = 0; i < 46; i++) {
+    const t = rr();
+    const x = cx + (t - 0.5) * len;
+    const taper = 1 - Math.pow(Math.abs(t - 0.5) * 2, 1.6);
+    const y = cy + (rr() - 0.5) * thick * 0.6 * taper;
+    const rx = len * (0.05 + rr() * 0.08), ry = thick * (0.25 + rr() * 0.45) * (0.35 + taper * 0.65);
+    cg.beginPath(); cg.ellipse(x, y, rx, ry, 0, 0, 7); cg.fillStyle = '#fff'; cg.fill();
+  }
+  const [c2, g2] = layer();
+  g2.filter = `blur(${Math.max(3, thick * 0.18)}px)`;
+  g2.drawImage(c, 0, 0);
+  g2.filter = 'none';
+  g2.globalCompositeOperation = 'source-in';
+  const gr = g2.createLinearGradient(0, cy - thick, 0, cy + thick);
+  const near = Math.max(0, 1 - Math.hypot(cx - SUN.x, cy - SUN.y) / (W * 0.9));
+  gr.addColorStop(0, `rgba(${110 + near * 60},${86 + near * 40},${150 - near * 20},.95)`);
+  gr.addColorStop(0.55, `rgba(${200 + near * 40},${120 + near * 50},${140 - near * 30},.95)`);
+  gr.addColorStop(1, `rgba(255,${170 + near * 60},${130 + near * 40},1)`);
+  g2.fillStyle = gr; g2.fillRect(0, 0, W, H);
+  g.globalAlpha = lit;
+  g.drawImage(c2, 0, 0);
+  g.globalAlpha = 1;
+}
+cloud(X(-10), Y(44), W * 0.75, 70, 11, 0.55);
+cloud(X(9), Y(40.5), W * 0.7, 60, 12, 0.6);
+cloud(X(-14), Y(35.5), W * 0.62, 46, 13, 0.75);
+cloud(X(12), Y(33), W * 0.55, 34, 14, 0.8);
+cloud(X(-2), Y(29.5), W * 0.85, 26, 15, 0.85);
+cloud(X(-17), Y(26.5), W * 0.4, 18, 16, 0.8);
+cloud(X(16), Y(25.8), W * 0.4, 16, 17, 0.75);
+
+/* ---------------- 太阳本身 ---------------- */
+{
+  let gr = g.createRadialGradient(SUN.x, SUN.y, 0, SUN.x, SUN.y, 120);
+  gr.addColorStop(0, 'rgba(255,252,236,1)');
+  gr.addColorStop(0.32, 'rgba(255,244,205,1)');
+  gr.addColorStop(0.38, 'rgba(255,214,150,.75)');
+  gr.addColorStop(1, 'rgba(255,190,120,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(SUN.x, SUN.y, 120, 0, 7); g.fill();
+}
+
+/* ---------------- 远处的树：两层，越远越淡 ---------------- */
+function treeLine(seed, yBase, yTop, color, haze, xFrom = -26, xTo = 26) {
+  const [c, cg] = layer();
+  const rr = rng(seed);
+  cg.fillStyle = '#000';
+  cg.fillRect(0, Y(yBase), W, H);
+  let x = xFrom;
+  while (x < xTo) {
+    const w = 2.6 + rr() * 4.2;
+    const top = yBase + (yTop - yBase) * (0.4 + rr() * 0.6);
+    const cx = x + w / 2;
+    if (rr() < 0.22) {
+      // 松树：一层层的三角，边上毛毛的
+      const th = top + 2 + rr() * 3;
+      const tiers = 6;
+      for (let k = 0; k < tiers; k++) {
+        const t0 = k / tiers;
+        const yy = th - (th - yBase) * t0 * 0.92;
+        const half = 0.5 + (k + 1) * 0.42;
+        cg.beginPath();
+        cg.moveTo(X(cx), Y(yy));
+        for (let j = 0; j <= 8; j++) {
+          const f = j / 8;
+          cg.lineTo(X(cx + half * f + (rr() - 0.5) * 0.25), Y(yy - (th - yBase) * 0.22 * f - (j % 2) * 0.35));
+        }
+        cg.lineTo(X(cx - half), Y(yy - (th - yBase) * 0.22));
+        for (let j = 8; j >= 0; j--) {
+          const f = j / 8;
+          cg.lineTo(X(cx - half * f + (rr() - 0.5) * 0.25), Y(yy - (th - yBase) * 0.22 * f - (j % 2) * 0.35));
+        }
+        cg.closePath(); cg.fill();
+      }
+    } else {
+      // 阔叶树：一个大椭圆的树冠，上沿一圈小圆，边缘一鼓一鼓的
+      const ry = (top - yBase) * 0.62, rx = w * 0.62;
+      const cy = top - ry;
+      cg.beginPath(); cg.ellipse(X(cx), Y(cy), rx * U, ry * U, 0, 0, 7); cg.fill();
+      cg.fillRect(X(cx - rx), Y(cy), rx * 2 * U, Y(yBase) - Y(cy));
+      for (let k = 0; k < 70; k++) {
+        const a = Math.PI * (0.02 + rr() * 0.96);
+        const px = cx + Math.cos(a) * rx * (0.88 + rr() * 0.14);
+        const py = cy + Math.sin(a) * ry * (0.86 + rr() * 0.16);
+        cg.beginPath(); cg.arc(X(px), Y(py), U * (0.22 + rr() * 0.42), 0, 7); cg.fill();
+      }
+    }
+    x += w * (0.5 + rr() * 0.3);
+  }
+  const [c2, g2] = layer();
+  g2.filter = 'blur(1.2px)';
+  g2.drawImage(c, 0, 0);
+  g2.filter = 'none';
+  g2.globalCompositeOperation = 'source-in';
+  const gr = g2.createLinearGradient(0, Y(yTop + 3), 0, Y(yBase));
+  gr.addColorStop(0, color[0]); gr.addColorStop(1, color[1]);
+  g2.fillStyle = gr; g2.fillRect(0, 0, W, H);
+  // 太阳附近被照亮，雾气更重
+  g2.globalCompositeOperation = 'source-atop';
+  const sg = g2.createRadialGradient(SUN.x, SUN.y, 0, SUN.x, SUN.y, W * 0.45);
+  sg.addColorStop(0, `rgba(255,190,130,${haze})`); sg.addColorStop(1, 'rgba(255,170,130,0)');
+  g2.fillStyle = sg; g2.fillRect(0, 0, W, H);
+  g.drawImage(c2, 0, 0);
+}
+treeLine(31, 14, 27, ['#b07c9c', '#c98e98'], 0.7);
+treeLine(32, 13, 23.8, ['#6a4870', '#7c5576'], 0.5);
+
+/* ---------------- 邻居家的屋顶和窗 ---------------- */
+{
+  const x0 = X(7.5), x1 = X(19.5), peak = X(13.5);
+  g.fillStyle = '#4a3456';
+  g.fillRect(X(8.3), Y(21.5), X(18.7) - X(8.3), Y(14) - Y(21.5));
+  g.beginPath(); g.moveTo(x0, Y(21.2)); g.lineTo(peak, Y(26.3)); g.lineTo(x1, Y(21.2)); g.lineTo(x1, Y(20.6)); g.lineTo(x0, Y(20.6)); g.closePath();
+  g.fillStyle = '#3a2848'; g.fill();
+  // 屋脊上的一道亮边
+  g.strokeStyle = 'rgba(255,170,120,.55)'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(x0, Y(21.2)); g.lineTo(peak, Y(26.3)); g.stroke();
+  // 瓦片的线
+  g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 2;
+  for (let i = 1; i < 6; i++) {
+    const yy = 21.2 + i * 0.85;
+    const half = (1 - (yy - 21.2) / 5.1) * (x1 - x0) / 2;
+    g.beginPath(); g.moveTo(peak - half, Y(yy)); g.lineTo(peak + half, Y(yy)); g.stroke();
+  }
+  // 烟囱
+  g.fillStyle = '#3d2a4a'; g.fillRect(X(15.6), Y(27.2), U * 1.1, Y(23.4) - Y(27.2));
+  g.fillStyle = '#2f2039'; g.fillRect(X(15.45), Y(27.5), U * 1.4, U * 0.45);
+  // 亮着灯的窗
+  for (const wx of [10.2, 15.4]) {
+    const gx = X(wx), gy = Y(19.8), ww = U * 1.9, wh = U * 2.1;
+    const glow = g.createRadialGradient(gx + ww / 2, gy + wh / 2, 2, gx + ww / 2, gy + wh / 2, ww * 1.6);
+    glow.addColorStop(0, 'rgba(255,200,110,.45)'); glow.addColorStop(1, 'rgba(255,180,90,0)');
+    g.fillStyle = glow; g.fillRect(gx - ww, gy - wh, ww * 3, wh * 3);
+    g.fillStyle = '#ffd27a'; g.fillRect(gx, gy, ww, wh);
+    g.fillStyle = '#4a3456'; g.fillRect(gx + ww / 2 - 2, gy, 4, wh); g.fillRect(gx, gy + wh / 2 - 2, ww, 4);
+    g.strokeStyle = '#2f2039'; g.lineWidth = 4; g.strokeRect(gx, gy, ww, wh);
+  }
+}
+
+/* ---------------- 电线杆、电线、小鸟 ---------------- */
+{
+  const px = X(-15.5);
+  g.fillStyle = '#2c2033';
+  g.fillRect(px - U * 0.28, Y(36), U * 0.56, Y(0) - Y(36));
+  g.fillRect(px - U * 2.6, Y(33.8), U * 5.2, U * 0.4);
+  g.fillRect(px - U * 1.8, Y(31.6), U * 3.6, U * 0.32);
+  for (const [dx, dy] of [[-2.3, 34.2], [2.3, 34.2], [-1.5, 31.9], [1.5, 31.9]]) {
+    g.fillStyle = '#3a2c40'; g.fillRect(X(-15.5 + dx) - 3, Y(dy) - 9, 6, 9);
+  }
+  g.strokeStyle = 'rgba(36,26,44,.85)'; g.lineWidth = 2.2;
+  const wires = [[-2.3, 34.1, 27.5, 30.5], [2.3, 34.1, 26.5, 31.2], [-1.5, 31.8, 26, 28.4], [1.5, 31.8, 25, 28.9]];
+  for (const [dx, y0, x1w, y1] of wires) {
+    const x0 = X(-15.5 + dx), x1 = X(x1w);
+    g.beginPath(); g.moveTo(x0, Y(y0)); g.quadraticCurveTo((x0 + x1) / 2, Y(Math.min(y0, y1) - 2.6), x1, Y(y1)); g.stroke();
+    g.beginPath(); g.moveTo(x0, Y(y0)); g.quadraticCurveTo(x0 - U * 4, Y(y0 - 1.2), 0, Y(y0 - 1.5)); g.stroke();
+  }
+  // 电线上站着的小鸟
+  const bird = (x, y, s, flip) => {
+    g.save(); g.translate(x, y); g.scale(flip ? -s : s, s);
+    g.fillStyle = '#271c2e';
+    g.beginPath(); g.ellipse(0, -9, 9, 7, -0.2, 0, 7); g.fill();
+    g.beginPath(); g.arc(7, -16, 5, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(11, -17); g.lineTo(16, -15.5); g.lineTo(11, -14.5); g.fill();
+    g.beginPath(); g.moveTo(-7, -8); g.lineTo(-17, -3); g.lineTo(-8, -4); g.fill();
+    g.fillRect(-1, -3, 1.5, 4); g.fillRect(3, -3, 1.5, 4);
+    g.restore();
+  };
+  const wireY = (x0, y0, x1, y1, t) => {
+    const cx = (x0 + x1) / 2, cy = Y(Math.min(y0, y1) - 2.6);
+    const a = Y(y0), b = Y(y1);
+    return { x: (1 - t) * (1 - t) * X(x0) + 2 * (1 - t) * t * X(cx === cx ? (x0 + x1) / 2 : 0) + t * t * X(x1), y: (1 - t) * (1 - t) * a + 2 * (1 - t) * t * cy + t * t * b };
+  };
+  for (const [t, s, f] of [[0.34, 1.1, false], [0.38, 1, true], [0.62, 1.05, false]]) {
+    const p = wireY(-15.5 - 2.3, 34.1, 27.5, 30.5, t);
+    bird(p.x, p.y + 1, s, f);
+  }
+  const p2 = wireY(-15.5 + 1.5, 31.8, 25, 28.9, 0.5);
+  bird(p2.x, p2.y + 1, 0.95, true);
+  // 远处飞的两只
+  g.strokeStyle = '#3b2b47'; g.lineWidth = 2.5; g.lineCap = 'round';
+  for (const [x, y, s] of [[X(4), Y(38.5), 1], [X(6.2), Y(37.6), 0.75]]) {
+    g.beginPath(); g.moveTo(x - 12 * s, y); g.quadraticCurveTo(x - 5 * s, y - 7 * s, x, y); g.quadraticCurveTo(x + 5 * s, y - 7 * s, x + 12 * s, y); g.stroke();
+  }
+}
+
+/* ---------------- 栅栏：逆光，板缝里漏出金光 ---------------- */
+{
+  // 板缝后面的光
+  const lg = g.createLinearGradient(0, Y(FENCE_TOP), 0, Y(0));
+  lg.addColorStop(0, '#ffd890'); lg.addColorStop(0.6, '#ffb469'); lg.addColorStop(1, '#e88a52');
+  g.fillStyle = lg; g.fillRect(0, Y(FENCE_TOP), W, Y(0) - Y(FENCE_TOP));
+  const rr = rng(77);
+  const bw = 1.02, gap = 0.07;
+  let x = -PW / 2 - 0.3;
+  let i = 0;
+  while (x < PW / 2 + 1) {
+    const top = FENCE_TOP + (rr() - 0.5) * 0.35;
+    const x0 = X(x + gap / 2), x1 = X(x + bw - gap / 2);
+    const tilt = (rr() - 0.5) * 0.012;
+    g.save();
+    g.translate((x0 + x1) / 2, Y(0)); g.rotate(tilt); g.translate(-(x0 + x1) / 2, -Y(0));
+    // 板子的形状：狗耳朵式的顶
+    const ear = U * 0.28;
+    g.beginPath();
+    g.moveTo(x0, Y(-0.2)); g.lineTo(x0, Y(top) + ear); g.lineTo(x0 + ear, Y(top)); g.lineTo(x1 - ear, Y(top)); g.lineTo(x1, Y(top) + ear); g.lineTo(x1, Y(-0.2)); g.closePath();
+    const tone = 0.85 + rr() * 0.3;
+    const bg = g.createLinearGradient(0, Y(top), 0, Y(0));
+    bg.addColorStop(0, `rgb(${120 * tone},${80 * tone},${66 * tone})`);
+    bg.addColorStop(0.5, `rgb(${98 * tone},${66 * tone},${58 * tone})`);
+    bg.addColorStop(1, `rgb(${70 * tone},${48 * tone},${44 * tone})`);
+    g.fillStyle = bg; g.fill();
+    g.save(); g.clip();
+    // 木纹
+    for (let k = 0; k < 9; k++) {
+      const gx = x0 + (x1 - x0) * (0.08 + rr() * 0.84);
+      g.strokeStyle = `rgba(${40 + rr() * 20},${24},${20},${0.18 + rr() * 0.2})`;
+      g.lineWidth = 1 + rr() * 1.6;
+      g.beginPath(); g.moveTo(gx, Y(top));
+      for (let yy = top; yy > -0.5; yy -= 1.2) g.lineTo(gx + Math.sin(yy * 0.8 + k) * (1 + rr() * 2), Y(yy));
+      g.stroke();
+    }
+    // 偶尔一个节疤
+    if (rr() < 0.35) {
+      const kx = x0 + (x1 - x0) * (0.3 + rr() * 0.4), ky = Y(2 + rr() * 12);
+      g.beginPath(); g.ellipse(kx, ky, 5, 8, 0, 0, 7); g.fillStyle = 'rgba(44,26,20,.55)'; g.fill();
+    }
+    // 左边亮一点、右边暗一点：有厚度
+    const side = g.createLinearGradient(x0, 0, x1, 0);
+    side.addColorStop(0, 'rgba(255,190,140,.10)'); side.addColorStop(0.15, 'rgba(255,190,140,0)'); side.addColorStop(0.85, 'rgba(0,0,0,0)'); side.addColorStop(1, 'rgba(0,0,0,.22)');
+    g.fillStyle = side; g.fillRect(x0, Y(top + 1), x1 - x0, Y(-1) - Y(top + 1));
+    g.restore();
+    // 顶上被夕阳勾出的亮边
+    g.strokeStyle = 'rgba(255,196,128,.95)'; g.lineWidth = 2.6;
+    g.beginPath(); g.moveTo(x0, Y(top) + ear); g.lineTo(x0 + ear, Y(top)); g.lineTo(x1 - ear, Y(top)); g.lineTo(x1, Y(top) + ear); g.stroke();
+    // 钉子
+    g.fillStyle = 'rgba(40,30,30,.8)';
+    for (const ny of [3.2, 13.2]) { g.beginPath(); g.arc((x0 + x1) / 2 - 5, Y(ny), 2.2, 0, 7); g.fill(); g.beginPath(); g.arc((x0 + x1) / 2 + 5, Y(ny), 2.2, 0, 7); g.fill(); }
+    g.restore();
+    x += bw;
+    i++;
+  }
+  // 两根横木和立柱（在我们这一面）
+  for (const ry of [3.2, 13.2]) {
+    const rg = g.createLinearGradient(0, Y(ry + 0.45), 0, Y(ry - 0.45));
+    rg.addColorStop(0, '#8c6450'); rg.addColorStop(0.25, '#6e4c3e'); rg.addColorStop(1, '#46302a');
+    g.fillStyle = rg; g.fillRect(0, Y(ry + 0.45), W, U * 0.9);
+    g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, Y(ry - 0.45), W, U * 0.35);
+  }
+  for (let px = -20; px <= 22; px += 8.2) {
+    const pg = g.createLinearGradient(X(px - 0.6), 0, X(px + 0.6), 0);
+    pg.addColorStop(0, '#7a5644'); pg.addColorStop(0.3, '#5e4134'); pg.addColorStop(1, '#3a2822');
+    g.fillStyle = pg; g.fillRect(X(px - 0.6), Y(FENCE_TOP - 0.6), U * 1.2, Y(0) - Y(FENCE_TOP - 0.6));
+    g.fillStyle = 'rgba(255,190,130,.7)'; g.fillRect(X(px - 0.6), Y(FENCE_TOP - 0.6), U * 1.2, 2.5);
+  }
+  // 栅栏底下被地面反光、上面被天空照的一层整体色调
+  const tint = g.createLinearGradient(0, Y(FENCE_TOP), 0, Y(0));
+  tint.addColorStop(0, 'rgba(120,80,140,.10)'); tint.addColorStop(1, 'rgba(30,40,20,.32)');
+  g.fillStyle = tint; g.fillRect(0, Y(FENCE_TOP + 0.5), W, Y(0) - Y(FENCE_TOP + 0.5));
+}
+
+/* ---------------- 栅栏脚下的灌木、草、小花 ---------------- */
+function bush(cx, cy, w, h, seed, dark) {
+  const rr = rng(seed);
+  for (let i = 0; i < 90; i++) {
+    const t = rr();
+    const x = cx + (rr() - 0.5) * w * U;
+    const y = Y(cy + rr() * h * (1 - Math.abs((x - cx) / (w * U / 2)) * 0.6));
+    const rad = U * (0.35 + rr() * 0.55);
+    const l = 0.6 + t * 0.5;
+    g.fillStyle = `rgb(${(dark ? 38 : 52) * l},${(dark ? 58 : 76) * l},${(dark ? 30 : 34) * l})`;
+    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill();
+  }
+  // 上沿有一点逆光
+  g.save(); g.globalCompositeOperation = 'source-atop';
+  g.restore();
+}
+bush(X(-19), 0, 6, 3.6, 3, true);
+bush(X(-12.5), 0, 3.5, 2, 4, false);
+bush(X(17.5), 0, 7, 4.4, 5, true);
+bush(X(11.5), 0, 3, 1.6, 6, false);
+// 一株向日葵
+{
+  const sx = X(-8.2);
+  g.strokeStyle = '#3c5426'; g.lineWidth = 6;
+  g.beginPath(); g.moveTo(sx, Y(0)); g.quadraticCurveTo(sx + 8, Y(5), sx - 4, Y(10.5)); g.stroke();
+  for (const [ly, d] of [[3.4, 1], [6.2, -1]]) {
+    g.save(); g.translate(sx + 3, Y(ly)); g.rotate(d * 0.6);
+    g.beginPath(); g.ellipse(d * 18, 0, 20, 9, 0, 0, 7); g.fillStyle = '#486b2c'; g.fill(); g.restore();
+  }
+  g.save(); g.translate(sx - 4, Y(10.9)); g.rotate(-0.25);
+  for (let k = 0; k < 16; k++) {
+    g.rotate(Math.PI * 2 / 16);
+    g.beginPath(); g.ellipse(0, -24, 7, 15, 0, 0, 7); g.fillStyle = k % 2 ? '#f6b52a' : '#ffc93a'; g.fill();
+  }
+  g.beginPath(); g.arc(0, 0, 17, 0, 7); g.fillStyle = '#5a3415'; g.fill();
+  g.beginPath(); g.arc(-4, -4, 7, 0, 7); g.fillStyle = 'rgba(255,200,120,.25)'; g.fill();
+  g.restore();
+}
+// 草：很多细叶子，根部暗、尖上被照亮
+{
+  const rr = rng(88);
+  for (let i = 0; i < 2600; i++) {
+    const x = rr() * W;
+    const h = U * (0.4 + Math.pow(rr(), 2) * 2.4);
+    const y0 = Y(-0.6 + rr() * 0.6);
+    const bend = (rr() - 0.5) * h * 0.8;
+    const l = 0.55 + rr() * 0.6;
+    const gr = g.createLinearGradient(0, y0, 0, y0 - h);
+    gr.addColorStop(0, `rgb(${34 * l},${48 * l},${24 * l})`);
+    gr.addColorStop(1, `rgb(${130 * l},${140 * l},${60 * l})`);
+    g.fillStyle = gr;
+    const w = 1.6 + rr() * 2.4;
+    g.beginPath(); g.moveTo(x - w, y0); g.quadraticCurveTo(x + bend * 0.3, y0 - h * 0.6, x + bend, y0 - h); g.quadraticCurveTo(x + bend * 0.3 + w * 0.3, y0 - h * 0.6, x + w, y0); g.fill();
+  }
+  // 小野花
+  for (let i = 0; i < 60; i++) {
+    const x = rr() * W, y = Y(rr() * 1.4);
+    const col = ['#fff3e0', '#ffb3c7', '#c9a0ff', '#ffd45a'][Math.floor(rr() * 4)];
+    for (let k = 0; k < 5; k++) { g.beginPath(); g.arc(x + Math.cos(k * 1.26) * 3.2, y + Math.sin(k * 1.26) * 3.2, 2.6, 0, 7); g.fillStyle = col; g.fill(); }
+    g.beginPath(); g.arc(x, y, 1.8, 0, 7); g.fillStyle = '#ffb000'; g.fill();
+  }
+}
+// 地面：栅栏的影子
+{
+  const gg = g.createLinearGradient(0, Y(0), 0, H);
+  gg.addColorStop(0, '#3e4a28'); gg.addColorStop(1, '#4d5a2e');
+  g.fillStyle = gg; g.fillRect(0, Y(-0.25), W, H - Y(-0.25));
+}
+
+/* ---------------- 整体：靠近地平线有一层暖暖的雾，再加一点颗粒 ---------------- */
+{
+  g.globalCompositeOperation = 'screen';
+  const hz = g.createLinearGradient(0, Y(30), 0, Y(12));
+  hz.addColorStop(0, 'rgba(255,170,120,0)'); hz.addColorStop(0.6, 'rgba(255,170,120,.16)'); hz.addColorStop(1, 'rgba(255,170,120,0)');
+  g.fillStyle = hz; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'source-over';
+  const img = g.getImageData(0, 0, W, H);
+  const d = img.data;
+  const rr = rng(5);
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (rr() - 0.5) * 7;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n;
+  }
+  g.putImageData(img, 0, 0);
+}
+
+window.result = cv.toDataURL('image/jpeg', 0.86);
+document.getElementById('dl').href = window.result;
+window.done = true;
+</script>
+</body>
+</html>

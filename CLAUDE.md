@@ -87,6 +87,7 @@ cd /tmp/three && git sparse-checkout set --no-cone /build/three.module.min.js /L
 ```
 
 - three.js r169 放在 `games/_shared/lib/three.module.min.js`（约 690KB，带 LICENSE），3D 游戏直接 `import * as THREE from '../_shared/lib/three.module.min.js'`。
+- **物理引擎 Bullet（ammo.js）**：`games/_shared/lib/ammo.wasm.js` + `ammo.wasm.wasm`（共约 1MB，从 three.js r169 仓库的 `examples/jsm/libs/` 拿的），许可证 `AMMO-LICENSE.txt`（zlib，来自 kripken/ammo.js）。不是 ES module：`index.html` 里先 `<script src="../_shared/lib/ammo.wasm.js">`，再在模块里 `await Ammo({ locateFile: (p) => '../_shared/lib/' + p })`。圆柱叠罗汉很稳（打罐子在用，写法见 `games/cans/physics.js`）。几个坑：物体刚摆好不能直接设成睡着，要先算几十步让接触建立起来，不然下面的被打飞了上面的不会醒；`getActivationState` 这个版本没有，用 `isActive()`。**在 Node 里直接跑 ammo 被环境的权限检查拦了**，测试都放在 Playwright 的浏览器里跑。
 
 ## 测试（推之前必须做）
 
@@ -149,6 +150,8 @@ git ls-remote origin refs/heads/main    # 确认远端已经是新 commit
 | tiles | 别踩白块 | 仿「别踩白块儿 / 白块达人」，**没有钢琴曲**（gray 选的：清脆的合成敲击声，音高随连击慢慢往上走，设置里一个开关能整个关掉）。canvas 2D，**黑白质感风**：黑块是带厚度、光泽、投影的「键」，踩下去变成沉下去的浅灰键 + 一圈涟漪；踩错的白块变红闪、漏掉的黑块变红闪，棋盘倒回去让你看清。只有两个模式（gray 选的）：**经典**（踩完设定块数，默认 50，计时 0.000″，终点是整片绿色 + 格子终点线）和**街机**（一直往下掉、每踩一块再快一点，漏一块或踩白块就输）。「开始」那块算第 1 块；暂停 / 回主屏幕 / 读档以后要先踩标着「继续」的那块才接着走（经典计时也停着，街机先慢到七成再追回去）。经典按「滑到位以后」的位置判定（手指比动画快），街机按画面位置；已经踩过的那一行里的白块不算错。设置：经典块数、街机起始速度 / 加速、每行几格（3–5）、一屏几行（3–6）、音效。记录：经典最快（按块数分开存在 `bests`，`classicBest` 是显示用的字符串）、街机最多、街机最快速度、一共踩了、局数。棋盘底下留了一条浅灰底座给大厅横条。画面在 render.js（贴图缓存），规则在 game.js；`window.__tiles`（`next()` 给出下一块该踩的位置，`onTap(x,y)` 直接踩）|
 | vocab | 单词 | 不是游戏，是墨墨背单词的学习数据看板（gray 要的「abc 图标、点进去用各种格式显示 API 内容」）。**只读**，不往墨墨写。数据：今日进度 + 今日单词（三圈圆环：全部/新词/复习；第一反应分段条；单词格子/列表，圆点=新词、方块=复习、颜色=第一反应、空心=没背）、复习预报（按天 `as_count` 查 10 天，设置决定显示几天，斜纹那根是今天）、顽固词横栏（`query_study_records` 取 1000 条本地筛 STICKING）、云词本列表（点开读词本详情）、最近几天（**墨墨没有历史接口，是每次刷新在本机记一笔** `game.vocab.history`）。没填 Token 显示示例数据（demo.js）。Token 在 App 右上角钥匙里填，「连不上墨墨？」里可以填中转地址。点单词用系统朗读（`speechSynthesis`）。接口在 api.js：本地频控（10 秒 18 次 / 60 秒 38 次）、20 秒超时、错误分类。**github.io 直连墨墨会被跨域拦下（gray 真机确认）**，所以默认走中转 `RELAY_BASE`（`https://game-over-memo-123sdgv.vercel.app/open`），中转连不上（网络错误/超时）才试直连；404 时换路径前缀（`/api/v1/memo` ↔ 旧的 `/api/v1`）。能用的那条记在 `game.vocab.route`。钥匙面板「中转地址」可以填别的中转（只填域名也行，会补 `https://` 和 `/open`）。中转源码在 **`relay/`**（Vercel Node 函数 `api/open.js`，`vercel.json` 把 `/open/*` 改写过去；另有同规则的 Edge 版 `api/edge.js` 走 `/edge/*`，出口网络不同。App 顺序：`/edge` → `/open` → 直连，中转回 502 `relay_upstream/relay_timeout` 也算这条路不通、换下一条）。**实测：香港 hkg1 的 Node 函数连墨墨（阿里云杭州 47.97.211.202）TCP 超时，是墨墨挡了那个机房；Edge 版在新加坡 sin1 能连上（401，257ms）**，所以 Edge 排第一，Node 版函数挪到 sin1 当备用。`__ping` 会列出 DNS、各 IP 的 TCP 连接、API 和官网的结果：只认 `https://123sdgv.github.io`（和测试用的 localhost:8765）发来的请求，只放行 study 三个查询、notepads、vocabulary 这些只读接口，原样转发 Authorization，墨墨的状态码原样返回并补跨域头（所以走中转时能看出 Token 不对）；`/open/__ping` 自检能不能连到墨墨。**Claude 连的 Vercel 权限不能建项目也不能部署（403）**，是 gray 在 Vercel 里从 GitHub 导入本仓库、Root Directory 选 `relay`、项目名 `game-over-memo-123sdgv` 建的；改 relay/ 推到 main 会自动重新部署。测试：Playwright `ctx.route` 同时拦 `https://open.maimemo.com/**`（直连，应该 abort 模拟跨域被拦）和中转域名，要回 CORS 头。`window.__vocab` |
 
+| cans | 打罐子 | 黄昏后院打易拉罐（gray 选的风格；**背景直接贴一张图，不要像滚滚球那样建模**）。three.js + Bullet 物理（ammo，见「第三方库」）。罐子是圆柱刚体，叠成金字塔 / 夹木板的塔 / 一摞摞，放在木马架上的木板、树桩、油桶、木箱、轨道上来回走的小车上；**罐子掉到所有台面最低的那个下面才算打下去**（`downY`），全部打下去过关。**只用准星**（gray 选的）：按住出准星（在手指上方，设置可调），拖动，松手开枪；手指拖到屏幕最下面松手是取消。子弹是一颗很快、有分量的小球（开了连续碰撞），从准星射线打中的地方前面一点发出，所以能把罐子连同后面的一串撞飞；打中罐子留弹孔、喷汽水。**两种模式都要**（gray 选的）：轻松（子弹不限）/ 挑战（三星发数 + 设置里多给几发，打光了台上还有罐子就重来），各自记关卡进度和星星；星星按用了几发（开枪数减金罐子送回的）：≤ 三星发数 3 星，再多 2 发以内 2 星。花样四种都要：红色爆炸罐（打中就炸，旁边的红罐连环炸，有慢镜头）、木板隔层 / 高塔、会动的小车、金罐子（打下去送一发）。前 16 关手工排（`levels.js` 的 `HAND`），后面按种子自动生成（竖屏横向放不下，多堆就前后错开）；相机按罐子取景（`scene.js` 的 `cameraFor`），台子伸出画面没关系。**三星发数 `PAR` 是机器人试打出来的**：`tools/par-bot.html`（每枪试十几个瞄点、挑最好的；罐子 12 个以上再宽限 1 发），改了关卡或者物理参数要重跑。背景图 `img/backdrop.jpg` 是 `tools/backdrop.html` 画出来导出的（天空晚霞、远处的树和小房子、电线杆和小鸟、逆光栅栏）。其余贴图（8 种原创汽水图案、爆炸罐、金罐、木头、树皮、油桶、草地）都在 `art.js` 里现画，开局只画罐子的，其余空闲时慢慢画（`warmArt`）。枪是几何体拼的玩具左轮（`gun.js`），故意比准星偏左一点露出侧面，用单独的中性「影棚」反射环境。存档：每次停稳以后存所有东西的位置朝向，「继续上一局」原样摆回去。`window.__cans`（`start(mode, n)`、`shootItem(i, dy)` 瞄准第 i 个东西开一枪、`fire(x, y)`、`warp`）|
+
 设置 App：gray 让删掉的「主屏幕」设置页（连同里面的功能）已经删了，不要再加回来；「通用」里的东西已经并进「关于本机」。主屏幕图标下面不显示名字。
 
 ## gray 的偏好（长期有效）
@@ -171,4 +174,5 @@ git ls-remote origin refs/heads/main    # 确认远端已经是新 commit
 - [ ] 别踩白块：等 gray 真机反馈（街机速度曲线、敲击声、块的高度）再调。只要经典和街机两个模式，别自己加禅 / 极速。
 - [x] 单词：2026-10-29 gray 真机走 Edge 中转读到了自己的数据（Vercel 项目 `game-over-memo-123sdgv`）。
 - [ ] 单词：等 gray 用几天的反馈（看他想加什么图、哪块没数据）。
+- [ ] 打罐子：等 gray 真机反馈（手感：子弹力道、重力、准星离手指多远；难度：三星发数；iPhone 上的帧率，卡的话先试省电模式）再调。别加「点哪打哪」，只用准星。
 - [ ] 有些游戏的 stats 没记 `played`（倒水、方块、消灭星星、切水果、假条），所以设置首页「共玩了 N 局」偏少，以后可以补上。
