@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="bg-starmatch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F1F2F5"/></linearGradient><radialGradient id="pink-starmatch" cx=".36" cy=".26" r=".85"><stop offset="0" stop-color="#FFC4D8"/><stop offset=".4" stop-color="#FF5C93"/><stop offset="1" stop-color="#E22A6C"/></radialGradient><radialGradient id="blue-starmatch" cx=".36" cy=".26" r=".85"><stop offset="0" stop-color="#BDE6FF"/><stop offset=".4" stop-color="#35A9FF"/><stop offset="1" stop-color="#1079E6"/></radialGradient></defs>
+<rect width="120" height="120" fill="url(#bg-starmatch)"/>
+<g stroke-linejoin="round" stroke-width="10">
+<polygon points="37.00,25.00 43.70,34.78 55.07,38.13 47.84,47.52 48.17,59.37 37.00,55.40 25.83,59.37 26.16,47.52 18.93,38.13 30.30,34.78" fill="#A5134A" stroke="#A5134A"/>
+<polygon points="37.00,22.00 43.70,31.78 55.07,35.13 47.84,44.52 48.17,56.37 37.00,52.40 25.83,56.37 26.16,44.52 18.93,35.13 30.30,31.78" fill="url(#pink-starmatch)" stroke="url(#pink-starmatch)"/>
+<polygon points="83.00,67.00 89.70,76.78 101.07,80.13 93.84,89.52 94.17,101.37 83.00,97.40 71.83,101.37 72.16,89.52 64.93,80.13 76.30,76.78" fill="#0A51AE" stroke="#0A51AE"/>
+<polygon points="83.00,64.00 89.70,73.78 101.07,77.13 93.84,86.52 94.17,98.37 83.00,94.40 71.83,98.37 72.16,86.52 64.93,77.13 76.30,73.78" fill="url(#blue-starmatch)" stroke="url(#blue-starmatch)"/>
+</g>
+<ellipse cx="31" cy="32" rx="9" ry="4.2" transform="rotate(-24 31 32)" fill="#fff" opacity=".6"/>
+<ellipse cx="77" cy="74" rx="9" ry="4.2" transform="rotate(-24 77 74)" fill="#fff" opacity=".6"/>
+<g fill="none" stroke="#1C1D20" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".8">
+<path d="M71 19c11 2 19 9 22 20"/><path d="M85 33l8 7 6-9"/>
+<path d="M49 101c-11-2-19-9-22-20"/><path d="M35 87l-8-7-6 9"/>
+</g>
+</svg>
