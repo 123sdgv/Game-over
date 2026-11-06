@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg-chat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1F2F5"/>
+    </linearGradient>
+    <linearGradient id="blue-chat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5BA0FF"/>
+      <stop offset="1" stop-color="#2468EE"/>
+    </linearGradient>
+    <linearGradient id="gray-chat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EEF1F5"/>
+      <stop offset="1" stop-color="#DCE1E8"/>
+    </linearGradient>
+    <linearGradient id="shine-chat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="sh-chat" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.2" flood-color="#1D4FB8" flood-opacity=".28"/>
+    </filter>
+    <filter id="sh2-chat" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="#2A3550" flood-opacity=".14"/>
+    </filter>
+  </defs>
+  <rect width="120" height="120" fill="url(#bg-chat)"/>
+  <!-- 后面那个灰气泡（左边的人） -->
+  <g filter="url(#sh2-chat)">
+    <path d="M24 22h42a14 14 0 0 1 14 14v12a14 14 0 0 1-14 14H38a14 14 0 0 1-14-14V27a5 5 0 0 1 5-5z" fill="url(#gray-chat)"/>
+  </g>
+  <rect x="34" y="34" width="28" height="5" rx="2.5" fill="#B7C0CD"/>
+  <rect x="34" y="44" width="18" height="5" rx="2.5" fill="#C6CDD8"/>
+  <!-- 前面的蓝气泡（右边的人） -->
+  <g filter="url(#sh-chat)">
+    <path d="M54 50h33a5 5 0 0 1 5 5v23a14 14 0 0 1-14 14H54a14 14 0 0 1-14-14V64a14 14 0 0 1 14-14z" fill="url(#blue-chat)"/>
+    <path d="M54 50h33a5 5 0 0 1 5 5v8H40v1a14 14 0 0 1 14-14z" fill="url(#shine-chat)"/>
+  </g>
+  <circle cx="55" cy="71" r="4" fill="#fff"/>
+  <circle cx="66" cy="71" r="4" fill="#fff" opacity=".9"/>
+  <circle cx="77" cy="71" r="4" fill="#fff" opacity=".8"/>
+</svg>

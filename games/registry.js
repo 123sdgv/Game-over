@@ -405,4 +405,19 @@ export const games = [
       { key: 'played', label: '玩了几局' },
     ],
   },
+  {
+    id: 'chat',
+    name: '聊天',
+    path: 'games/chat/',
+    icons: ['icons/chat.svg'],
+    settingsNote: '两边的消息都由你来发：点输入框左边的小头像，或者点聊天里谁的头像、谁的气泡，就换成谁说话；双击头像是拍一拍。长按消息可以复制、编辑、引用、换边、撤回、插入、标成发送失败、删除。外观（浅色 / 深色）、我的头像和名字、默认聊天背景、表情包在 App 里的「我」页改。对话和头像会跟着导出备份；图片、表情包、相册背景只存在这台手机上。',
+    settings: [
+      { key: 'enterSend', label: '换行键直接发送', type: 'toggle', default: true, sub: '关掉以后换行键是换行，点「发送」才发' },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+    ],
+    stats: [
+      { key: 'chats', label: '对话' },
+      { key: 'sent', label: '一共写了（条）' },
+    ],
+  },
 ];

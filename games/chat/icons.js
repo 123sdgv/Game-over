@@ -1,0 +1,44 @@
+// 线条图标（全部原创）
+const s = (d, w = 1.8) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const dot = (x, y, r = 1) => `<circle cx="${x}" cy="${y}" r="${r}" fill="currentColor" stroke="none"/>`;
+
+export const I = {
+  back: s('<path d="M15.2 4.6 7.8 12l7.4 7.4"/>', 2.3),
+  more: `<svg viewBox="0 0 24 24" aria-hidden="true">${dot(5, 12, 1.9)}${dot(12, 12, 1.9)}${dot(19, 12, 1.9)}</svg>`,
+  add: s('<path d="M12 5.5v13M5.5 12h13"/>', 2.1),
+  plus: s('<circle cx="12" cy="12" r="9.3"/><path d="M12 7.9v8.2M7.9 12h8.2"/>', 1.7),
+  smile: s(`<circle cx="12" cy="12" r="9.3"/><path d="M8.2 14.1c.9 1.5 2.3 2.3 3.8 2.3s2.9-.8 3.8-2.3"/>${dot(8.9, 9.9, 1.1)}${dot(15.1, 9.9, 1.1)}`, 1.7),
+  keyboard: s(`<rect x="2.8" y="5.8" width="18.4" height="12.4" rx="2.6"/><path d="M8 14.6h8"/>${dot(6.8, 9.3, .9)}${dot(10.2, 9.3, .9)}${dot(13.8, 9.3, .9)}${dot(17.2, 9.3, .9)}${dot(6.8, 11.9, .9)}${dot(17.2, 11.9, .9)}`, 1.6),
+  photo: s('<rect x="3.2" y="4.8" width="17.6" height="14.4" rx="3.2"/><circle cx="8.8" cy="9.9" r="1.8"/><path d="m3.8 17.3 5.1-4.6 3.6 3.1 2.9-2.4 4.8 4"/>'),
+  mic: s('<rect x="9" y="3.3" width="6" height="11.2" rx="3"/><path d="M5.6 11.3a6.4 6.4 0 0 0 12.8 0M12 17.8v2.9"/>'),
+  clock: s('<circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2"/>'),
+  text: s('<path d="M5.5 6.3h13M12 6.3v12.4M9 18.7h6"/>'),
+  hand: s('<path d="M8.2 12.3V6.4a1.55 1.55 0 0 1 3.1 0v5.2m0-6.3a1.55 1.55 0 0 1 3.1 0v6.2m0-4.6a1.55 1.55 0 0 1 3.1 0v6.4c0 3.9-2.7 6.9-6.4 6.9-2.5 0-4.2-1.2-5.5-3.1l-2-3a1.6 1.6 0 0 1 2.6-1.9l2 2.3"/>', 1.6),
+  copy: s('<rect x="8.3" y="8.3" width="11.5" height="11.5" rx="2.4"/><path d="M15.7 8.3V6.6a2.4 2.4 0 0 0-2.4-2.4H6.6a2.4 2.4 0 0 0-2.4 2.4v6.7a2.4 2.4 0 0 0 2.4 2.4h1.7"/>'),
+  edit: s('<path d="M4.5 19.5h4l10.1-10.1a2.1 2.1 0 0 0 0-3l-1-1a2.1 2.1 0 0 0-3 0L4.5 15.5z"/><path d="m13.3 6.7 4 4"/>'),
+  quote: s('<path d="M9.6 6.2H6.4a2 2 0 0 0-2 2v3.2a2 2 0 0 0 2 2h2.4v.4c0 1.8-1 3.1-2.9 3.8M19.6 6.2h-3.2a2 2 0 0 0-2 2v3.2a2 2 0 0 0 2 2h2.4v.4c0 1.8-1 3.1-2.9 3.8"/>', 1.7),
+  swap: s('<path d="M4.5 8.2h14.2m-3.6-3.7 3.7 3.7-3.7 3.7M19.5 15.8H5.3m3.6 3.7-3.7-3.7 3.7-3.7"/>'),
+  undo: s('<path d="M9 7.2 4.6 11.4 9 15.6"/><path d="M4.8 11.4h9.4a5 5 0 0 1 0 10h-2.6"/>'),
+  insert: s('<path d="M4 4.5h16M4 19.5h16M12 8v8M8 12h8"/>'),
+  alert: s(`<circle cx="12" cy="12" r="9"/><path d="M12 7.3v6"/>${dot(12, 16.6, 1.15)}`),
+  trash: s('<path d="M4.6 6.8h14.8M9.6 6.6V5a1.4 1.4 0 0 1 1.4-1.4h2a1.4 1.4 0 0 1 1.4 1.4v1.6M6.6 6.8l.8 12a2 2 0 0 0 2 1.9h5.2a2 2 0 0 0 2-1.9l.8-12M10.3 10.8v6M13.7 10.8v6"/>'),
+  vtext: s('<path d="M5 6.5h8M9 6.5v11M15 11h5M17.5 11v6.5"/>'),
+  restore: s('<path d="M4.6 12a7.4 7.4 0 1 0 2.2-5.3"/><path d="M4.4 4.2v3.9h3.9"/>'),
+  search: s('<circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.6 15.6 4.4 4.4"/>', 1.9),
+  right: s('<path d="m9.5 6 6 6-6 6"/>', 2),
+  close: s('<path d="M7 7l10 10M17 7 7 17"/>', 2),
+  check: s('<path d="m5.5 12.5 4.2 4.2 8.8-9.4"/>', 2.3),
+  pin: s('<path d="M15 4.2 19.8 9l-3 1-3.6 3.6.4 4-1.3 1.3-3.6-3.6-4 4m4-4L5.1 11.7l1.3-1.3 4 .4L14 7.2z"/>', 1.7),
+  bubble: s('<path d="M12 4.3c-4.8 0-8.7 3.2-8.7 7.2 0 2.2 1.2 4.2 3.1 5.5l-.6 3.2 3.4-1.8c.9.2 1.8.3 2.8.3 4.8 0 8.7-3.2 8.7-7.2S16.8 4.3 12 4.3z"/>', 1.8),
+  bubbleFill: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.6c-5.2 0-9.4 3.5-9.4 7.9 0 2.4 1.2 4.5 3.2 5.9l-.6 3.4a.6.6 0 0 0 .9.6l3.6-1.9c.7.1 1.5.2 2.3.2 5.2 0 9.4-3.5 9.4-7.9S17.2 3.6 12 3.6z"/></svg>`,
+  user: s('<circle cx="12" cy="8.4" r="4"/><path d="M4.4 20.2c.9-3.7 3.9-5.9 7.6-5.9s6.7 2.2 7.6 5.9"/>', 1.8),
+  userFill: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.3" r="4.6" fill="currentColor"/><path fill="currentColor" d="M3.8 20.1c.8-4.1 4-6.6 8.2-6.6s7.4 2.5 8.2 6.6a.9.9 0 0 1-.9 1.1H4.7a.9.9 0 0 1-.9-1.1z"/></svg>`,
+  palette: s('<path d="M12 3.6a8.4 8.4 0 0 0 0 16.8c1.2 0 1.7-.8 1.5-1.7-.3-1.2.3-2.2 1.6-2.2h1.7a3.6 3.6 0 0 0 3.6-3.6c0-5.1-3.8-9.3-8.4-9.3z"/><circle cx="7.9" cy="11.4" r="1.1"/><circle cx="10.6" cy="7.6" r="1.1"/><circle cx="15.2" cy="8.1" r="1.1"/>', 1.6),
+  image: s('<rect x="3.6" y="4.6" width="16.8" height="14.8" rx="3"/><path d="m4.2 16.8 4.6-4.2 3.3 2.9 2.7-2.2 5 4.1"/><circle cx="15.6" cy="9.2" r="1.6"/>', 1.7),
+  sticker: s(`<path d="M20 12.6V7.4A3.4 3.4 0 0 0 16.6 4H7.4A3.4 3.4 0 0 0 4 7.4v9.2A3.4 3.4 0 0 0 7.4 20h5.2z"/><path d="M12.6 20c0-4 3.4-7.4 7.4-7.4"/>${dot(9, 9.6, 1)}${dot(14.4, 9.6, 1)}<path d="M8.6 13.6c.8 1 1.9 1.5 3.1 1.5"/>`, 1.6),
+  moon: s('<path d="M19.4 14.6A7.9 7.9 0 1 1 9.4 4.6a6.4 6.4 0 0 0 10 10z"/>', 1.7),
+};
+
+/** 语音的三道弧，弧口朝右；右边的人那条在 CSS 里镜像 */
+export const WAVE = `<svg class="wave" viewBox="0 0 20 20" aria-hidden="true"><circle cx="4.6" cy="10" r="1.7" fill="currentColor"/><path class="a1" d="M8 6.4a5.1 5.1 0 0 1 0 7.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path class="a2" d="M11.2 3.4a9.3 9.3 0 0 1 0 13.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`;

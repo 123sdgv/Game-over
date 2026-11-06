@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>聊天</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="vp">
+    <div id="nav">
+      <section class="page root" id="root">
+        <div class="tabview" id="tabMsgs">
+          <header class="lnav">
+            <b>消息</b>
+            <button class="nbtn add-chat" id="newBtn" aria-label="新对话"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.3"/><path d="M12 7.9v8.2M7.9 12h8.2"/></svg></span></button>
+          </header>
+          <div class="scroll" id="listScroll">
+            <label class="search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.6 15.6 4.4 4.4"/></svg>
+              <input id="search" type="search" placeholder="搜索" autocomplete="off" enterkeyhint="search">
+            </label>
+            <div id="list"></div>
+          </div>
+        </div>
+        <div class="tabview" id="tabMe" hidden>
+          <header class="lnav"><b>我</b></header>
+          <div class="scroll" id="meBody"></div>
+        </div>
+        <nav class="tabbar">
+          <button class="on" data-tab="msgs"><span class="t-ic" data-ic="chat"></span><span>消息</span><i class="badge" id="tabBadge" hidden></i></button>
+          <button data-tab="me"><span class="t-ic" data-ic="me"></span><span>我</span></button>
+        </nav>
+      </section>
+    </div>
+    <div id="layer"></div>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
