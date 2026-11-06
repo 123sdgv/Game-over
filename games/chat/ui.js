@@ -9,7 +9,7 @@ export function h(tag, attrs = {}, ...kids) {
     if (k === 'class') el.className = v;
     else if (k === 'html') el.innerHTML = v;
     else if (k === 'text') el.textContent = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') { for (const [sk, sv] of Object.entries(v)) { if (sk.startsWith('--')) el.style.setProperty(sk, sv); else el.style[sk] = sv; } }
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
     else el.setAttribute(k, v === true ? '' : v);
   }
@@ -18,6 +18,12 @@ export function h(tag, attrs = {}, ...kids) {
 }
 
 const layer = () => document.getElementById('layer');
+
+// 列表里的点按是用 pointer 事件处理的；手指抬起后浏览器还会补一个 click，
+// 如果这时刚好弹出了红包、大图之类的东西，click 会落在它上面。抬手后短时间内的 click 一律吞掉。
+let swallowUntil = 0;
+export const swallowClick = (ms = 350) => { swallowUntil = performance.now() + ms; };
+document.addEventListener('click', (e) => { if (performance.now() < swallowUntil) { e.stopPropagation(); e.preventDefault(); } }, true);
 export const blurActive = () => { const a = document.activeElement; if (a && a !== document.body && a.blur) a.blur(); };
 
 /** 往下拖关掉 */

@@ -1,19 +1,28 @@
 // 数据结构和格式化（不碰界面）
 //
-// D = { v, me:{name, av}, chats:[...], stickers:[{id,w,h}], theme:'auto'|'light'|'dark', wall }
-// chat = { id, left:{name, av}, right:null|{name, av}, sub, wall:null|墙纸, pin, unread, draft, spk:'L'|'R', msgs:[...], created, updated }
-//   right 是 null 时跟着「我」的资料走
+// D = { v, me:{name, av, frame}, chats:[...], stickers:[{id,w,h}], theme:'auto'|'light'|'dark', wall }
+// chat = { id, type:'single'|'group', left:{name, av, frame}, right:null|{name, av, frame}, members:[{id,name,av,frame}],
+//          showNames, sub, wall, bub, font, pin, unread, draft, msgs:[...], created, updated }
+//   单聊：left 是对方；群聊：left 是群名和群头像，members 是群里除了我的人
+//   right 是 null 时跟着「我」的资料走；消息一律先发在右边（s:'R'），长按换边 / 换人
 // av = { img: dataURL } 或 { c: 颜色序号 }（文字头像，字取名字第一个字）
+// frame = { id, text? }：头像挂件
 // 墙纸 = 'none' | 'mist' | ... | { img: 媒体 id }
-// 消息 m.k：
-//   text    { s, text, q?, fail? }          q = 引用 { id, s, t }
-//   img     { s, media, w, h, q?, fail? }
-//   voice   { s, sec, text?, showText?, heard?, q?, fail? }
-//   sticker { s, media, w, h, q? }
-//   time    { t }
-//   sys     { text }
-//   recall  { s, orig }
-//   pat     { from, to }
+// 消息 m.k（左边的人 s:'L'，群聊里再加 who: 成员 id）：
+//   text      { s, who?, text, q?, fail? }        q = 引用快照 { id, s, who, k, t, media?, w?, h? }
+//   img       { s, who?, media, w, h, q?, fail? }
+//   voice     { s, who?, sec, text?, showText?, heard?, q?, fail? }
+//   sticker   { s, who?, media, w, h, q? }
+//   redpacket { s, who?, text, amount, state:'new'|'open'|'gone'|'expired' }
+//   transfer  { s, who?, amount, note, state:'wait'|'done'|'back', receipt?:'done'|'back' }
+//   link      { s, who?, tpl, url, title, desc, author, cover?, cw?, ch? }
+//   call      { s, who?, video, res:'done'|'cancel'|'reject'|'noanswer'|'busy', dur }
+//   history   { s, who?, title, people:{key:{name,av}}, items:[{p, k, text?, media?, w?, h?, sec?, t?}] }
+//   time      { t }
+//   sys       { text }
+//   recall    { s, who?, orig }
+//   pat       { from, fromWho?, to, toWho? }
+//   rpnote    { by, byWho?, of, ofWho? }          某某领取了某某的红包
 
 export const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 
@@ -37,10 +46,11 @@ export function blank() {
   return { v: 1, me: { name: '我', av: { c: 0 } }, chats: [], stickers: [], theme: 'auto', wall: 'none' };
 }
 
-export function makeChat(left) {
+export function makeChat(left, { group = false, members = [] } = {}) {
   const now = Date.now();
   return {
-    id: uid(), left, right: null, sub: '', wall: null, pin: false, unread: 0, draft: '', spk: 'R',
+    id: uid(), type: group ? 'group' : 'single', left, right: null, members, showNames: true,
+    sub: '', wall: null, bub: 'classic', font: 'normal', pin: false, unread: 0, draft: '',
     msgs: [], created: now, updated: now,
   };
 }
@@ -53,11 +63,15 @@ export function repair(D) {
   D.stickers = Array.isArray(D.stickers) ? D.stickers.filter((s) => s && s.id) : [];
   if (!['auto', 'light', 'dark'].includes(D.theme)) D.theme = 'auto';
   D.wall ||= 'none';
-  const KINDS = ['text', 'img', 'voice', 'sticker', 'time', 'sys', 'recall', 'pat'];
+  const KINDS = ['text', 'img', 'voice', 'sticker', 'redpacket', 'transfer', 'link', 'call', 'history', 'time', 'sys', 'recall', 'pat', 'rpnote'];
   D.chats = D.chats.filter((c) => c && c.id && c.left).map((c) => {
     c.left.av ||= {};
+    c.type = c.type === 'group' ? 'group' : 'single';
+    c.members = Array.isArray(c.members) ? c.members.filter((x) => x && x.id) : [];
+    c.showNames = c.showNames !== false;
+    c.bub ||= 'classic';
+    c.font ||= 'normal';
     c.msgs = Array.isArray(c.msgs) ? c.msgs.filter((m) => m && m.id && KINDS.includes(m.k)) : [];
-    c.spk = c.spk === 'L' ? 'L' : 'R';
     c.unread = Math.max(0, c.unread | 0);
     c.draft = typeof c.draft === 'string' ? c.draft : '';
     c.created ||= Date.now();

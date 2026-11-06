@@ -1,9 +1,9 @@
 // 聊天：自己写两边对话的聊天页（给捡手机文学用）。入口：根页面（消息列表 / 我）、主题、键盘适配、测试钩子
-import { A, hb, save, flush, sfx, syncStats, storyTime, snippet, pname, chatById } from './state.js';
+import { A, hb, save, flush, sfx, syncStats, storyTime, snippet, pname, chatById, isGroup, nameOf, mediaUsed } from './state.js';
 import { makeChat, fmtTime, uid, hashColor } from './data.js';
-import { h, confirm } from './ui.js';
+import { h, confirm, actions } from './ui.js';
 import { I } from './icons.js';
-import { avatarEl } from './look.js';
+import { avatarEl, groupAvatarEl } from './look.js';
 import { media } from './media.js';
 import * as F from './sheets.js';
 import { initNav, push, popToRoot, depth } from './nav.js';
@@ -45,10 +45,20 @@ function preview(c) {
   for (let i = c.msgs.length - 1; i >= 0; i--) {
     const m = c.msgs[i];
     if (m.k === 'time') continue;
-    return { text: snippet(c, m), fail: !!m.fail };
+    let text = snippet(c, m);
+    if (isGroup(c) && m.s === 'L' && ['text', 'img', 'voice', 'sticker', 'link', 'redpacket', 'transfer', 'call', 'history'].includes(m.k)) text = `${nameOf(c, 'L', m.who)}：${text}`;
+    return { text, fail: !!m.fail };
   }
   return { text: '' };
 }
+/** 群聊里没读的消息有人 @ 我 */
+function atMe(c) {
+  if (!isGroup(c) || !c.unread) return false;
+  const me = '@' + nameOf(c, 'R');
+  const ls = c.msgs.filter((m) => m.s === 'L' && m.k === 'text').slice(-c.unread);
+  return ls.some((m) => m.text.includes(me) || m.text.includes('@所有人'));
+}
+const chatAvatar = (c, cls) => (isGroup(c) ? groupAvatarEl(c, cls) : avatarEl(c.left, cls));
 
 function renderList() {
   const q = query.trim().toLowerCase();
@@ -72,11 +82,11 @@ function renderList() {
 
 function rowEl(c) {
   const pv = preview(c);
-  const av = avatarEl(c.left, 's50');
+  const av = chatAvatar(c, 's50');
   const badge = c.unread ? h('i', { class: 'badge', text: c.unread > 99 ? '99+' : c.unread }) : null;
   const sub = c.draft && c.draft.trim()
     ? h('div', { class: 'row-sub' }, h('em', { text: '[草稿] ' }), c.draft.replace(/\s+/g, ' '))
-    : h('div', { class: 'row-sub' }, pv.fail && h('span', { class: 'mini-fail', html: I.alert }), pv.text);
+    : h('div', { class: 'row-sub' }, atMe(c) && h('em', { text: '[有人@我] ' }), pv.fail && h('span', { class: 'mini-fail', html: I.alert }), pv.text);
   const row = h('div', { class: 'row' + (c.pin ? ' pinned' : '') },
     h('div', { class: 'row-av' }, av, badge),
     h('div', { class: 'row-main' },
@@ -152,9 +162,11 @@ function swipe(wrap, row, actions) {
 }
 
 function deleteChat(c) {
-  for (const m of c.msgs) { if (m.k === 'img') media.del(m.media); if (m.k === 'recall' && m.orig && m.orig.k === 'img') media.del(m.orig.media); }
+  const ids = [];
+  for (const m of c.msgs) for (const id of [m.media, m.cover, m.orig && m.orig.media]) if (id) ids.push(id);
   const oldWall = c.wall;
   A.D.chats = A.D.chats.filter((x) => x !== c);
+  for (const id of ids) if (!mediaUsed(id)) media.del(id);
   releaseWall(oldWall);
   save(); syncStats(); sfx.del();
   if (depth() > 1) popToRoot();
@@ -170,6 +182,7 @@ function openChat(id) {
   current = chatPage(c, {
     changed: () => renderList(),
     deleted: () => deleteChat(c),
+    pickChat,
     closed: () => { current = null; renderList(); },
   });
   push(current);
@@ -177,15 +190,22 @@ function openChat(id) {
 }
 
 function newChat() {
-  F.personSheet({
-    title: '新对话', person: { name: '', av: { c: hashColor(uid()) } }, nameLabel: '对方的备注', placeholder: '比如：小林', okLabel: '开始聊天',
-    onSave: (p) => {
-      const c = makeChat({ name: p.name || '对方', av: p.av });
-      A.D.chats.push(c);
-      save(); syncStats(); renderList();
-      setTimeout(() => openChat(c.id), 120);
-    },
-  });
+  actions([
+    { label: '新对话', onPick: () => F.personSheet({
+      title: '新对话', person: { name: '', av: { c: hashColor(uid()) } }, nameLabel: '对方的备注', placeholder: '比如：小林', okLabel: '开始聊天',
+      onSave: (p) => created(makeChat({ name: p.name || '对方', av: p.av, ...(p.frame ? { frame: p.frame } : {}) })),
+    }) },
+    { label: '新群聊', onPick: () => F.groupSheet({ onSave: (g) => created(makeChat({ name: g.name, av: g.av }, { group: true, members: g.members })) }) },
+  ]);
+}
+function created(c) {
+  A.D.chats.push(c);
+  save(); syncStats(); renderList();
+  setTimeout(() => openChat(c.id), 120);
+}
+/** 转发：选一个对话 */
+function pickChat(fn) {
+  F.chatPicker({ chats: sorted(), avatarFor: (c) => chatAvatar(c, 's40'), nameFor: (c) => (isGroup(c) ? `${pname(c)}(${c.members.length + 1})` : pname(c)), onPick: fn });
 }
 $('#newBtn').addEventListener('click', newChat);
 search.addEventListener('input', () => { query = search.value; renderList(); });
@@ -202,9 +222,9 @@ function renderMe() {
   meBody.replaceChildren(
     h('button', { class: 'me-card', onclick: () => F.personSheet({
       title: '我的资料', person: me, okLabel: '保存',
-      onSave: (p) => { A.D.me = { name: p.name || '我', av: p.av }; save(); renderMe(); renderList(); },
+      onSave: (p) => { A.D.me = { name: p.name || '我', av: p.av, ...(p.frame ? { frame: p.frame } : {}) }; save(); renderMe(); renderList(); },
     }) },
-      avatarEl(me, 's64'),
+      avatarEl(me, 's64', { frame: true }),
       h('div', { class: 'me-main' }, h('b', { text: me.name || '我' }), h('small', { text: '右边那个人默认用这套头像和名字' })),
       h('span', { class: 'chev', html: I.right })),
     group('外观', h('div', { class: 'cell seg-cell' }, seg)),
@@ -278,4 +298,5 @@ window.__chat = {
   get page() { return current; },
   openChat, newChat, renderList, setTab, flush,
   add(name) { const c = makeChat({ name, av: { c: hashColor(name) } }); A.D.chats.push(c); save(); syncStats(); renderList(); return c.id; },
+  addGroup(name, names) { const c = makeChat({ name, av: {} }, { group: true, members: names.map((n) => ({ id: 'p' + uid(), name: n, av: { c: hashColor(n) } })) }); A.D.chats.push(c); save(); syncStats(); renderList(); return c.id; },
 };
