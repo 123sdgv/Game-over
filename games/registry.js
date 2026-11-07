@@ -446,4 +446,22 @@ export const games = [
       { key: 'played', label: '下班几次（局）' },
     ],
   },
+  {
+    id: 'lost',
+    name: '失物',
+    path: 'games/lost/',
+    icons: ['icons/lost.svg'],
+    settingsNote: '一部在码头捡到的手机。翻一翻里面的东西，弄清楚它的主人遇到了什么。右边的小圆球里有线索本、推理、提示和结案。结案只有一次，结案以后这台手机会被抹掉；想再玩一遍，打开上面的「重新捡起这台手机」。',
+    settings: [
+      { key: 'textSize', label: '字号', type: 'stepper', min: 1, max: 3, default: 2, display: (v) => ['小', '中', '大'][v - 1], sub: '聊天、备忘录、线索本里的字' },
+      { key: 'sound', label: '音效', type: 'toggle', default: true },
+      { key: 'reset', label: '重新捡起这台手机', type: 'toggle', default: false, sub: '打开以后再进游戏，进度清空、从头开始。用完会自己关上' },
+    ],
+    stats: [
+      { key: 'played', label: '捡起它（次）' },
+      { key: 'endings', label: '见过的结局' },
+      { key: 'last', label: '上一次的结局' },
+      { key: 'bestClues', label: '最多记下的线索' },
+    ],
+  },
 ];
