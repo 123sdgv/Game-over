@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>老电脑</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="desk">
+    <div id="led" aria-hidden="true"></div>
+    <div id="screen" data-theme="classic" data-style="bevel">
+      <div id="wall"></div>
+      <div id="paper" hidden></div>
+      <div id="icons"></div>
+      <div id="note" hidden></div>
+      <div id="wins"></div>
+      <div id="taskbar">
+        <button id="start"><svg class="ic" viewBox="0 0 32 32"><use href="#i-start"/></svg><b>开始</b></button>
+        <div id="tasks"></div>
+        <button id="todo"><svg class="ic" viewBox="0 0 32 32"><use href="#i-note"/></svg><span id="todoTxt">维护单</span></button>
+        <div id="tray">
+          <button id="trayPrint" hidden aria-label="打印机"><svg class="ic" viewBox="0 0 32 32"><use href="#i-printer"/></svg></button>
+          <button id="trayD" aria-label="daemon"><i></i></button>
+          <span id="trayDay"></span>
+          <span id="clock"></span>
+        </div>
+      </div>
+      <div id="startMenu" hidden></div>
+      <div id="todoPop" hidden></div>
+      <div id="balloon" hidden></div>
+      <div id="fx"></div>
+      <div id="modal"></div>
+      <div id="glitch" aria-hidden="true"></div>
+      <div id="crt" aria-hidden="true"></div>
+      <div id="overlay" hidden></div>
+    </div>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
