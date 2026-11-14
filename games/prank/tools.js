@@ -1,4 +1,4 @@
-// 右边工具箱里的 15 样东西。
+// 右边工具箱里的 17 样东西。
 // kind: place=放在画布上（长按变大）；tap=点一下就用；drag=按住拖着用；water=拖水位小点
 import { sfx } from './sfx.js';
 
@@ -21,6 +21,8 @@ export const TOOLS = [
   { id: 'hole', name: '黑洞', kind: 'place', desc: '连人带东西全吸进去，最后吐出来。', how: '点画布 · 长按变大' },
   { id: 'eraser', name: '橡皮擦', kind: 'drag', desc: '擦掉他一截。道具、钉子、绳子、线也能擦。', how: '按住擦' },
   { id: 'pencil', name: '铅笔', kind: 'drag', desc: '从他身上画出去多长一条；画别处是一条线，东西能放上面。', how: '' },
+  { id: 'food', name: '食物', kind: 'place', desc: '放在地上，他忍不住过去捡起来吃。吃下去才知道是食物中毒还是爆炸。', how: '点画布 · 长按变大 · 每次随机一种' },
+  { id: 'knife', name: '刀子', kind: 'tap', desc: '点一个火柴人，他就拿着刀发狂，见人就砍，发狂的之间也互相砍。别人会躲会跑。', how: '再点一下发狂的人，他就清醒 · 最多 5 个' },
 ];
 export const toolById = (id) => TOOLS.find((t) => t.id === id);
 
@@ -34,8 +36,8 @@ function pickAt(W, x, y, r) {
     if (d < bd) { bd = d; best = { p }; }
   }
   for (const o of W.props) {
-    if (!['anvil', 'peel', 'spring', 'balloon'].includes(o.t) || o.dead) continue;
-    const cy = o.t === 'anvil' ? o.y - 18 * o.s : o.t === 'balloon' ? o.y : o.y - 8 * o.s;
+    if (!['anvil', 'peel', 'spring', 'balloon', 'food'].includes(o.t) || o.dead) continue;
+    const cy = o.t === 'anvil' ? o.y - 18 * o.s : o.t === 'balloon' ? o.y : o.t === 'food' ? W.foodCenter(o).y : o.y - 8 * o.s;
     const d = hyp(o.x - x, cy - y) - (o.t === 'anvil' ? 18 : o.t === 'balloon' ? 12 : 10) * o.s;
     if (d < bd) { bd = d; best = { o, oy: o.y - cy }; }
   }
@@ -57,6 +59,8 @@ export function makeTools(W, cb = {}) {
       case 'hole': W.openHole(x, y, s); break;
       case 'nail': W.useNail(x, y); break;
       case 'balloon': W.useBalloon(x, y); break;
+      case 'food': W.placeFood(x, y, s); break;
+      case 'knife': if (W.useKnife(x, y) === 'miss') return; break;
       default: return;
     }
     used(id);

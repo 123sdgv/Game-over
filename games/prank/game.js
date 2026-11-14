@@ -26,7 +26,7 @@ document.documentElement.style.setProperty('--check', pattern(2, [[0, 0], [1, 1]
 document.documentElement.style.setProperty('--check25', pattern(2, [[0, 0]]));
 
 /* ─────────────── 记录 ─────────────── */
-const st = { played: 0, hits: 0, deaths: 0, limbs: 0, breaks: 0, biggest: 0, favorite: '—', uses: {}, ...hb.stats() };
+const st = { played: 0, hits: 0, deaths: 0, limbs: 0, breaks: 0, biggest: 0, eaten: 0, mads: 0, favorite: '—', uses: {}, ...hb.stats() };
 if (typeof st.uses !== 'object' || !st.uses) st.uses = {};
 if (st.uses.hand) { st.uses.mouse = (st.uses.mouse || 0) + st.uses.hand; delete st.uses.hand; }
 let statsDirty = false;
@@ -40,7 +40,7 @@ function bumpUse(id) {
 }
 
 /* ─────────────── 世界 ─────────────── */
-const CAUSE_NAME = { anvil: '铁砧', bolt: '闪电', roller: '压路机', spikes: '钉板', peel: '香蕉皮', spring: '弹簧板', hole: '黑洞', eraser: '橡皮擦', fall: '地板', poke: '鼠标', wall: '铅笔线', nail: '钉子', yank: '鼠标', water: '水', melt: '水' };
+const CAUSE_NAME = { anvil: '铁砧', bolt: '闪电', roller: '压路机', spikes: '钉板', peel: '香蕉皮', spring: '弹簧板', hole: '黑洞', eraser: '橡皮擦', fall: '地板', poke: '鼠标', wall: '铅笔线', nail: '钉子', yank: '鼠标', water: '水', melt: '水', food: '食物爆炸', poison: '食物中毒', knife: '刀子' };
 
 const logEl = $('log');
 function logLine(text) {
@@ -84,6 +84,8 @@ const W = new World({
   born(B) { st.played++; touchStats(); saveNow(); logLine(`第 ${B.num} 个火柴人已启动`); },
   death() { st.deaths++; touchStats(); saveNow(); logLine('火柴人.exe 已停止工作'); sfx.error(); cancelPressIfNeeded(); },
   jolt(a) { jolt(a); },
+  ate() { st.eaten++; touchStats(); },
+  mad() { st.mads++; touchStats(); logLine('有人发狂了'); },
 });
 let batchHits = 0;
 const tools = makeTools(W, { used: bumpUse });
@@ -109,6 +111,7 @@ function jolt(a) {
 }
 
 /* ─────────────── 布局：手机竖着拿就把整个界面转 90°，所有东西都在转过来的坐标里 ─────────────── */
+const COLS = 5;
 let rotated = false, px = 1, dpr = 1, stageW = 0, stageH = 0, cellPx = 56;
 
 function safeAreas() {
@@ -159,13 +162,14 @@ function layout() {
   const th = big ? 30 : 24, mh = big ? 30 : 24, stb = big ? 92 : 60;
   const inner = WH - th - mh - 4;
   const minDesc = big ? 150 : 96;
-  const cell = Math.floor(Math.max(36, Math.min((inner - minDesc) / 4, WW * 0.42 / 4, big ? 78 : 60)));
+  // 道具格 5 列 × 4 行；选中鼠标时缩成 10 列 × 2 行的小格
+  const cell = Math.floor(Math.max(34, Math.min((inner - minDesc) / 4, WW * 0.36 / COLS, big ? 74 : 60)));
   cellPx = cell;
   const root = document.documentElement.style;
   root.setProperty('--fs', `${fs}px`); root.setProperty('--th', `${th}px`); root.setProperty('--mh', `${mh}px`);
-  root.setProperty('--stb', `${stb}px`); root.setProperty('--cell', `${cell}px`); root.setProperty('--rw', `${cell * 4}px`);
+  root.setProperty('--stb', `${stb}px`); root.setProperty('--cell', `${cell}px`); root.setProperty('--rw', `${cell * COLS}px`);
   // 圆盘：道具缩成两排以后，剩下的地方能放多大放多大
-  const padSize = Math.floor(Math.max(90, Math.min(cell * 4 - 18, inner - cell - 22, big ? 330 : 400)));
+  const padSize = Math.floor(Math.max(90, Math.min(cell * COLS - 18, inner - cell - 22, big ? 330 : 400)));
   root.setProperty('--pad', `${padSize}px`);
   sizeIcons();
 
@@ -207,10 +211,12 @@ for (const t of TOOLS) {
   $('grid').append(b);
   cells[t.id] = b;
 }
-// 15 样道具排不满 4×4，补一个空格子
-const blank = document.createElement('div');
-blank.className = 'tool blank';
-$('grid').append(blank);
+// 17 样道具排不满 5×4，补几个空格子
+for (let i = TOOLS.length; i % COLS || i % (COLS * 2); i++) {
+  const blank = document.createElement('div');
+  blank.className = 'tool blank';
+  $('grid').append(blank);
+}
 
 function showTool() {
   const t = toolById(sel);
@@ -251,7 +257,7 @@ cv.addEventListener('pointerdown', (e) => {
   const q = toWorld(e), t = toolById(sel);
   press = { id: e.pointerId, t0: performance.now(), tool: sel, kind: t.kind, x: q.x, y: q.y, tick: 0 };
   if (t.kind === 'drag') tools.down(sel, q.x, q.y);
-  else if (t.kind === 'place') W.preview = { id: sel, x: q.x, y: q.y, s: 1 };
+  else if (t.kind === 'place') { W.preview = { id: sel, x: q.x, y: q.y, s: 1 }; if (sel === 'food') W.rollFood(); }
   else if (t.kind === 'water') tools.waterDown(q.x, q.y);
 });
 cv.addEventListener('pointermove', (e) => {
@@ -302,7 +308,7 @@ function growPreview() {
   const hold = (performance.now() - press.t0) / 1000;
   if (hold < 0.18) return;
   const u = Math.min(1, (hold - 0.18) / 1.05);
-  const max = press.tool === 'roller' ? 2 : press.tool === 'hole' ? 2.2 : 2.5;
+  const max = press.tool === 'roller' ? 2 : press.tool === 'hole' || press.tool === 'food' ? 2.2 : 2.5;
   W.preview.s = 1 + u * (max - 1);
   if (u < 1 && Math.floor(hold * 12) !== press.tick) { press.tick = Math.floor(hold * 12); sfx.grow(u); }
 }
@@ -406,7 +412,7 @@ $('mStop').addEventListener('click', (e) => {
 const showHelp = () => showCard({
   title: '帮助',
   big: '怎么整他',
-  meta: '点右边选道具，再点画布，用在那个位置；有些道具长按变大。\n鼠标：滑圆盘移动，碰到他就抓起来，松手扔；点圆盘中央戳他。\n钉子点手腕脚踝；绳子按住拖，靠近钉子、手腕、脚踝就连上。\n水：拖小点调水位。\n死了一个自动画一个；「停止」就不画了，「重画」接着画。\n活着的时候点「重画」多一个人，血条共用。',
+  meta: '点右边选道具，再点画布，用在那个位置；有些道具长按变大。\n鼠标：滑圆盘移动，碰到他就抓起来，松手扔；点圆盘中央戳他。\n钉子点手腕脚踝；绳子按住拖，靠近钉子、手腕、脚踝就连上。\n水：拖小点调水位。\n食物放在地上，他会忍不住去吃。刀子点一个人他就发狂，再点一下清醒。\n死了一个自动画一个；「停止」就不画了，「重画」接着画。\n活着的时候点「重画」多一个人，血条共用。',
 });
 $('mHelp').addEventListener('click', () => { if (!cardOpen) { sfx.click(); showHelp(); } });
 $('btnSys').addEventListener('click', () => {
@@ -450,7 +456,8 @@ function hud(dt) {
     text('iHurt', !lost && !broke ? (V.hp < V.max ? '有伤' : '完好') : [lost ? `断 ${lost}` : '', broke ? `折 ${broke}` : ''].filter(Boolean).join(' · '));
   } else text('iHurt', '—');
   text('iHits', `${batchHits} 下`);
-  text('menuInfo', `活着 ${live.length} · 第 ${W.drawn} 个`);
+  const madN = live.filter((b) => b.mad).length;
+  text('menuInfo', `活着 ${live.length}${madN ? ` · 发狂 ${madN}` : ''} · 第 ${W.drawn} 个`);
   for (const [k, id] of Object.entries(FIG)) {
     const el = $(id);
     el.classList.toggle('lost', !B || !B.limbOK[k]);

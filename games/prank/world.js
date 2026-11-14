@@ -1,16 +1,18 @@
 // 世界：Verlet 物理、地面和铅笔线、绳子、水、所有道具、特效。一个世界单位 = 一个低分辨率像素。
 import * as art from './art.js';
-import { INK, PAPER, gray, quantize } from './art.js';
+import { INK, PAPER, gray, quantize, FOOD_KINDS, FOOD_BOTTOM } from './art.js';
 import { sfx } from './sfx.js';
 import { Body, HANDS_FEET, LIMB_JOINTS } from './body.js';
 
 export const G = 820;
 export const DT = 1 / 120;
 export const MAX_ALIVE = 5;
+export const MAX_MAD = 5;     // 最多几个人同时发狂
 const CELL = 3; // 水的格子大小
 const hyp = Math.hypot;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (l) => l[(Math.random() * l.length) | 0];
 const FONT = '-apple-system, "PingFang SC", "Noto Sans CJK SC", sans-serif';
 
 /* 点到线段：返回距离和最近点的比例 */
@@ -43,7 +45,7 @@ function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
 function fall(W, o, dt) {
   if (o.held) return false;
   const wet = W.waterAt(o.x, o.y - 3);
-  if (o.t === 'peel' && wet) {
+  if ((o.t === 'peel' || o.t === 'food') && wet) {
     o.rest = false;
     o.vy = (o.vy || 0) + ((wet.level - o.y) * 30 - (o.vy || 0) * 5) * dt;
     o.y += o.vy * dt;
@@ -116,6 +118,41 @@ const P = {
       }
     },
     draw(W, c, o) { art.peel(c, o.x, o.y, o.s); },
+  },
+
+  // 食物：放在地上，火柴人忍不住过去捡起来吃。吃下去才知道是中毒还是爆炸（o.bad，放下时就定好了）
+  food: {
+    frame(W, o, dt) {
+      if (o.fuse != null) {
+        // 要炸了：嘶嘶冒火星
+        o.fuse -= dt;
+        o.tick = (o.tick || 0) - dt;
+        if (o.tick <= 0) {
+          o.tick = 0.11;
+          sfx.fuse();
+          const q = W.foodCenter(o);
+          W.spark(q.x + rnd(-4, 4) * o.s, q.y - 5 * o.s, rnd(-70, 70), rnd(-190, -70), 4);
+        }
+        if (o.fuse <= 0) { W.foodBlast(o); return; }
+      }
+      if (o.by) {
+        const B = o.by;
+        if (o.held || B.food !== o || !B.alive) { o.by = null; o.inHand = false; o.rest = false; o.vy = Math.min(o.vy || 0, 0); o.vx = 0; }
+        else {
+          const q = W.foodCenter(o);
+          o.x = q.x; o.y = q.y + FOOD_BOTTOM[o.kind] * o.s;
+          return;
+        }
+      }
+      fall(W, o, dt);
+    },
+    draw(W, c, o) {
+      const q = W.foodCenter(o);
+      const j = o.fuse != null ? 0.9 : 0;
+      art.food(c, o.kind, q.x + rnd(-j, j), q.y + rnd(-j, j), o.s, q.ang, o.bites || 0, q.dir);
+      if (o.fuse != null && Math.floor(W.t * 16) % 2) art.star(c, q.x + 4 * o.s, q.y - 6 * o.s, 3.4);
+    },
+    front: true,
   },
 
   spring: {
@@ -798,7 +835,7 @@ export class World {
     this.socialT -= dt;
     if (this.socialT > 0) return;
     this.socialT = rnd(7, 13);
-    const free = live.filter((b) => !b.partner && !['run', 'dive', 'duck', 'jump', 'back', 'mourn', 'swim'].includes(b.act) && !b.swimming);
+    const free = live.filter((b) => !b.partner && !b.mad && !b.sick && !b.fleeing && !['run', 'dive', 'duck', 'jump', 'back', 'mourn', 'swim', 'crave', 'pickup', 'eat', 'sick', 'heave'].includes(b.act) && !b.swimming);
     if (free.length < 2) return;
     const a = free[(Math.random() * free.length) | 0];
     const others = free.filter((b) => b !== a);
@@ -836,6 +873,12 @@ export class World {
       if (q.x < a - 6 || q.x > b + 6 || Math.abs(q.y - by.y) > 60) continue;
       if (by.t === 'anvil' && q.y < by.y - 40 * by.s) continue;
       if (q.t === 'peel' || q.t === 'spring') { this.remove(q); this.dust(q.x, q.y, 4); }
+      if (q.t === 'food' && !q.by) {
+        if (q.fuse != null) { this.foodBlast(q); continue; }
+        this.remove(q); this.dust(q.x, q.y, 4);
+        for (let i = 0; i < 6; i++) this.crumb(q.x + rnd(-8, 8) * q.s, q.y - rnd(0, 6), 2);
+        this.word(q.x, q.y - 20, '啪叽', 13);
+      }
     }
   }
   /** 把铅笔线里满足条件的点抹掉，线会断成几段 */
@@ -1470,6 +1513,115 @@ export class World {
     for (const [B, list] of byBody) B.spatOut(list, o);
   }
 
+  /* ─────────────── 食物 ─────────────── */
+  /** 下一个放的是什么食物（按下手指时就定了，预览和放下去的一样） */
+  rollFood() { this.nextFood = pick(FOOD_KINDS); return this.nextFood; }
+  placeFood(x, y, s) {
+    const kind = this.nextFood || pick(FOOD_KINDS);
+    this.nextFood = null;
+    const list = this.props.filter((o) => o.t === 'food' && !o.by);
+    if (list.length >= 8) this.vanish(list[0]);
+    sfx.place();
+    s *= 1.15;                       // 默认比脑袋稍大一点，一眼看得清
+    return this.addProp({ t: 'food', kind, x: clamp(x, 14, this.w - 14), y: Math.min(y, this.ground), s, rest: false, bites: 0, dir: Math.random() < 0.5 ? -1 : 1, bad: Math.random() < 0.5 ? 'poison' : 'boom' });
+  }
+  /** 食物现在画在哪（中心）、转多少、朝哪边 */
+  foodCenter(o) {
+    if (o.by && o.by.alive) return o.by.foodPose(o);
+    return { x: o.x, y: o.y - FOOD_BOTTOM[o.kind] * o.s, ang: 0, dir: o.dir || 1 };
+  }
+  foodBlast(o) {
+    const q = this.foodCenter(o);
+    const eater = o.by && o.by.alive && o.inHand ? o.by : null;
+    const hand = eater ? o.hand : null;
+    this.remove(o);
+    this.blast(q.x, q.y, o.s, eater, hand);
+  }
+
+  /** 爆炸：推开周围所有东西，离得近的掉血、断胳膊腿，拿着它的那个最惨 */
+  blast(x, y, s = 1, eater = null, hand = null) {
+    const R = 66 * s;
+    sfx.boom(s);
+    this.bang(1.6 * Math.min(1.6, s));
+    this.hitstop = Math.max(this.hitstop, 0.06);
+    if (this.opts.flash) this.flashT = Math.max(this.flashT, 0.12);
+    this.fx.push({ k: 'ring', x, y, r0: 6, r1: R * 1.1, life: 0.26, t: 0, w: 4 });
+    this.fx.push({ k: 'ring', x, y, r0: 4, r1: R * 0.6, life: 0.18, t: 0, w: 2 });
+    const P0 = this.opts.particles;
+    for (let i = 0; i < 9 * P0; i++) {
+      const a = Math.random() * Math.PI * 2, v = rnd(30, 120) * s;
+      this.puff(x + Math.cos(a) * 6 * s, y + Math.sin(a) * 6 * s, rnd(5, 10) * s, { g: rnd(40, 140), life: rnd(0.5, 1), grow: 26 * s, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40 });
+    }
+    for (let i = 0; i < 10 * P0; i++) {
+      const a = Math.random() * Math.PI * 2, v = rnd(220, 520);
+      this.spark(x, y, Math.cos(a) * v, Math.sin(a) * v - 120, rnd(4, 8));
+    }
+    for (let i = 0; i < 6 * P0; i++) this.crumb(x + rnd(-10, 10), y + rnd(-10, 10), 2);
+    this.word(x, y - 26 * s, '轰！！', 22 + 6 * s);
+    if (y > this.ground - 34) { this.scorch(x, this.ground, 22 * s); this.crack(x, this.ground, 16 * s); }
+    // 推开
+    const RR = R * 1.7;
+    for (const p of this.pts) {
+      if (p.pin || p.hole || p.im === 0) continue;
+      const dx = p.x - x, dy = p.y - y, d = hyp(dx, dy) || 1;
+      if (d > RR) continue;
+      const k = (1 - d / RR) * (1 - d / RR);
+      const v = (260 + 980 * k) * Math.sqrt(s) * (k > 0.05 ? 1 : k / 0.05);
+      p.trap = null; p.sleep = 0;
+      if (p.flat) { p.flat = false; p.y -= 2; }
+      p.px = p.x - (dx / d) * v * DT;
+      p.py = p.y - ((dy / d) * v - 220 * k) * DT;
+    }
+    for (const o of this.props) {
+      if (o.dead || o.held) continue;
+      const dx = o.x - x, dy = o.y - 8 - y, d = hyp(dx, dy) || 1;
+      if (d > R) continue;
+      if (o.t === 'balloon') { this.popBalloon(o); continue; }
+      if (o.t === 'peel' || o.t === 'spring' || (o.t === 'food' && !o.by)) {
+        const k = 1 - d / R;
+        o.rest = false; o.vx = (dx / d) * 380 * k; o.vy = -180 - 420 * k;
+      }
+    }
+    // 人
+    const hit = [];
+    for (const B of this.bodies) {
+      if (!B.alive || B.state === 'draw') continue;
+      let dm = 1e9;
+      for (const p of B.all) dm = Math.min(dm, hyp(p.x - x, p.y - y));
+      if (dm < R) hit.push([B, dm]);
+    }
+    for (const [B, dm] of hit) B.blasted(8 + (1 - dm / R) * 62 * Math.sqrt(s), x, y, R, B === eater, hand);
+  }
+
+  /** 刀子：点一个人，他就拿着刀发狂；点发狂的那个，他就清醒 */
+  useKnife(x, y) {
+    let best = null, bd = 22;
+    for (const B of this.bodies) {
+      if (!B.alive || B.state === 'draw') continue;
+      for (const p of B.all) {
+        const d = hyp(p.x - x, p.y - y) - p.r;
+        if (d < bd) { bd = d; best = B; }
+      }
+    }
+    if (!best) { sfx.click(); this.word(x, y - 10, '点在火柴人身上', 12); return 'miss'; }
+    if (best.mad) { best.calm(); return 'calm'; }
+    if (this.bodies.filter((b) => b.mad && b.alive).length >= MAX_MAD) { sfx.error(); this.word(x, y - 14, `最多 ${MAX_MAD} 个`, 14); return 'full'; }
+    if (!best.knifeHand()) { sfx.error(); this.word(x, y - 14, '他没手拿刀', 14); return 'nohand'; }
+    best.goMad();
+    this.cb.mad && this.cb.mad(best);
+    return 'mad';
+  }
+  /** 掉在地上的刀、啃完的骨头：落地躺一会儿就没了 */
+  dropThing(k, x, y, vx, vy, s = 1) {
+    if (this.fx.length < 240) this.fx.push({ k, x, y, vx, vy, s, a: rnd(-1, 1), va: rnd(-14, 14), life: 4, t: 0 });
+  }
+  /** 吐出来的口水泡 */
+  spit(x, y, dir) {
+    for (let i = 0; i < 3 * this.opts.particles; i++) {
+      if (this.fx.length < 240) this.fx.push({ k: 'spit', x, y, vx: dir * rnd(20, 80), vy: rnd(-40, 30), r: rnd(0.8, 1.8), life: rnd(0.4, 0.8), t: 0 });
+    }
+  }
+
   eraseAt(x, y, r) {
     // 墙和污渍
     this.eraseWalls((q) => hyp(q.x - x, q.y - y) < r, true);
@@ -1621,6 +1773,21 @@ export class World {
         case 'flake': f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.92; f.vy *= 0.92; break;
         case 'bubble': f.x += f.vx * dt; f.y += f.vy * dt; break;
         case 'shard': f.vy += G * 0.8 * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.a += f.va * dt; if (f.y > this.ground - 1) { f.y = this.ground - 1; f.vy *= -0.3; f.vx *= 0.6; f.va *= 0.6; } break;
+        case 'knife': case 'bone': {
+          f.vy += G * dt; f.x += f.vx * dt; f.y += f.vy * dt; f.a += f.va * dt;
+          const g = this.supportY(f.x, f.y - f.vy * dt - 2) - 2;
+          if (f.y > g) {
+            f.y = g;
+            if (f.vy > 120) sfx.clink(f.k === 'knife');
+            f.vy *= -0.25; f.vx *= 0.5; f.va *= 0.4;
+            // 躺平
+            const flat = Math.round(f.a / Math.PI) * Math.PI;
+            f.a += (flat - f.a) * 0.5;
+          }
+          f.x = clamp(f.x, 4, this.w - 4);
+          break;
+        }
+        case 'spit': f.vy += G * 0.7 * dt; f.x += f.vx * dt; f.y += f.vy * dt; if (f.y > this.ground - 1) continue; break;
         case 'drop':
           f.vy += G * dt; f.x += f.vx * dt; f.y += f.vy * dt;
           if (f.y >= this.ground) { this.stain(f.x, this.ground + 1, f.r * 1.3); continue; }
@@ -1663,6 +1830,15 @@ export class World {
           c.restore();
           break;
         case 'drop': c.fillStyle = INK; c.beginPath(); c.arc(f.x, f.y, f.r, 0, Math.PI * 2); c.fill(); break;
+        case 'knife': case 'bone':
+          if (f.life - f.t < 0.8 && Math.floor(f.t * 12) % 2) break;
+          if (f.k === 'knife') art.knife(c, f.x, f.y, f.a, 1);
+          else art.bone(c, f.x, f.y, f.s, f.a);
+          break;
+        case 'spit':
+          c.fillStyle = PAPER; c.strokeStyle = INK; c.lineWidth = 0.8;
+          c.beginPath(); c.arc(f.x, f.y, f.r, 0, Math.PI * 2); c.fill(); c.stroke();
+          break;
         case 'ring':
           c.strokeStyle = INK; c.lineWidth = f.w * (1 - u) + 0.5;
           c.beginPath(); c.arc(f.x, f.y, f.r0 + (f.r1 - f.r0) * (1 - (1 - u) * (1 - u)), 0, Math.PI * 2); c.stroke();
@@ -1799,10 +1975,10 @@ export class World {
     const G0 = this.preview;
     if (G0) {
       const gy = this.supportY(G0.x, G0.y);
-      art.ghost(c, G0.id, G0.x, G0.y, G0.s, this.t, gy);
+      art.ghost(c, G0.id, G0.x, G0.y, G0.s, this.t, gy, { kind: this.nextFood });
       if (G0.s > 1.02) {
         c.strokeStyle = INK; c.lineWidth = 1.4; c.setLineDash([3, 3]);
-        c.beginPath(); c.arc(G0.x, G0.id === 'peel' || G0.id === 'spring' ? gy - 8 : G0.y, 30 * G0.s, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.arc(G0.x, G0.id === 'peel' || G0.id === 'spring' || G0.id === 'food' ? gy - 8 : G0.y, 30 * G0.s, 0, Math.PI * 2); c.stroke();
         c.setLineDash([]);
         const label = `×${G0.s.toFixed(1)}`;
         c.font = `800 12px ${FONT}`; c.textAlign = 'center';
@@ -1821,13 +1997,13 @@ export class World {
     const bi = new Map(this.bodies.map((b, i) => [b, i]));
     const r1 = (v) => Math.round(v * 10) / 10;
     const at = (p) => idx.get(p) ?? -1;
-    const keep = ['nail', 'peel', 'spring', 'balloon', 'spikes'];
+    const keep = ['nail', 'peel', 'spring', 'balloon', 'spikes', 'food'];
     return {
       v: 2,
       w: this.w, h: this.h, ground: this.ground, drawn: this.drawn, autoDraw: this.autoDraw, hp: Math.round(this.vit.hp), grudge: Math.round(this.grudge),
       pts: live.map((p) => [r1(p.x), r1(p.y), p.r, p.im || 1, p.part || 0, p.owner ? bi.get(p.owner) ?? -1 : -1, p.flat ? 1 : 0, p.corpse ? 1 : 0, p.group || 0, p.pin && typeof p.pin.by === 'number' ? [p.pin.x, p.pin.y, p.pin.by, p.pin.kind] : 0, r1(p.wet || 0)]),
       sticks: this.sticks.filter((s) => s.kind !== 'ice' && idx.has(s.a) && idx.has(s.b)).map((s) => [at(s.a), at(s.b), r1(s.len), s.kind]),
-      props: this.props.filter((o) => keep.includes(o.t) && !o.held).map((o) => ({ id: o.id, t: o.t, x: r1(o.x), y: r1(o.y), s: o.s, rest: o.rest, life: o.life, ang: o.ang, rise: o.rise, caught: o.caught, direct: o.direct, to: o.to ? at(o.to) : undefined })),
+      props: this.props.filter((o) => keep.includes(o.t) && !o.held).map((o) => ({ id: o.id, t: o.t, x: r1(o.x), y: r1(o.y), s: o.s, rest: o.rest, life: o.life, ang: o.ang, rise: o.rise, caught: o.caught, direct: o.direct, to: o.to ? at(o.to) : undefined, kind: o.kind, bites: o.bites, bad: o.bad, dir: o.dir, fuse: o.fuse })),
       walls: this.walls.map((l) => l.pts.map((q) => [r1(q.x), r1(q.y)])),
       ropes: this.ropes.filter((r) => r.pts.every((p) => idx.has(p))).map((r) => ({ pts: r.pts.map(at), L: r1(r.L), seg: r.seg, target: r.target, ends: r.ends.map((e) => (!e ? 0 : e.nail ? { nail: e.nail.id } : { p: at(e.p) })) })),
       waters: this.waters.map((w) => ({ room: w.room, sx: w.sx, sy: w.sy, level: r1(w.target) })),
@@ -1843,7 +2019,7 @@ export class World {
       this.sticks = d.sticks.filter((a) => this.pts[a[0]] && this.pts[a[1]]).map((a) => ({ a: this.pts[a[0]], b: this.pts[a[1]], len: a[2], kind: a[3] }));
       const maxId = Math.max(0, ...(d.props || []).map((o) => o.id || 0));
       nextId = Math.max(nextId, maxId + 1);
-      this.props = (d.props || []).map((o) => ({ vx: 0, vy: 0, ...o, to: o.to != null && o.to >= 0 ? this.pts[o.to] : null }));
+      this.props = (d.props || []).filter((o) => o.t !== 'food' || FOOD_KINDS.includes(o.kind)).map((o) => ({ vx: 0, vy: 0, ...o, to: o.to != null && o.to >= 0 ? this.pts[o.to] : null, rest: o.t === 'food' ? false : o.rest }));
       this.walls = (d.walls || []).map((l) => this.makeWall(l.map((q) => ({ x: q[0], y: q[1] }))));
       this.ropes = (d.ropes || []).map((r) => {
         const pts = r.pts.map((i) => this.pts[i]).filter(Boolean);

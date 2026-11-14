@@ -3,7 +3,7 @@
   --k: #000; --w: #fff;
   --fs: 12px; --th: 24px; --mh: 22px; --stb: 62px;
   --check: none; --check25: none;
-  --rw: 216px; --cell: 52px;
+  --rw: 260px; --cell: 52px;
 }
 html, body { background: #000; }
 #desk {
@@ -78,18 +78,18 @@ html, body { background: #000; }
 #info dd { margin: 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* 工具箱 */
-#grid { flex: none; display: grid; grid-template-columns: repeat(4, var(--cell)); grid-auto-rows: var(--cell); border-bottom: 2px solid var(--k); }
+#grid { flex: none; display: grid; grid-template-columns: repeat(5, var(--cell)); grid-auto-rows: var(--cell); border-bottom: 2px solid var(--k); }
 .tool { position: relative; display: grid; place-items: center; background: var(--w); border-right: 2px solid var(--k); border-bottom: 2px solid var(--k); touch-action: manipulation; }
-.tool:nth-child(4n) { border-right: 0; }
-.tool:nth-last-child(-n+4) { border-bottom: 0; }
+.tool:nth-child(5n) { border-right: 0; }
+.tool:nth-last-child(-n+5) { border-bottom: 0; }
 .tool.blank { background-image: var(--check25); background-size: 4px 4px; image-rendering: pixelated; }
 
 /* 选中鼠标：道具缩成两排小格子，圆盘占下面一大半 */
-#right.mini #grid { grid-template-columns: repeat(8, calc(var(--cell) / 2)); grid-auto-rows: calc(var(--cell) / 2); }
-#right.mini .tool:nth-child(4n) { border-right: 2px solid var(--k); }
-#right.mini .tool:nth-child(8n) { border-right: 0; }
-#right.mini .tool:nth-last-child(-n+4) { border-bottom: 2px solid var(--k); }
-#right.mini .tool:nth-last-child(-n+8) { border-bottom: 0; }
+#right.mini #grid { grid-template-columns: repeat(10, calc(var(--cell) / 2)); grid-auto-rows: calc(var(--cell) / 2); }
+#right.mini .tool:nth-child(5n) { border-right: 2px solid var(--k); }
+#right.mini .tool:nth-child(10n) { border-right: 0; }
+#right.mini .tool:nth-last-child(-n+5) { border-bottom: 2px solid var(--k); }
+#right.mini .tool:nth-last-child(-n+10) { border-bottom: 0; }
 #right.mini #desc, #right.mini #log { display: none; }
 #padWrap { flex: 1; min-height: 0; display: grid; place-items: center; }
 #pad {

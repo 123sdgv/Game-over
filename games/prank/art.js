@@ -213,6 +213,124 @@ export function anchor(c, x, y) {
   c.beginPath(); c.rect(x - 4, y - 4, 8, 8); c.fillStyle = PAPER; c.fill(); ink(c, 1.8); c.stroke();
 }
 
+/* ─────────────── 食物：鸡腿、汉堡、蛋糕 ─────────────── */
+// 局部坐标以食物中心为原点，宽 20 左右。bites 0–3：咬了几口，咬痕是从一头一口口啃进去的
+export const FOOD_KINDS = ['leg', 'burger', 'cake'];
+export const FOOD_BOTTOM = { leg: 6.6, burger: 6.5, cake: 6.5 };   // 中心到底边的距离（放在地上时用）
+const BITES = {
+  leg: [[-11.5, -1.5, 4.6], [-8.6, 3.4, 4.4], [-5.4, -2.8, 4.8]],
+  burger: [[10, -2.6, 4.2], [9.6, 3, 4.2], [5.8, 0.2, 4.6]],
+  cake: [[10, 3.4, 4.4], [6.6, -0.4, 4.4], [4, 4.6, 4.4]],
+};
+/** 这块食物的外轮廓（用来给咬痕描边） */
+function foodShape(c, kind) {
+  c.beginPath();
+  if (kind === 'leg') {
+    c.moveTo(4.6, -2.6); c.bezierCurveTo(0.6, -8, -10.4, -8.4, -11.6, -1.4); c.bezierCurveTo(-12, 5.4, -3, 7.6, 4.6, 2.6); c.closePath();
+  } else if (kind === 'burger') {
+    c.moveTo(-9.6, -0.6); c.bezierCurveTo(-9.6, -8.4, 9.6, -8.4, 9.6, -0.6); c.lineTo(9.6, 3.6); c.lineTo(8.6, 6.5); c.lineTo(-8.6, 6.5); c.lineTo(-9.6, 3.6); c.closePath();
+  } else {
+    c.moveTo(-9.6, -5.6); c.lineTo(-9.6, 6.5); c.lineTo(10.4, 6.5); c.lineTo(10.4, 3); c.closePath();
+  }
+}
+function foodBody(c, kind) {
+  if (kind === 'leg') {
+    // 骨头
+    c.beginPath(); c.rect(3, -1.5, 9.6, 3); c.fillStyle = PAPER; c.fill(); ink(c, 1.3); c.stroke();
+    for (const yy of [-1.9, 1.9]) { c.beginPath(); c.arc(13.4, yy, 2.4, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill(); ink(c, 1.3); c.stroke(); }
+    c.fillStyle = PAPER; c.fillRect(11.6, -1.2, 2.2, 2.4);
+    // 肉：烤得焦黄，上亮下暗
+    foodShape(c, 'leg');
+    c.fillStyle = rad(c, -6, -4.6, 0.5, 13, 238, 40); c.fill(); ink(c, 1.6); c.stroke();
+    ink(c, 0.9);
+    c.beginPath(); c.moveTo(-7.4, 0.8); c.quadraticCurveTo(-5, 2.4, -2.4, 1.4); c.moveTo(-3.4, -3.6); c.quadraticCurveTo(-1.4, -2.6, 0.4, -3.4); c.stroke();
+    c.strokeStyle = PAPER; c.lineWidth = 1.3;
+    c.beginPath(); c.arc(-5.6, -1.6, 4, Math.PI * 1.1, Math.PI * 1.6); c.stroke();
+  } else if (kind === 'burger') {
+    // 下层面包
+    c.beginPath(); c.moveTo(-9.2, 3.4); c.lineTo(9.2, 3.4); c.lineTo(8.4, 6.5); c.lineTo(-8.4, 6.5); c.closePath();
+    c.fillStyle = lin(c, 0, 3, 0, 6.5, 210, 120); c.fill(); ink(c, 1.3); c.stroke();
+    // 肉饼
+    c.beginPath(); c.roundRect(-9.8, 0.6, 19.6, 3.2, 1.4); c.fillStyle = gray(38); c.fill(); ink(c, 1.3); c.stroke();
+    // 芝士往下滴
+    c.beginPath(); c.moveTo(-9, 0.2); c.lineTo(9, 0.2); c.lineTo(7.4, 1.4); c.lineTo(5.6, 3.2); c.lineTo(4, 1.4); c.lineTo(-2, 1.4); c.lineTo(-3.6, 3.4); c.lineTo(-5.2, 1.4); c.lineTo(-9, 1.2); c.closePath();
+    c.fillStyle = gray(235); c.fill(); ink(c, 1); c.stroke();
+    // 生菜
+    ink(c, 1.6); c.beginPath(); c.moveTo(-10, -0.4);
+    for (let i = 1; i <= 8; i++) c.quadraticCurveTo(-10 + i * 2.5 - 1.25, i % 2 ? -2.2 : 1, -10 + i * 2.5, -0.4);
+    c.stroke();
+    // 上层面包，芝麻
+    c.beginPath(); c.moveTo(-9.4, -0.8); c.bezierCurveTo(-9.4, -8.4, 9.4, -8.4, 9.4, -0.8); c.closePath();
+    c.fillStyle = rad(c, -3.4, -5.6, 0.5, 12, 252, 150); c.fill(); ink(c, 1.5); c.stroke();
+    c.fillStyle = INK;
+    for (const [sx, sy] of [[-4.6, -4.4], [-0.6, -5.8], [3.4, -4.8], [5.8, -2.8], [-6.8, -2.2], [1.4, -3]]) c.fillRect(sx - 0.5, sy - 0.4, 1.1, 0.8);
+  } else {
+    // 一角蛋糕（侧面）：两层蛋糕夹奶油，顶上厚奶油往下淌，一颗樱桃
+    c.save(); foodShape(c, 'cake'); c.clip();
+    c.fillStyle = lin(c, 0, -6, 0, 6.5, 230, 150); c.fillRect(-11, -8, 23, 15);
+    c.fillStyle = PAPER; c.fillRect(-11, 1, 23, 1.8);
+    c.restore();
+    foodShape(c, 'cake'); ink(c, 1.5); c.stroke();
+    c.beginPath(); c.moveTo(-10.4, -6.4); c.lineTo(11, 2.6); c.lineTo(10.6, 4.4);
+    c.quadraticCurveTo(8.6, 3, 7, 3.6); c.quadraticCurveTo(5.4, 6, 4, 2.6); c.quadraticCurveTo(-1, -0.4, -3.4, -0.6);
+    c.quadraticCurveTo(-5, 2.4, -6.6, -1.4); c.lineTo(-10.4, -3); c.closePath();
+    c.fillStyle = PAPER; c.fill(); ink(c, 1.2); c.stroke();
+    // 樱桃
+    ink(c, 1); c.beginPath(); c.moveTo(-5.6, -8.4); c.quadraticCurveTo(-4.4, -12, -1.6, -12.6); c.stroke();
+    c.beginPath(); c.arc(-6, -6.6, 2.8, 0, Math.PI * 2); c.fillStyle = rad(c, -7, -7.6, 0.3, 3.2, 200, 25); c.fill(); ink(c, 1.1); c.stroke();
+    c.fillStyle = PAPER; c.fillRect(-7.4, -8, 1.1, 1.1);
+  }
+}
+/** 食物。cx,cy 是中心 */
+export function food(c, kind, cx, cy, s = 1, ang = 0, bites = 0, dir = 1) {
+  begin(c, cx, cy, s, ang);
+  if (dir < 0) c.scale(-1, 1);
+  const B = BITES[kind] || BITES.leg, n = Math.min(3, bites | 0);
+  if (!n) { foodBody(c, kind); c.restore(); return; }
+  // 咬掉的地方挖空，再沿着咬痕补一圈描边
+  c.save();
+  c.beginPath(); c.rect(-20, -20, 40, 40);
+  for (let i = 0; i < n; i++) { const [bx, by, br] = B[i]; c.moveTo(bx + br, by); c.arc(bx, by, br, 0, Math.PI * 2); }
+  c.clip('evenodd');
+  foodBody(c, kind);
+  c.restore();
+  for (let i = 0; i < n; i++) {
+    // 每一口的边只描还剩下的那一段（别的咬痕里已经空了）
+    c.save(); foodShape(c, kind); c.clip();
+    c.beginPath(); c.rect(-20, -20, 40, 40);
+    for (let k = 0; k < n; k++) if (k !== i) { const [bx, by, br] = B[k]; c.moveTo(bx + br - 0.6, by); c.arc(bx, by, br - 0.6, 0, Math.PI * 2); }
+    c.clip('evenodd');
+    const [bx, by, br] = B[i];
+    ink(c, 1.4); c.beginPath(); c.arc(bx, by, br, 0, Math.PI * 2); c.stroke();
+    c.restore();
+  }
+  c.restore();
+}
+/** 啃剩的骨头 */
+export function bone(c, x, y, s = 1, ang = 0) {
+  begin(c, x, y, s, ang);
+  c.beginPath(); c.rect(-5, -1.3, 10, 2.6); c.fillStyle = PAPER; c.fill(); ink(c, 1.2); c.stroke();
+  for (const bx of [-5.6, 5.6]) for (const yy of [-1.7, 1.7]) { c.beginPath(); c.arc(bx, yy, 2.1, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill(); ink(c, 1.2); c.stroke(); }
+  c.fillStyle = PAPER; c.fillRect(-6, -1, 12, 2);
+  c.restore();
+}
+
+/** 菜刀。x,y 是握把的位置，ang 是刀尖的方向 */
+export const KNIFE_TIP = 24;
+export function knife(c, x, y, ang = 0, s = 1) {
+  begin(c, x, y, s, ang);
+  // 刀把
+  c.beginPath(); c.roundRect(-6.4, -1.8, 9, 3.6, 1.4); c.fillStyle = lin(c, 0, -1.8, 0, 1.8, 120, 15); c.fill(); ink(c, 1.1); c.stroke();
+  c.fillStyle = PAPER; c.fillRect(-4.4, -0.5, 1, 1); c.fillRect(-1.2, -0.5, 1, 1);
+  c.fillStyle = INK; c.fillRect(2.4, -2.8, 1.6, 5.6);
+  // 刀身：刀背直，刀刃往刀尖收
+  c.beginPath(); c.moveTo(4, -2.4); c.lineTo(19, -2.4); c.lineTo(22.4, -1.8); c.quadraticCurveTo(17, 3.2, 4, 3.2); c.closePath();
+  c.fillStyle = lin(c, 0, -2.4, 0, 3.2, 248, 135); c.fill(); ink(c, 1.1); c.stroke();
+  c.strokeStyle = PAPER; c.lineWidth = 0.9;
+  c.beginPath(); c.moveTo(6, -1); c.lineTo(17.6, -1); c.stroke();
+  c.restore();
+}
+
 /* ─────────────── 拿在手里的工具 ─────────────── */
 
 /** 鼠标箭头。x,y 是箭头尖 */
@@ -283,9 +401,11 @@ export function head(c, x, y, r, ang, f = {}) {
   c.fillStyle = PAPER; c.fill();
   // 一点点明暗，脑袋才是个球
   c.save(); c.clip();
+  // 中毒：脸色发青（黑白里就是整张脸一层网点）
+  if (f.sick) { c.fillStyle = gray(244 - f.sick * 24); c.fillRect(-r - 2, -r - 2, 2 * r + 4, 2 * r + 4); }
   c.beginPath(); c.arc(r * 0.35, r * 0.4, r * 1.05, 0, Math.PI * 2);
   c.beginPath(); c.arc(-r * 0.32, -r * 0.34, r * 1.15, 0, Math.PI * 2, true); c.rect(-r - 2, -r - 2, 2 * r + 4, 2 * r + 4);
-  c.fillStyle = gray(168); c.fill('evenodd');
+  c.fillStyle = gray(f.sick ? 150 : 168); c.fill('evenodd');
   c.restore();
   c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2);
   ink(c, 3); c.stroke();
@@ -356,6 +476,33 @@ export function head(c, x, y, r, ang, f = {}) {
     // 开心：眼睛笑成弯，大笑
     c.beginPath(); c.arc(-3.3 + lx, -1, 2.2, Math.PI * 1.1, Math.PI * 1.9); c.moveTo(1.2 + lx, -1.6); c.arc(3.3 + lx, -1, 2.2, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
     c.beginPath(); c.arc(lx, 1.8, 3.4, 0.1, Math.PI - 0.1); c.closePath(); c.fillStyle = INK; c.fill();
+  } else if (m === 'mad') {
+    // 发狂：眉毛竖成八字，眼睛只剩两个小点，咧着嘴露牙笑
+    ink(c, 1.7);
+    c.beginPath(); c.moveTo(-6 + lx, -5.6); c.lineTo(-1.4 + lx, -2.6); c.moveTo(6 + lx, -5.6); c.lineTo(1.4 + lx, -2.6); c.stroke();
+    dot(-3.3, -0.6, 1.6, 1.6); dot(3.3, -0.6, 1.6, 1.6);
+    c.beginPath(); c.moveTo(-4.6 + lx, 2.2); c.lineTo(4.6 + lx, 2.2); c.quadraticCurveTo(lx, 9.4, -4.6 + lx, 2.2); c.closePath();
+    c.fillStyle = PAPER; c.fill(); ink(c, 1.2); c.stroke();
+    ink(c, 0.9); c.beginPath(); c.moveTo(-3.4 + lx, 3.8); c.lineTo(3.4 + lx, 3.8); c.moveTo(lx, 2.2); c.lineTo(lx, 5.6); c.stroke();
+  } else if (m === 'sick') {
+    // 中毒：眼睛无神往下耷拉，嘴歪歪扭扭
+    ink(c, 1.3);
+    c.beginPath(); c.moveTo(-5.4 + lx, -3.4); c.lineTo(-1.8 + lx, -2.2); c.moveTo(5.4 + lx, -3.4); c.lineTo(1.8 + lx, -2.2); c.stroke();
+    dot(-3.4, -0.4, 2, 1.6); dot(3.4, -0.4, 2, 1.6);
+    c.beginPath(); c.moveTo(-3.8 + lx, 5); c.quadraticCurveTo(-2 + lx, 3.4, -0.4 + lx, 5); c.quadraticCurveTo(1.4 + lx, 6.6, 3.4 + lx, 4.4); c.stroke();
+  } else if (m === 'heave') {
+    // 要吐了：眼睛紧闭，腮帮子鼓起来
+    ink(c, 1.4);
+    c.beginPath(); c.moveTo(-5.4 + lx, -3); c.lineTo(-2 + lx, -1.4); c.lineTo(-5.4 + lx, 0.2); c.moveTo(5.4 + lx, -3); c.lineTo(2 + lx, -1.4); c.lineTo(5.4 + lx, 0.2); c.stroke();
+    c.beginPath(); c.ellipse(lx, 4.4, 4.4, 2.6, 0, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill(); ink(c, 1.3); c.stroke();
+    c.beginPath(); c.moveTo(-1.6 + lx, 4.4); c.lineTo(1.6 + lx, 4.4); c.stroke();
+  } else if (m === 'crave') {
+    // 馋：眼睛发亮，张着嘴流口水
+    for (const ax of [-3.3, 3.3]) { c.beginPath(); c.arc(ax + lx, -1.4 + ly, 2.3, 0, Math.PI * 2); c.fillStyle = INK; c.fill(); c.fillStyle = PAPER; c.fillRect(ax + lx - 1.4, -2.8 + ly, 1.3, 1.3); }
+    c.beginPath(); c.arc(lx, 2.6, 3, 0.15, Math.PI - 0.15); c.closePath(); c.fillStyle = INK; c.fill();
+    const dy = ((f.t || 0) * 2.2) % 1;
+    c.beginPath(); c.moveTo(2.4 + lx, 3.4); c.lineTo(2.4 + lx, 5 + dy * 2.4); c.arc(2.4 + lx, 5.6 + dy * 2.4, 1.1, -Math.PI / 2, Math.PI * 1.5);
+    c.fillStyle = PAPER; c.fill(); ink(c, 0.9); c.stroke();
   } else if (m === 'happy') {
     dot(-3.2, -1.6); dot(3.2, -1.6);
     c.beginPath(); c.arc(lx, 1.8, 3, 0.25, Math.PI - 0.25); c.stroke();
@@ -377,6 +524,17 @@ export function head(c, x, y, r, ang, f = {}) {
       const a = i * 0.32 - Math.PI / 2;
       c.beginPath(); c.moveTo(Math.cos(a) * r, Math.sin(a) * r); c.lineTo(Math.cos(a) * (r + 7 + (i % 2) * 2), Math.sin(a) * (r + 7 + (i % 2) * 2)); c.stroke();
     }
+  }
+  if (f.mad) {
+    // 头顶冒青筋
+    const ax = r * 0.95, ay = -r * 0.95, k = 1 + Math.sin((f.t || 0) * 14) * 0.12;
+    c.beginPath(); c.arc(ax, ay, 4.4 * k, 0, Math.PI * 2); c.fillStyle = PAPER; c.fill();
+    ink(c, 1.3);
+    c.beginPath();
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      c.moveTo(ax + sx * 1.1 * k, ay + sy * 3.4 * k); c.quadraticCurveTo(ax + sx * 1.1 * k, ay + sy * 1.1 * k, ax + sx * 3.4 * k, ay + sy * 1.1 * k);
+    }
+    c.stroke();
   }
   if (f.lump) {
     const a = -1.0;
@@ -430,6 +588,8 @@ const ICONS = {
     balloon(c, 18, 13, 0.82);
     ink(c, 1.2); c.beginPath(); c.moveTo(18, 26); c.quadraticCurveTo(15, 29, 19, 34); c.stroke();
   },
+  food: (c) => food(c, 'leg', 17, 19, 1.32, -0.62),
+  knife: (c) => knife(c, 7.4, 29, -0.86, 1.32),
   water: (c) => {
     // 一滴水和两条波浪
     c.beginPath(); c.moveTo(18, 3); c.bezierCurveTo(24, 11, 27, 15, 27, 19); c.arc(18, 19, 9, 0, Math.PI); c.bezierCurveTo(9, 15, 12, 11, 18, 3); c.closePath();
@@ -451,7 +611,7 @@ export function makeIcon(id, size = 36) {
 }
 
 /** 放道具之前手指下面那个预览。gy 是手指下面的落脚点（地面或者铅笔线） */
-export function ghost(c, id, x, y, s, t, gy) {
+export function ghost(c, id, x, y, s, t, gy, f = {}) {
   switch (id) {
     case 'anvil': anvil(c, x, y, s); break;
     case 'peel': peel(c, x, gy, s); break;
@@ -461,6 +621,7 @@ export function ghost(c, id, x, y, s, t, gy) {
     case 'hole': hole(c, x, y, 18 * s, t); break;
     case 'spikes': spikes(c, x, gy + 1, s, 0, 1); break;
     case 'roller': roller(c, x, gy + 1, s, 1, t); break;
+    case 'food': food(c, f.kind || 'leg', x, gy - FOOD_BOTTOM[f.kind || 'leg'] * s * 1.15, s * 1.15); break;
     default: break;
   }
 }

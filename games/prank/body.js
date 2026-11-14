@@ -1,6 +1,6 @@
 // 一个火柴人：骨架、性格、动作、反应、伤情。血条是大家共用的（World.vit）。
 import * as art from './art.js';
-import { INK, PAPER } from './art.js';
+import { INK, PAPER, KNIFE_TIP, FOOD_BOTTOM } from './art.js';
 import { sfx } from './sfx.js';
 
 const DT = 1 / 120;
@@ -60,6 +60,21 @@ const LINES = {
   grudge: ['你到底想干嘛', '我都这样了', '我记着呢', '放过我吧', '你还来？'],
   grief: ['喂！', '醒醒！', '你别吓我', '不会吧……', '他刚才还在说话'],
   griefNear: ['你醒醒', '起来啊', '别睡这儿', '我拉你起来'],
+  crave: ['好香……', '腿自己动了', '就闻一下', '我不饿……我不饿……', '控制不住我自己', '谁的？我的！'],
+  eat: ['吧唧吧唧', '真香', '嗯——', '好吃！'],
+  gone: ['没了……', '被抢了', '我的……', '哼'],
+  far: ['够不着', '算了', '那么高谁够得着'],
+  stare: ['嗯？', '它在响', '这什么声音', '……？'],
+  sick: ['肚子……', '咕……', '这东西过期了吧', '我不行了', '有毒……', '想吐'],
+  sickEnd: ['再也不乱吃了', '活过来了……', '再也不吃了'],
+  boomed: ['……咳', '这饭有毒吧', '谁在里面放了炸药', '我的眉毛'],
+  boomNear: ['……咳', '我的眉毛', '耳朵嗡嗡的', '什么东西炸了', '我什么都听不见'],
+  madStart: ['啊啊啊啊啊！', '嘿嘿嘿嘿……', '都别动！', '我受够了！'],
+  mad: ['别跑！', '站住！', '嘿嘿嘿', '下一个！', '都别想走', '啊啊啊！', '过来！'],
+  madAlone: ['人呢？', '出来！', '嘿嘿……', '我闻到你了'],
+  flee: ['他疯了！', '快跑！', '救命啊！', '别过来！', '冷静点！', '他有刀！'],
+  corner: ['别杀我！', '我错了我错了', '不要啊', '有话好说'],
+  calm: ['我刚才……干了什么', '头好疼', '刚才那是我？', '怎么回事……', '刀呢？'],
 };
 
 // 每种性格自己说的（只有上班族透露身世）
@@ -73,6 +88,9 @@ const PLINES = {
     water: ['又是水', '我不想动', '这也不算工伤吧'],
     grudge: ['你跟那帮人是一伙的吧', '我真的只是上班的', '我什么都没看见', '我不会说出去的'],
     chat: ['……', '嗯', '别跟我说话', '你怎么进来的', '我还有报表没交', '没事别叫我', '你家人会来找你吗'],
+    crave: ['加班没吃饭', '……就一口', '公司从来不管饭'],
+    mad: ['报表！！报表！！', '都是你们害的', '我不干了！！', '加班加班加班'],
+    flee: ['我只是个上班的！', '别找我！', '我什么都没看见！'],
   },
   sunny: {
     idle: ['今天天气真好！', '嗨！', '你好呀！', '要不要跳舞', '想吃火锅', '我们会出去的！', '这屏幕真白！', '有人一起玩吗', '你手机该充电啦'],
@@ -83,6 +101,9 @@ const PLINES = {
     water: ['下水啦！', '我会游泳哦！', '好好玩！'],
     grudge: ['你为什么要这样嘛', '我们不是朋友吗', '我不跟你玩了！'],
     chat: ['你好呀！', '你叫什么？', '一起玩吧！', '我们会出去的！', '要不要击掌！', '你笑一个嘛', '别担心！'],
+    crave: ['哇！吃的！', '是给我的吗！', '开饭啦！'],
+    mad: ['陪我玩嘛！！', '嘻嘻嘻嘻', '抓到你了！', '来击掌呀！！'],
+    flee: ['我们不是朋友吗！', '你怎么了！', '醒醒啊！'],
   },
   sharp: {
     idle: ['这里没有门', '我观察一下', '地面是实的', '刚才那招有规律', '记下来', '不能慌', '先活动一下', '这屏幕边界很硬'],
@@ -93,6 +114,9 @@ const PLINES = {
     water: ['水位在涨', '先上浮', '留一口气'],
     grudge: ['我已经摸清你了', '你的习惯很明显', '别以为我不知道'],
     chat: ['小心点', '我观察过了，这里没有门', '别站那儿', '刚才那招有规律', '记住路线', '你听我说', '分开走'],
+    crave: ['这肯定有诈……但是好香', '先检查一下', '就尝一口'],
+    mad: ['目标锁定', '你跑不掉的', '下一个', '我都算好了'],
+    flee: ['分开跑！', '别往墙角跑！', '保持距离！'],
   },
 };
 
@@ -113,7 +137,28 @@ const TOOL_LINES = {
   rope: ['你拿绳子干嘛', '我不玩这个'],
   balloon: ['气球！', '是给我的吗', '有点可疑'],
   water: ['要下雨了？', '我会游泳的', '水是哪来的'],
+  food: ['什么味道', '好香', '是给我的吗'],
+  knife: ['刀？！', '那是真刀吗', '别拿刀对着人'],
 };
+
+/** 两条线段之间最近的距离，和第二条线段上最近的点 */
+function segDist(ax, ay, bx, by, cx, cy, dx, dy) {
+  const near = (px, py, x0, y0, x1, y1) => {
+    const ex = x1 - x0, ey = y1 - y0, l2 = ex * ex + ey * ey || 1;
+    const t = clamp(((px - x0) * ex + (py - y0) * ey) / l2, 0, 1);
+    return { d: hyp(px - x0 - ex * t, py - y0 - ey * t), x: x0 + ex * t, y: y0 + ey * t };
+  };
+  const d1 = bx - ax, d2 = by - ay, d3 = dx - cx, d4 = dy - cy, den = d1 * d4 - d2 * d3;
+  if (Math.abs(den) > 1e-6) {
+    const u = ((cx - ax) * d4 - (cy - ay) * d3) / den, v = ((cx - ax) * d2 - (cy - ay) * d1) / den;
+    if (u >= 0 && u <= 1 && v >= 0 && v <= 1) return { d: 0, x: cx + d3 * v, y: cy + d4 * v };
+  }
+  let best = near(ax, ay, cx, cy, dx, dy);
+  const b2 = near(bx, by, cx, cy, dx, dy); if (b2.d < best.d) best = b2;
+  const c1 = near(cx, cy, ax, ay, bx, by); if (c1.d < best.d) best = { d: c1.d, x: cx, y: cy };
+  const c2 = near(dx, dy, ax, ay, bx, by); if (c2.d < best.d) best = { d: c2.d, x: dx, y: dy };
+  return best;
+}
 
 function ik(ax, ay, bx, by, l1, l2, bend) {
   let dx = bx - ax, dy = by - ay, d = hyp(dx, dy) || 0.01;
@@ -210,6 +255,8 @@ export class Body {
     this.sayCd = 1.5;
     this.act = 'idle'; this.actT = 1.5; this.phase = 0; this.tx = x;
     this.mob = 'walk';
+    this.mad = false; this.atk = null; this.prey = null; this.fleeing = false;
+    this.food = null; this.crave = null; this.foodCd = 0; this.sick = 0; this.sickVis = 0;
     this.num = W.drawn;
     this.recalc(true);
     if (animate) {
@@ -342,6 +389,7 @@ export class Body {
     this.ctrl = 0;
     this.removeIce();
     this.state = 'dead';
+    if (this.mad) this.dropKnife();
     if (this.partner) { const o = this.partner; this.partner = null; if (o.partner === this) o.endMeet(); }
     this.W.cb.say && this.W.cb.say(this, '', 0);
     this.W.noteDeath(this, this.cause);
@@ -646,10 +694,11 @@ export class Body {
     if (best) { const dx = best.x - x; best.px -= (dx >= 0 ? 1 : -1) * 200 * DT; best.py += 110 * DT; }
     this.hurt(1.2, 'poke', { quiet: true });
     if (this.dead) return;
+    if (this.mad) { this.say(this.line('mad'), 1); sfx.ouch(0.3); return; }
     this.setMood('angry', 0.8);
     this.say(pick(LINES.poke), 1);
     sfx.ouch(0.3);
-    if (this.state === 'ctrl' && this.pain > 25) this.act = 'fist';
+    if (this.state === 'ctrl' && this.pain > 25 && !['pickup', 'eat'].includes(this.act)) this.act = 'fist';
   }
 
   /** 铅笔：从他身上画出去，就多长一条软趴趴的东西 */
@@ -686,13 +735,13 @@ export class Body {
 
   /** 你选了什么道具，他会念叨一句 */
   reactTool(id) {
-    if (!this.alive || this.state !== 'ctrl') return;
+    if (!this.alive || this.state !== 'ctrl' || this.mad) return;
     const l = TOOL_LINES[id];
     if (l) { this.say(pick(l), 1.4, true); this.setMood(this.W.grudge > 35 ? 'scared' : 'wow', 0.8); }
   }
   /** 同伴死了 */
   mateDied(B) {
-    if (!this.alive || this.state !== 'ctrl' || this.swimming) return;
+    if (!this.alive || this.state !== 'ctrl' || this.swimming || this.mad) return;
     this.setMood('wow', 1.4);
     if (Math.random() < 0.7) this.say(pick(LINES.grief), 1.5, true);
     const hip = B.j.hip || B.j.chest || B.j.head;
@@ -821,8 +870,12 @@ export class Body {
     this.lump = Math.max(0, this.lump - dt * 0.05);
     this.winT = (this.winT || 0) - dt;
     this.tearCd = (this.tearCd || 0) - dt;
+    this.foodCd -= dt;
+    this.chew = Math.max(0, (this.chew || 0) - dt);
     const W = this.W;
     if (this.state !== 'draw') this.updateBonds();
+    if (this.sick > 0 && this.state !== 'draw') { this.updSick(dt); if (this.dead) return; }
+    this.sickVis = lerp(this.sickVis, this.sick > 0 ? 1 : 0, Math.min(1, dt * 2.5));
     if (this.frameMax) {
       // 一个身子撞上去，头、胸、胯、四肢是前后几帧陆续碰到的：0.25 秒内只算最重的那一下
       if (this.winT <= 0) { this.winT = 0.25; this.winD = 0; }
@@ -873,6 +926,9 @@ export class Body {
         break;
       default: break;
     }
+    // 手里的吃的：不在捡、不在吃了就掉下去
+    if (this.food && (this.state !== 'ctrl' || !['pickup', 'eat'].includes(this.act) || this.food.dead || this.food.held)) this.dropFood();
+    if (this.atk && (this.state !== 'ctrl' || this.act !== 'stab')) this.atk = null;
   }
 
   /** 水：头在水下就憋气，憋不住开始掉血；冻着遇水会化 */
@@ -1037,6 +1093,7 @@ export class Body {
     }
     if (this.act === 'swim') { this.act = 'idle'; this.actT = 0.4; this.gy = W.support(this.x, hip.y, this.id).y; }
 
+    if (this.mad) { this.doMad(dt); return; }
     if (this.dodgeCheck(dt)) return;
     if (this.gapeO) return;
 
@@ -1053,6 +1110,10 @@ export class Body {
       this.actT = 0.4;
       return;
     }
+    if (this.fleeMad(dt)) return;
+    if (this.act === 'pickup' || this.act === 'eat') { this.doEat(dt); return; }
+    if (this.sick > 0) { this.doSick(dt); return; }
+    if (this.doCrave(dt)) return;
     if (this.partner) { this.doMeet(dt); return; }
     if (this.act === 'mourn') { this.doMourn(dt); return; }
     if (this.actT > 0) return;
@@ -1139,6 +1200,477 @@ export class Body {
     this.dir = side; this.dodged = true;
     this.fear = Math.min(100, this.fear + 20);
     sfx.scratch();
+  }
+
+  /* ─────────────── 刀子：发狂 ─────────────── */
+  /** 拿刀的那只手：要连着、没骨折 */
+  knifeHand() {
+    const ok = (k) => { const l = LIMBS[k]; return this.j[l.a] && this.j[l.b] && !this.broken[k]; };
+    const pref = this.knifeSide === 'l' ? ['lArm', 'rArm'] : ['rArm', 'lArm'];
+    for (const k of pref) if (ok(k)) return k;
+    return null;
+  }
+  goMad() {
+    const W = this.W, c = this.j.chest || this.j.hip;
+    this.mad = true;
+    this.knifeSide = this.knifeHand() === 'lArm' ? 'l' : 'r';
+    this.atk = null; this.prey = null; this.preyT = 0; this.fleeing = false; this.crave = null;
+    this.madSay = rnd(1.5, 3);
+    if (this.food) this.dropFood();
+    if (this.partner) this.endMeet();
+    if (this.state === 'ctrl') { this.act = 'madidle'; this.actT = 0.5; }
+    sfx.knife(); sfx.growl();
+    if (c) {
+      W.fx.push({ k: 'ring', x: c.x, y: c.y, r0: 4, r1: 34, life: 0.22, t: 0, w: 2 });
+      W.word(c.x, c.y - 44, '发狂！', 17);
+    }
+    W.bang(0.4);
+    this.say(pick(LINES.madStart), 1.4, true);
+  }
+  /** 再用刀点一下：清醒过来，刀掉地上 */
+  calm(noHand = false) {
+    const W = this.W, c = this.j.chest || this.j.hip;
+    this.dropKnife();
+    this.mad = false; this.atk = null; this.prey = null;
+    this.dizzy = Math.max(this.dizzy, 1.6);
+    this.setMood('wow', 1.8);
+    if (this.state === 'ctrl') { this.act = 'idle'; this.actT = rnd(1.2, 1.8); }
+    sfx.calm();
+    if (c) W.word(c.x, c.y - 44, noHand ? '刀掉了' : '清醒了', 15);
+    this.say(noHand ? '刀……' : pick(LINES.calm), 1.6, true);
+  }
+  dropKnife() {
+    const k = this.knifeHand() || (this.knifeSide === 'l' ? 'lArm' : 'rArm');
+    const h = this.j[LIMBS[k].b] || this.j.chest || this.j.hip;
+    if (!h) return;
+    this.W.dropThing('knife', h.x, h.y, rnd(-60, 60), rnd(-160, -60));
+  }
+  /** 刀尖、刀身中间在哪（按真正的关节位置算，所以躲开了就砍不到） */
+  blade() {
+    const k = this.knifeHand();
+    if (!k) return null;
+    const l = LIMBS[k], a = this.j[l.a], b = this.j[l.b];
+    let dx = b.x - a.x, dy = b.y - a.y;
+    const d = hyp(dx, dy) || 1; dx /= d; dy /= d;
+    return { hx: b.x, hy: b.y, dx, dy, tx: b.x + dx * KNIFE_TIP, ty: b.y + dy * KNIFE_TIP };
+  }
+  /** 找最近的人砍：发狂的也算，谁都砍 */
+  findPrey() {
+    const W = this.W, hip = this.j.hip;
+    let best = null, bd = 1e9;
+    for (const B of W.bodies) {
+      if (B === this || !B.alive || B.state === 'draw') continue;
+      const q = B.j.chest || B.j.hip;
+      if (!q) continue;
+      if (q.y < this.gy - 130) continue;              // 太高了够不着（吊着、飞着）
+      const d = Math.abs(q.x - hip.x) + Math.abs(q.y - (this.gy - 50)) * 0.6;
+      if (d < bd) { bd = d; best = B; }
+    }
+    return best;
+  }
+  /** 往他身上哪儿砍：离我胸口最近的那个点 */
+  aimAt(B) {
+    const cx = this.x, cy = this.gy - 52;
+    let best = null, bd = 1e9;
+    for (const n of ['head', 'neck', 'chest', 'hip']) {
+      const p = B.j[n];
+      if (!p) continue;
+      const d = hyp(p.x - cx, p.y - cy) + (n === 'chest' ? -6 : 0);
+      if (d < bd) { bd = d; best = p; }
+    }
+    return best;
+  }
+  doMad(dt) {
+    const W = this.W, hip = this.j.hip;
+    if (!this.knifeHand()) { this.calm(true); return; }
+    this.fear = 0;
+    this.madSay -= dt;
+    if (this.madSay <= 0) { this.madSay = rnd(2.4, 4.6); this.say(this.line(this.prey ? 'mad' : 'madAlone'), 1.1); }
+    if (this.atk) { this.updAtk(dt); return; }
+    this.preyT -= dt;
+    let prey = this.prey;
+    if (!prey || !prey.alive || prey.state === 'draw' || this.preyT <= 0) { prey = this.prey = this.findPrey(); this.preyT = rnd(1.5, 3); }
+    if (!prey) {
+      // 没人可砍：拿着刀到处转
+      if (this.act !== 'prowl' && this.act !== 'madidle') { this.act = 'madidle'; this.actT = rnd(0.6, 1.2); }
+      if (this.actT <= 0) {
+        if (this.act === 'prowl') { this.act = 'madidle'; this.actT = rnd(0.8, 1.6); }
+        else { this.act = 'prowl'; this.tx = rnd(30, W.w - 30); this.actT = 5; }
+      }
+      if (this.act === 'prowl') {
+        this.dir = this.tx > this.x ? 1 : -1;
+        if (Math.abs(this.tx - this.x) < 8) { this.act = 'madidle'; this.actT = rnd(0.8, 1.6); }
+      }
+      return;
+    }
+    const aim = this.aimAt(prey);
+    if (!aim) return;
+    this.aim = { x: aim.x, y: aim.y };
+    const low = aim.y > this.gy - 34;
+    const d = aim.x >= hip.x ? 1 : -1;
+    this.dir = d;
+    // 站着砍和弯腰砍，脖子在不同的地方
+    const nx = this.x + d * (low ? 20 : 5), ny = this.gy - (low ? 44 : 68);
+    const crawl = this.mob === 'crawl' || this.mob === 'worm';
+    const reach = crawl ? 44 : 46;
+    const near = crawl ? hyp(aim.x - (this.x + d * 29), aim.y - (this.gy - 8)) : hyp(aim.x - nx, aim.y - ny);
+    if (near < reach) { this.startAtk(prey, low); return; }
+    this.act = 'chase'; this.actT = 0.3;
+  }
+  startAtk(prey, low) {
+    // 往哪砍在抬手的时候就定了，所以对方躲开了就砍空
+    this.atk = { ph: 'wind', t: 0, prey, low, hit: false };
+    this.act = 'stab';
+    prey.seeStab(this);
+  }
+  updAtk(dt) {
+    const a = this.atk;
+    a.t += dt;
+    if (a.ph === 'wind') {
+      if (a.t >= 0.2) { a.ph = 'strike'; a.t = 0; sfx.swish(); }
+    } else if (a.ph === 'strike') {
+      if (!a.hit) this.knifeHit();
+      if (a.t >= 0.13) { a.ph = 'rec'; a.t = 0; }
+    } else if (a.t >= 0.26) {
+      this.atk = null;
+      this.act = 'chase'; this.actT = 0.2;
+    }
+  }
+  /** 刀身扫到谁身上就算砍中（谁都算，不光是盯着的那个） */
+  knifeHit() {
+    const W = this.W, b = this.blade();
+    if (!b) return;
+    const x0 = b.hx + b.dx * 5, y0 = b.hy + b.dy * 5;
+    let best = null, bd = 1e9;
+    for (const q of W.sticks) {
+      if (q.kind !== 'limb' && q.kind !== 'torso' && q.kind !== 'neck' && q.kind !== 'extra') continue;
+      const B = q.a.owner;
+      if (!B || B === this || B !== q.b.owner || !B.alive || B.state === 'draw' || q.a.hole) continue;
+      const r = segDist(x0, y0, b.tx, b.ty, q.a.x, q.a.y, q.b.x, q.b.y);
+      if (r.d < 3.4 && r.d < bd) { bd = r.d; best = { B, x: r.x, y: r.y, st: q }; }
+    }
+    for (const B of W.bodies) {
+      const h = B.j.head;
+      if (B === this || !h || !B.alive || B.state === 'draw' || h.hole) continue;
+      const r = segDist(h.x, h.y, h.x, h.y, x0, y0, b.tx, b.ty);
+      if (r.d < h.r + 1 && r.d - h.r < bd) { bd = r.d - h.r; best = { B, x: r.x, y: r.y, head: true }; }
+    }
+    if (!best) return;
+    this.atk.hit = true;
+    best.B.stabbedBy(this, best, b.dx, b.dy);
+  }
+  /** 被发狂的人砍中：掉血、喷墨、被砍倒，运气不好胳膊腿、脑袋就掉了 */
+  stabbedBy(att, hit, nx, ny) {
+    const W = this.W;
+    if (this.state === 'frozen') { this.shatter('knife'); return; }
+    if (this.state === 'flat') this.popUp();
+    this.cause = 'knife'; this.causeT = 2;
+    W.spurt(hit.x, hit.y, 10, nx * 0.8, ny * 0.6 - 0.5);
+    sfx.slash();
+    W.word(hit.x, hit.y - 14, pick(['噗嗤', '唰', '噗']), 13);
+    W.hitstop = Math.max(W.hitstop, 0.03);
+    W.bang(0.35);
+    for (const q of this.all) {
+      if (q.pin || q.hole) continue;
+      const d = hyp(q.x - hit.x, q.y - hit.y), k = 1 / (1 + (d / 16) * (d / 16));
+      q.px -= nx * 240 * k * DT; q.py -= (ny * 240 - 70) * k * DT; q.sleep = 0;
+    }
+    if (hit.head) { this.lump = Math.min(6, this.lump + 1.5); this.dizzy = Math.max(this.dizzy, 1.2); }
+    this.hurt(rnd(9, 14) * (hit.head ? 1.3 : 1), 'knife');
+    if (this.dead) return;
+    this.fear = 100;
+    if (this.state === 'ctrl' || this.state === 'getup') this.knock(this.mad ? 0.45 : 0.8);
+    // 砍在胳膊腿、脖子上，有可能直接砍断
+    let st = hit.st;
+    if (hit.head && this.j.head && this.j.neck) st = W.sticks.find((q) => (q.a === this.j.head && q.b === this.j.neck) || (q.b === this.j.head && q.a === this.j.neck));
+    if (!st || !W.sticks.includes(st)) return;
+    const chance = st.kind === 'neck' ? (hit.head ? 0.1 : 0.16) : st.kind === 'extra' ? 0.5 : st.kind === 'limb' ? 0.24 : 0;
+    if (Math.random() < chance) {
+      sfx.stab();
+      if (st.kind === 'neck' && this.j.head) { const h = this.j.head; h.px = h.x - nx * 160 * DT; h.py = h.y + 220 * DT; }
+      const len = hyp(st.b.x - st.a.x, st.b.y - st.a.y) || 1;
+      W.cutStick(st, hit.head ? 0.5 : clamp(hyp(hit.x - st.a.x, hit.y - st.a.y) / len, 0.2, 0.8));
+    }
+  }
+  /** 看见刀砍过来：能躲就躲（弯腰、跳、往后退） */
+  seeStab(att) {
+    if (this.mad || this.state !== 'ctrl' || this.dodgeCd > 0 || this.swimming) return;
+    if (this.mob !== 'walk' && this.mob !== 'hop') return;
+    this.dodgeCd = 0.7;
+    if (Math.random() >= this.skill * 0.85) return;
+    const a = att.aim || { x: att.x, y: att.gy - 50 };
+    if (this.food) this.dropFood();
+    if (Math.random() < 0.5) this.evade(a.y, att.x);
+    else { this.dir = att.x > this.x ? 1 : -1; this.act = 'back'; this.actT = 0.75; this.dodged = true; if (this.partner) this.endMeet(); }
+  }
+  /** 附近有人发狂：跑。跑到墙角了，身手好的从他身边扑过去，不然缩成一团 */
+  fleeMad(dt) {
+    const W = this.W, hip = this.j.hip;
+    let m = null, md = 1e9;
+    for (const B of W.bodies) {
+      if (B === this || !B.mad || !B.alive || B.state === 'draw') continue;
+      const q = B.j.hip;
+      if (!q || Math.abs(q.y - hip.y) > 90) continue;
+      const d = Math.abs(q.x - hip.x);
+      if (d < md) { md = d; m = B; }
+    }
+    const busy = m && m.state !== 'ctrl' && m.state !== 'getup';     // 他躺着呢，没那么急
+    if (!m || md > (busy ? 70 : this.fleeing ? 210 : 170)) {
+      if (this.fleeing) { this.fleeing = false; this.act = 'idle'; this.actT = rnd(0.3, 0.8); }
+      return false;
+    }
+    this.fear = Math.min(100, this.fear + dt * 80);
+    if (!this.fleeing) {
+      this.fleeing = true;
+      this.say(this.line('flee'), 1.2, true);
+      if (this.partner) this.endMeet();
+      if (this.food) this.dropFood();
+    }
+    const away = hip.x < m.j.hip.x ? -1 : 1;
+    const edge = away < 0 ? hip.x - 26 : W.w - 26 - hip.x;
+    if (this.mob !== 'walk' && this.mob !== 'hop') { this.act = 'move'; this.dir = away; this.actT = 0.4; return true; }
+    if (edge < 16) {
+      if (md < 64 && this.dodgeCd <= 0) {
+        this.dodgeCd = 1.3;
+        if (Math.random() < this.skill * 0.8) { this.ctrl = Math.min(this.ctrl, 0.45); this.dive(-away); return true; }
+      }
+      if (this.act !== 'cower') { this.say(pick(LINES.corner), 1.2); this.ctrl = Math.min(this.ctrl, 0.45); }
+      this.act = 'cower'; this.dir = away; this.actT = 0.4;
+      return true;
+    }
+    this.act = 'run'; this.dir = away; this.actT = 0.4;
+    return true;
+  }
+
+  /* ─────────────── 食物 ─────────────── */
+  freeHand() {
+    for (const k of ['rArm', 'lArm']) {
+      const l = LIMBS[k];
+      if (this.j[l.a] && this.j[l.b] && !this.broken[k] && !this.tied[k]) return l.b;
+    }
+    return null;
+  }
+  pickFood() {
+    const W = this.W, hip = this.j.hip;
+    let best = null, bd = 1e9;
+    for (const o of W.props) {
+      if (o.t !== 'food' || o.dead || o.by || o.held) continue;
+      if (o.y < this.gy - 60 && o.rest) continue;           // 放在高处的线上，够不着
+      const d = Math.abs(o.x - hip.x);
+      if (d < bd) { bd = d; best = o; }
+    }
+    return best;
+  }
+  /** 地上有吃的：不由自主地走过去 */
+  doCrave(dt) {
+    const W = this.W, hip = this.j.hip;
+    if (this.foodCd > 0) return false;
+    let o = this.crave;
+    if (!o || o.dead || o.by || o.held || !W.props.includes(o)) {
+      const had = !!o && this.act === 'crave';
+      o = this.crave = this.pickFood();
+      if (!o) {
+        if (had) { this.act = 'idle'; this.actT = rnd(0.8, 1.4); this.setMood('sad', 1.2); this.say(pick(LINES.gone), 1.2, true); }
+        return false;
+      }
+    }
+    // 落在高处的铅笔线上了：够不着
+    if (o.rest && o.y < this.gy - 60) {
+      this.crave = null; this.foodCd = 4;
+      if (this.act === 'crave') { this.act = 'idle'; this.actT = rnd(0.8, 1.4); this.say(pick(LINES.far), 1.2, true); }
+      return false;
+    }
+    if (this.act !== 'crave') {
+      this.act = 'crave'; this.craveT = 0;
+      if (this.partner) this.endMeet();
+      if (Math.random() < 0.8) this.say(this.line('crave'), 1.4, true);
+    }
+    this.craveT += dt;
+    const crawl = this.mob === 'crawl' || this.mob === 'worm';
+    // 走到它旁边：站着的停在跟前，趴着的脑袋够到它
+    const noHand = crawl || !this.freeHand();
+    const off = noHand ? 38 : 15;
+    const want = o.x - (o.x >= this.x ? 1 : -1) * off;
+    const dx = want - this.x;
+    if (Math.abs(dx) < 6 && Math.abs(o.y - this.gy) < 16 && o.rest) {
+      this.dir = o.x >= this.x ? 1 : -1;
+      this.food = o; o.by = this; o.inHand = false; o.hand = null;
+      this.crave = null;
+      this.act = 'pickup'; this.eatT = 0;
+      if (noHand) this.act = 'eat';      // 没手（或者趴着）：直接凑过去啃
+      return true;
+    }
+    this.dir = dx >= 0 ? 1 : -1;
+    if (this.craveT > 14) {
+      this.crave = null; this.foodCd = 6;
+      this.act = 'idle'; this.actT = rnd(0.8, 1.4);
+      this.say(pick(LINES.far), 1.2, true);
+      return false;
+    }
+    return true;
+  }
+  /** 捡起来、咬三口。会炸的那种咬到第二口就开始嘶嘶响 */
+  doEat(dt) {
+    const W = this.W, o = this.food;
+    if (!o || o.dead) { this.food = null; this.act = 'idle'; this.actT = 0.6; return; }
+    this.eatT += dt;
+    if (this.act === 'pickup') {
+      if (this.eatT >= 0.3 && !o.inHand) {
+        o.hand = this.freeHand();
+        o.inHand = !!o.hand;
+        if (o.inHand) sfx.place();
+      }
+      if (this.eatT >= 0.62) {
+        this.act = 'eat'; this.eatT = 0;
+        if (Math.random() < 0.5) this.say(pick(LINES.eat), 1, true);
+      }
+      return;
+    }
+    const T = [0.42, 0.9, 1.38];
+    while ((o.bites || 0) < 3 && o.fuse == null && this.eatT >= T[o.bites || 0]) {
+      o.bites = (o.bites || 0) + 1;
+      this.chew = 0.16;
+      sfx.munch();
+      const h = this.j.head;
+      if (h) { for (let i = 0; i < 3; i++) W.crumb(h.x + this.dir * 7 + rnd(-2, 2), h.y + 5, 1.5); if (o.bites === 1) W.word(h.x + this.dir * 10, h.y - 18, '吧唧', 13); }
+      if (o.bites === 1) W.cb.ate && W.cb.ate();
+      if (o.bites === 2 && o.bad === 'boom') {
+        o.fuse = 0.85;
+        this.setMood('wow', 1.2);
+        this.say(pick(LINES.stare), 1, true);
+      }
+    }
+    if (o.fuse != null) return;                       // 等着炸
+    if (this.eatT >= 1.85) {
+      // 吃完了
+      const h = this.j[o.hand] || this.j.head || this.j.hip;
+      if (o.kind === 'leg' && h) W.dropThing('bone', h.x, h.y, -this.dir * rnd(60, 110), rnd(-200, -120), o.s);
+      W.remove(o);
+      this.food = null;
+      this.poisoned(o.s);
+    }
+  }
+  dropFood() {
+    const o = this.food;
+    this.food = null;
+    if (!o) return;
+    if (o.by === this) { o.by = null; o.inHand = false; o.rest = false; o.vy = -40; o.vx = this.dir * 20; }
+    if (this.act === 'pickup' || this.act === 'eat') { this.act = 'idle'; this.actT = 0.4; }
+  }
+  /** 拿在手里的吃的画在哪 */
+  foodPose(o) {
+    const ha = o.inHand && o.hand && this.j[o.hand];
+    const k = o.kind, s = o.s, d = this.dir;
+    if (!ha) return { x: o.x, y: o.y - FOOD_BOTTOM[k] * s, ang: 0, dir: o.dir || 1 };
+    if (k === 'leg') {
+      const h = this.j.head;
+      const mx = h ? h.x + d * 6 : ha.x + d * 10, my = h ? h.y + 4 : ha.y - 10;
+      let dx = mx - ha.x, dy = my - ha.y;
+      const L = hyp(dx, dy) || 1; dx /= L; dy /= L;
+      return { x: ha.x + dx * 11 * s, y: ha.y + dy * 11 * s, ang: Math.atan2(dy, dx) + Math.PI, dir: 1 };
+    }
+    return { x: ha.x + d * 1.5, y: ha.y - (FOOD_BOTTOM[k] - 1.5) * s, ang: 0, dir: -d };
+  }
+  /** 吃坏肚子：脸发青、捂着肚子、一阵阵想吐，慢慢掉血，最后一头栽倒 */
+  poisoned(s = 1) {
+    const W = this.W;
+    this.sick = 7.5 + s;
+    this.sickRate = W.vit.max * 0.2 * Math.sqrt(s) / this.sick;
+    this.heaveT = rnd(1, 1.6);
+    this.gurgleT = 0.4;
+    this.cause = 'poison'; this.causeT = 2;
+    W.cb.hit && W.cb.hit(W.vit.max * 0.2 * Math.sqrt(s), 'poison');
+    W.cb.counted && W.cb.counted();
+    const c = this.j.chest || this.j.hip;
+    if (c) W.word(c.x, c.y - 30, '咕噜……', 15);
+    this.setMood('sick', 1);
+    this.say(pick(LINES.sick), 1.4, true);
+    if (this.state === 'ctrl') { this.act = 'sick'; this.actT = rnd(0.6, 1); }
+  }
+  updSick(dt) {
+    const W = this.W;
+    this.sick -= dt;
+    this.hp -= this.sickRate * dt;
+    W.focus = this;
+    this.pain = Math.max(this.pain, 30);
+    this.gurgleT -= dt;
+    if (this.gurgleT <= 0) {
+      this.gurgleT = rnd(1.4, 2.4);
+      sfx.gurgle();
+      const c = this.j.hip || this.j.chest;
+      if (c && Math.random() < 0.6) W.word(c.x + rnd(-8, 8), c.y - 6, pick(['咕噜噜', '咕……', '噗噜']), 11);
+    }
+    if (this.hp <= 0) { this.hp = 0; this.cause = 'poison'; W.killAll('poison'); return; }
+    if (this.sick <= 0) {
+      this.sick = 0;
+      // 最后一头栽倒，躺一会儿才缓过来
+      if (this.state === 'ctrl') { this.knock(1.5); this.say(pick(LINES.sickEnd), 1.6, true); }
+    }
+  }
+  /** 中毒了：慢慢挪，时不时弯腰干呕 */
+  doSick(dt) {
+    this.heaveT -= dt;
+    if (this.mob === 'crawl' || this.mob === 'worm') { this.act = 'rest'; return; }
+    if (this.act === 'heave') {
+      if (this.actT <= 0) { this.act = 'sick'; this.actT = rnd(0.8, 1.6); }
+      else if (!this.spat && this.actT < 0.35) {
+        this.spat = true;
+        const h = this.j.head;
+        if (h) { this.W.spit(h.x + this.dir * 8, h.y + 6, this.dir); this.W.word(h.x + this.dir * 12, h.y - 16, '呕——', 14); }
+        sfx.retch();
+      }
+      return;
+    }
+    if (this.heaveT <= 0) {
+      this.heaveT = rnd(1.8, 3);
+      this.act = 'heave'; this.actT = 0.8; this.spat = false;
+      return;
+    }
+    if (this.act !== 'sick' || this.actT <= 0) {
+      this.act = 'sick'; this.actT = rnd(0.9, 1.8);
+      this.dir = this.x < 40 ? 1 : this.x > this.W.w - 40 ? -1 : Math.random() < 0.5 ? -1 : 1;
+      if (Math.random() < 0.3) this.say(pick(LINES.sick), 1.2);
+    }
+  }
+  /** 被炸到 */
+  blasted(d, x, y, R, self, hand) {
+    if (this.dead || this.state === 'draw') return;
+    if (this.state === 'frozen') { this.shatter('food'); return; }
+    if (this.state === 'flat') this.popUp();
+    this.cause = 'food'; this.causeT = 2.5;
+    this.soot = 7; this.hair = true; this.lump = Math.min(6, this.lump + 1.5);
+    const cut = [];
+    if (self) {
+      const arm = hand === 'lHa' ? 'lArm' : hand === 'rHa' ? 'rArm' : null;
+      if (arm && Math.random() < 0.7) cut.push(arm);
+      if (Math.random() < 0.4) cut.push('head');
+    } else {
+      for (const [k, l] of Object.entries(LIMBS)) {
+        const p = this.j[l.b];
+        if (p && hyp(p.x - x, p.y - y) < R * 0.5 && Math.random() < 0.3) cut.push(k);
+      }
+      const h = this.j.head;
+      if (h && hyp(h.x - x, h.y - y) < R * 0.35 && Math.random() < 0.15) cut.push('head');
+    }
+    this.hurt(d, 'food', { quiet: true });
+    sfx.ouch(2);
+    if (this.dead) return;
+    this.knock(1.6);
+    this.dizzy = Math.max(this.dizzy, 2.6);
+    for (const k of cut) {
+      if (this.dead || this.released) break;
+      if (k === 'head') this.cutNeck();
+      else this.detachLimb(k);
+    }
+    if (!this.dead) this.say(pick(self ? LINES.boomed : LINES.boomNear), 1.4, true);
+  }
+  cutNeck() {
+    const h = this.j.head, n = this.j.neck;
+    if (!h || !n) return;
+    const s = this.W.sticks.find((q) => (q.a === h && q.b === n) || (q.a === n && q.b === h));
+    if (!s) return;
+    h.py = h.y + rnd(240, 380) * DT;
+    this.W.cutStick(s, 0.5);
   }
 
   doMeet(dt) {
@@ -1245,6 +1777,14 @@ export class Body {
   }
 
   /* ─────────────── 姿势 ─────────────── */
+  /** 发狂：拿刀的手举过头顶抖，另一只手往前抓 */
+  madArms(n, t, d) {
+    const ks = this.knifeHand();
+    if (!ks || !n) return;
+    const side = ks === 'lArm' ? 'l' : 'r', other = side === 'l' ? 'r' : 'l';
+    this.arm(side, n[0] + d * 4, n[1] - 25 + Math.sin(t * 23) * 2, -d);
+    this.arm(other, n[0] + d * 21, n[1] + 5 + Math.sin(t * 7) * 4, d);
+  }
   torso(x, y, lean = 0, tilt = 0) {
     const T = this.T, sn = Math.sin(lean), cs = Math.cos(lean);
     T.hip = [x, y];
@@ -1348,7 +1888,7 @@ export class Body {
 
     // 被挡住了（撞上铅笔线）
     if (Math.abs(hip.x - this.x) > 18 && this.mob === 'walk' && !this.anchors.length) {
-      if (this.act === 'run') {
+      if (this.act === 'run' || this.act === 'chase') {
         W.word(hip.x, hip.y - 50, '嘭', 16); sfx.thud(0.9);
         this.hurt(8, 'wall');
         if (this.dead) return;
@@ -1363,7 +1903,7 @@ export class Body {
     }
 
     if (this.mob === 'crawl' || this.mob === 'worm') {
-      const moving = this.act === 'move';
+      const moving = this.act === 'move' || this.act === 'crave' || this.act === 'chase' || this.act === 'prowl';
       const spd = this.mob === 'crawl' ? 26 : 13;
       if (moving) {
         this.x += d * spd * dt;
@@ -1372,18 +1912,33 @@ export class Body {
         this.x = clamp(this.x, 14, W.w - 14);
       }
       this.poseLow(this.phase, moving);
+      // 趴着也能砍：拿刀那只手抬起来往前捅
+      if (this.mad && this.mob === 'crawl') {
+        const ks = this.knifeHand(), n = this.T.neck;
+        if (ks && n) {
+          const side = ks === 'lArm' ? 'l' : 'r', a = this.atk, aim = this.aim;
+          if (a && a.ph === 'wind') this.arm(side, n[0] - d * 2, n[1] - 20, -d);
+          else if (a && a.ph === 'strike' && aim) this.arm(side, aim.x, aim.y, d);
+          else this.arm(side, n[0] + d * 10, n[1] - 16 + Math.sin(t * 20) * 2, -d);
+        }
+      }
       return;
     }
 
     const hop = this.mob === 'hop';
     let act = this.act;
+    const mode = act;
     if (act === 'move' || act === 'rest') act = 'idle';
     if (act === 'mourn') act = Math.abs(this.mournX - this.x) > 4 ? 'walk' : 'kneel';
+    if (act === 'crave' || act === 'prowl') act = 'walk';
+    if (act === 'chase') act = 'run';
     const wade = this.wetNow ? 0.6 : 1;
+    // 速度：馋的时候走得急，发狂追人比逃命的稍慢一点（逃得掉，跑到墙角就没辙了）
+    const spdK = mode === 'crave' ? 1.18 : mode === 'chase' ? 0.88 : mode === 'prowl' ? 0.9 : 1;
 
     if (act === 'walk' || act === 'run') {
       const run = act === 'run';
-      if (!run && W.obstacleAhead(this.x, d, g)) { this.dir = -d; this.tx = clamp(this.x - d * rnd(60, 180), 26, W.w - 26); return; }
+      if (!run && mode === 'walk' && W.obstacleAhead(this.x, d, g)) { this.dir = -d; this.tx = clamp(this.x - d * rnd(60, 180), 26, W.w - 26); return; }
       // 走钢丝：快到头了小心转身
       if (this.onRope) {
         const s2 = W.support(this.x + d * 14, g - 6, this.id);
@@ -1391,7 +1946,7 @@ export class Body {
       }
       const hpK = this.hpf < 0.35 ? 0.72 : 1;
       if (hop) {
-        const spd = (run ? 84 : 42) * wade;
+        const spd = (run ? 84 : 42) * wade * spdK;
         this.x += d * spd * dt;
         this.phase += dt * (run ? 12 : 7.5);
         const h = Math.abs(Math.sin(this.phase));
@@ -1402,7 +1957,7 @@ export class Body {
         this.arm('l', n[0] - 18, n[1] + 10 - h * 9, 1);
         this.arm('r', n[0] + 18, n[1] + 10 - h * 9, -1);
       } else {
-        const om = (run ? 11.5 : 7.5) * hpK * (run ? 1 : SPEED[this.kind]) * wade, stride = run ? 21 : 13, lift = run ? 14 : 7;
+        const om = (run ? 11.5 : 7.5) * hpK * (run ? 1 : SPEED[this.kind]) * wade * spdK, stride = run ? 21 : 13, lift = run ? 14 : 7;
         const spd = om * stride * 0.62 * (this.onRope ? 0.5 : 1);
         this.x += d * spd * dt;
         this.phase += om * dt * (this.onRope ? 0.5 : 1);
@@ -1426,6 +1981,13 @@ export class Body {
           this.arm('r', n[0] + d * 11 * Math.cos(a), n[1] + 27 - Math.abs(Math.cos(a)) * 3);
         }
       }
+      // 发狂的举着刀；馋的两只手往前伸
+      const n2 = this.T.neck;
+      if (this.mad && n2) this.madArms(n2, t, d);
+      else if (mode === 'crave' && n2) {
+        this.arm('l', n2[0] + d * 23, n2[1] + 5 + Math.sin(t * 4) * 2, -d);
+        this.arm('r', n2[0] + d * 25, n2[1] + 1 - Math.sin(t * 4) * 2, -d);
+      }
       if (this.x < 24) { this.x = 24; this.dir = 1; if (act === 'walk') this.tx = rnd(90, W.w - 30); }
       if (this.x > W.w - 24) { this.x = W.w - 24; this.dir = -1; if (act === 'walk') this.tx = rnd(30, W.w - 90); }
       this.applyLeash();
@@ -1439,7 +2001,97 @@ export class Body {
       if (hop) this.hopLeg(this.x, foot);
       else { this.leg('l', this.x - 9, foot); this.leg('r', this.x + 9, foot); }
     };
+    const legs = (lx, rx, fy, bend) => { if (hop) this.hopLeg(this.x, fy); else { this.leg('l', lx, fy, bend); this.leg('r', rx, fy, bend); } };
     switch (act) {
+      case 'madidle': {
+        // 拿着刀喘粗气
+        const pant = Math.sin(t * 9) * 1.3;
+        this.torso(this.x, g - STAND + 2 + pant, d * 0.14);
+        legs(this.x - 11, this.x + 11, foot);
+        this.madArms(this.T.neck, t, d);
+        break;
+      }
+      case 'stab': {
+        const a = this.atk, aim = this.aim || { x: this.x + d * 40, y: g - 54 };
+        const low = a ? a.low : false, ph = a ? a.ph : 'rec';
+        let lean = low ? 0.95 : 0.22;
+        if (ph === 'wind') { lean -= 0.2; this.x -= d * 16 * dt; }
+        else if (ph === 'strike') { lean += 0.16; this.x += d * 70 * dt; }
+        this.x = clamp(this.x, 20, W.w - 20);
+        this.torso(this.x, g - STAND + (low ? 14 : 3), d * lean);
+        const lunge = ph === 'strike' ? 1 : ph === 'wind' ? 0.2 : 0.6;
+        legs(this.x - d * 12, this.x + d * (6 + 10 * lunge), foot);
+        const n = this.T.neck, ks = this.knifeHand();
+        const side = ks === 'lArm' ? 'l' : 'r', other = side === 'l' ? 'r' : 'l';
+        if (ph === 'wind') this.arm(side, n[0] - d * 8, n[1] - 22, -d);
+        else if (ph === 'strike') this.arm(side, aim.x, aim.y, d);
+        else this.arm(side, n[0] + d * 17, n[1] + 10, d);
+        this.arm(other, n[0] + d * 14, n[1] + 12, d);
+        break;
+      }
+      case 'pickup': {
+        // 弯腰把吃的捡起来
+        const o = this.food, u = clamp(this.eatT / 0.62, 0, 1), k = Math.sin(u * Math.PI);
+        const ox = o ? o.x : this.x + d * 15, oy = o ? o.y : foot;
+        this.torso(this.x, g - STAND + 15 * k, d * 1.15 * k);
+        legs(this.x - d * 6, this.x + d * 5, foot);
+        const n = this.T.neck;
+        const hs = (o && o.hand) || this.freeHand();
+        const side = hs === 'lHa' ? 'l' : 'r', other = side === 'l' ? 'r' : 'l';
+        this.arm(side, lerp(n[0] + d * 8, ox, k), lerp(n[1] + 24, oy - 4, k), d);
+        this.arm(other, n[0] - d * 4, n[1] + 26);
+        break;
+      }
+      case 'eat': {
+        const o = this.food;
+        if (!o || !o.inHand) {
+          // 没手：跪下去直接啃
+          const bob = this.chew > 0 ? 2.5 : 0;
+          this.torso(this.x, g - 13, d * 1.32, d * (0.5 + bob * 0.04));
+          this.leg('l', this.x - d * 18, foot, -d); this.leg('r', this.x - d * 14, foot, -d);
+          const n = this.T.neck;
+          this.arm('l', n[0] + d * 6, foot - 2, d); this.arm('r', n[0] + d * 10, foot - 2, d);
+          break;
+        }
+        const stare = o.fuse != null;
+        this.torso(this.x, g - STAND + breathe, stare ? -d * 0.08 : d * 0.05, this.chew > 0 ? d * 0.14 : 0);
+        legs(this.x - 9, this.x + 9, foot);
+        const n = this.T.neck, h = this.T.head, sk = o.s;
+        const mx = h[0] + d * 6, my = h[1] + 4, ch = this.chew / 0.16;
+        let hx, hy;
+        if (stare) { hx = n[0] + d * 19; hy = n[1] - 6; }
+        else if (o.kind === 'leg') { hx = mx + d * (4 + 6 * sk - ch * 6); hy = my + 9 + 6 * sk - ch * 4; }
+        else { hx = mx + d * (3 + 7 * sk - ch * 4); hy = my + 4 + 5 * sk - ch * 2; }
+        const side = o.hand === 'lHa' ? 'l' : 'r', other = side === 'l' ? 'r' : 'l';
+        this.arm(side, hx, hy, d);
+        if (o.kind === 'leg' || stare) this.arm(other, n[0] - d * 4, n[1] + 26);
+        else this.arm(other, hx - d * 2, hy + 2, d);
+        break;
+      }
+      case 'sick': {
+        // 捂着肚子慢慢挪
+        const sw = Math.sin(t * 3.1);
+        this.x += d * 13 * dt;
+        this.phase += dt * 5;
+        if (this.x < 24) { this.x = 24; this.dir = 1; } else if (this.x > W.w - 24) { this.x = W.w - 24; this.dir = -1; }
+        const a = this.phase;
+        this.torso(this.x + sw * 1.5, g - STAND + 3, d * 0.32 + sw * 0.1, d * 0.2);
+        if (hop) this.hopLeg(this.x, foot);
+        else { this.leg('l', this.x + d * 5 * Math.cos(a), foot - 3 * Math.max(0, -Math.sin(a))); this.leg('r', this.x - d * 5 * Math.cos(a), foot - 3 * Math.max(0, Math.sin(a))); }
+        const c = this.T.chest, hp = this.T.hip;
+        this.arm('l', c[0] + d * 7, c[1] + 8, d);
+        this.arm('r', hp[0] + d * 8, hp[1] - 3, d);
+        break;
+      }
+      case 'heave': {
+        // 弯腰干呕，手撑着膝盖
+        const u = clamp(1 - this.actT / 0.8, 0, 1), k = Math.sin(Math.min(1, u * 1.7) * Math.PI / 2) * (u > 0.85 ? (1 - u) / 0.15 : 1);
+        this.torso(this.x, g - STAND + 7 * k, d * 1.05 * k, d * 0.35 * k);
+        legs(this.x - 12, this.x + 12, foot);
+        this.arm('l', this.x + d * 4, g - 20, d);
+        this.arm('r', this.x + d * 10, g - 21, d);
+        break;
+      }
       case 'gape': {
         stand();
         const n = this.T.neck;
@@ -1703,6 +2355,11 @@ export class Body {
       default: break;
     }
     if (this.swimming) return this.headUnder ? '憋气' : '游泳';
+    if (this.mad) return { chase: '发狂追人', stab: '拿刀砍人' }[this.act] || '发狂了';
+    if (this.sick > 0) return this.act === 'heave' ? '干呕' : '食物中毒';
+    if (this.act === 'crave') return '被香味勾走了';
+    if (this.act === 'pickup') return '捡吃的';
+    if (this.act === 'eat') return this.food && this.food.fuse != null ? '盯着吃的看' : '吃东西';
     if (this.mob === 'crawl') return this.act === 'move' ? '在地上爬' : '趴着喘气';
     if (this.mob === 'worm') return this.act === 'move' ? '像虫一样蠕动' : '放弃思考';
     if (this.onRope && (this.act === 'walk' || this.act === 'run')) return '走钢丝';
@@ -1721,7 +2378,11 @@ export class Body {
   /* ─────────────── 绘制 ─────────────── */
   moodNow() {
     if (this.dead) return 'dead';
+    if (this.mad && this.state !== 'frozen') return 'mad';
     if (this.moodT > 0) return this.mood;
+    if (this.sick > 0) return this.act === 'heave' ? 'heave' : 'sick';
+    if (this.state === 'ctrl' && (this.act === 'crave' || this.act === 'pickup')) return 'crave';
+    if (this.state === 'ctrl' && this.act === 'eat') return 'happy';
     if (this.headUnder && this.air < 0.7) return 'scared';
     if (this.dizzy > 0) return 'dizzy';
     if (this.liftU >= 1.8 || this.hoisted) return 'wow';
@@ -1760,6 +2421,12 @@ export class Body {
       c.beginPath(); c.moveTo(a.x - 5, a.y - 3); c.lineTo(a.x - 1, a.y - 5); c.lineTo(a.x + 1, a.y - 1); c.lineTo(a.x + 5, a.y - 3); c.stroke();
     }
 
+    // 刀：握在手里，顺着小臂的方向
+    if (this.mad) {
+      const b = this.blade();
+      if (b) art.knife(c, b.hx + b.dx * 1.5, b.hy + b.dy * 1.5, Math.atan2(b.dy, b.dx), 1);
+    }
+
     // 手机
     if (this.state === 'ctrl' && this.act === 'phone' && this.mob !== 'crawl' && this.mob !== 'worm' && j.rHa) {
       c.fillStyle = INK; c.fillRect(j.rHa.x + this.dir * 2 - 2, j.rHa.y - 7, 4, 8);
@@ -1771,8 +2438,9 @@ export class Body {
       const flat = h.flat || this.squash > 0.5;
       const ang = flat ? 0 : n ? Math.atan2(h.x - n.x, n.y - h.y) : h.ang;
       const look = this.state === 'ctrl' && (this.act === 'wave' || this.act === 'idle') ? this.dir * 0.2 : this.dir * 0.8;
+      const down = this.state === 'ctrl' && (this.act === 'phone' || this.act === 'pickup' || (this.act === 'eat' && !(this.food && this.food.inHand)));
       art.head(c, h.x, h.y, 9, ang, {
-        mood: this.moodNow(), look, lookY: this.act === 'gape' ? -1 : this.act === 'phone' ? 1 : 0,
+        mood: this.moodNow(), look, lookY: this.act === 'gape' ? -1 : down ? 1 : 0, mad: this.mad, sick: this.sickVis > 0.05 ? this.sickVis : 0,
         squash: this.squash, hair: this.hair, lump: this.lump > 0.4 ? this.lump : 0, dizzy: this.dizzy > 0, t: this.t, tear: this.hpf < 0.28 || (this.moodT > 0 && this.mood === 'sad'),
       });
     }
@@ -1875,6 +2543,7 @@ export class Body {
     return {
       id: this.id, kind: this.kind, j, dir: this.dir, x: Math.round(this.x), gy: this.gy, num: this.num, slot: this.slot,
       broken: this.broken, hair: this.hair, lump: this.lump, hitCount: this.hitCount, age: Math.round(this.age),
+      mad: this.mad ? 1 : 0, ks: this.knifeSide, sick: Math.round(this.sick * 10) / 10, sickRate: this.sickRate,
     };
   }
   restore(d, pts) {
@@ -1889,6 +2558,9 @@ export class Body {
     this.hitCount = d.hitCount || 0; this.age = d.age || 0; this.cause = 'fall';
     this.pain = 0; this.fear = 0; this.spurts = []; this.ice = []; this.xray = 0; this.squash = 0; this.dizzy = 0; this.soot = 0;
     this.moodT = 0; this.sayCd = 2; this.hitCd = 0; this.causeT = 0; this.T = {}; this.ctrl = 0;
+    this.mad = !!d.mad; this.knifeSide = d.ks || 'r'; this.atk = null; this.prey = null; this.preyT = 0; this.madSay = 2; this.fleeing = false;
+    this.food = null; this.crave = null; this.foodCd = 0;
+    this.sick = d.sick > 0 ? d.sick : 0; this.sickRate = d.sickRate || 0; this.sickVis = this.sick > 0 ? 1 : 0; this.heaveT = 1; this.gurgleT = 1;
     this.limbOK = {};
     this.all = pts.filter((p) => p.owner === this);
     for (const [k, l] of Object.entries(LIMBS)) this.limbOK[k] = !!(this.j[l.a] && this.j[l.b]);

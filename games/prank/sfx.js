@@ -57,6 +57,23 @@ export const sfx = {
   bubble() { sound.tone({ f: r(320, 520), to: r(620, 900), dur: 0.05, type: 'sine', vol: 0.09 }); },
   clap() { sound.hiss({ f: 2600, to: 1200, dur: 0.05, filter: 'bandpass', q: 0.8, vol: 0.32 }); },
   yawn() { sound.tone({ f: 330, to: 200, dur: 0.5, type: 'triangle', vol: 0.06, attack: 0.08 }); },
+  /* 食物 */
+  munch() { sound.hiss({ f: r(1300, 1900), to: r(500, 800), dur: 0.07, filter: 'bandpass', q: 1.4, vol: 0.2 }); sound.tone({ f: r(180, 240), to: 120, dur: 0.05, type: 'square', vol: 0.05, delay: 0.02 }); },
+  gurgle() { for (let i = 0; i < 4; i++) sound.tone({ f: r(70, 120), to: r(140, 230), dur: 0.09, type: 'sine', vol: 0.24, delay: i * 0.075 }); },
+  retch() { sound.tone({ f: 250, to: 105, dur: 0.34, type: 'sawtooth', vol: 0.08 }); sound.hiss({ f: 700, to: 280, dur: 0.3, filter: 'bandpass', q: 1.2, vol: 0.13 }); },
+  fuse() { sound.hiss({ f: r(4200, 6800), dur: 0.05, filter: 'highpass', vol: 0.12 }); },
+  boom(s = 1) {
+    sound.tone({ f: 120, to: 26, dur: 0.75, type: 'sine', vol: 0.6, attack: 0.002 });
+    sound.hiss({ f: 1700, to: 80, dur: 0.6 + s * 0.15, filter: 'lowpass', vol: 0.55 });
+    sound.hiss({ f: 5200, to: 900, dur: 0.16, filter: 'bandpass', q: 0.6, vol: 0.3 });
+  },
+  /* 刀子 */
+  knife() { sound.hiss({ f: 5200, to: 7800, dur: 0.24, filter: 'bandpass', q: 6, vol: 0.2 }); sound.tone({ f: 2900, to: 3500, dur: 0.26, type: 'triangle', vol: 0.06, delay: 0.05 }); },
+  growl() { sound.tone({ f: 96, to: 68, dur: 0.42, type: 'sawtooth', vol: 0.08, delay: 0.08 }); },
+  swish() { sound.hiss({ f: r(1500, 2400), to: r(500, 800), dur: 0.09, filter: 'bandpass', q: 1.6, vol: 0.17 }); },
+  slash() { sound.hiss({ f: 3600, to: 1100, dur: 0.07, filter: 'bandpass', q: 0.9, vol: 0.3 }); sound.tone({ f: 150, to: 70, dur: 0.08, type: 'sine', vol: 0.3 }); },
+  calm() { sound.tone({ f: 660, to: 420, dur: 0.2, type: 'triangle', vol: 0.12 }); },
+  clink(metal = true) { if (metal) { sound.tone({ f: r(2400, 3200), dur: 0.12, type: 'triangle', vol: 0.08 }); sound.tone({ f: r(3800, 4400), dur: 0.08, type: 'triangle', vol: 0.05 }); } else sound.tone({ f: r(500, 700), dur: 0.05, type: 'triangle', vol: 0.1 }); },
   // 火柴人的声音：几个方波音节，像老游戏里的小人叫
   ouch(p = 1) {
     const f = r(440, 620);
