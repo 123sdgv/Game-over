@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>拧螺丝</title>
+  <link rel="stylesheet" href="../_shared/base.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 三个标签页 -->
+  <main class="tabs-page" id="pages">
+    <!-- 闯关 -->
+    <section class="page" id="pgHome" data-tab="home">
+      <header class="page-head">
+        <h1>拧螺丝</h1>
+        <div class="head-chip" id="homeBank"></div>
+      </header>
+      <div class="hero">
+        <canvas id="heroCv"></canvas>
+      </div>
+      <button class="play-btn" id="playBtn">
+        <span class="play-big" id="playBig">开始第 1 关</span>
+        <span class="play-sub" id="playSub"></span>
+      </button>
+      <div class="streak" id="streak">
+        <div class="streak-top">
+          <span id="streakText"></span>
+          <span class="streak-reward" id="streakReward"></span>
+        </div>
+        <div class="streak-dots" id="streakDots"></div>
+      </div>
+      <p class="home-note" id="homeNote"></p>
+    </section>
+
+    <!-- 仓库 -->
+    <section class="page" id="pgBank" data-tab="bank" hidden>
+      <header class="page-head">
+        <h1>仓库</h1>
+        <div class="head-sub" id="bankTotal"></div>
+      </header>
+      <div class="bank-grid" id="bankGrid"></div>
+      <div class="bank-special" id="bankSpecial"></div>
+      <p class="bank-note" id="bankNote"></p>
+    </section>
+
+    <!-- 钉子画 -->
+    <section class="page" id="pgArt" data-tab="art" hidden>
+      <header class="page-head">
+        <h1>钉子画</h1>
+        <button class="head-btn" id="newArt"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>新建</button>
+      </header>
+      <div class="art-list" id="artList"></div>
+      <div class="art-empty" id="artEmpty" hidden>
+        <div class="art-empty-pic" id="artEmptyPic"></div>
+        <p>还没有作品。<br>新建一张画布，用闯关攒的螺丝一颗颗钉上去。</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" id="tabbar">
+    <button data-tab="home" aria-current="page">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 14h9M14 9.5v9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span>闯关</span>
+    </button>
+    <button data-tab="bank">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 11h18v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 11l3-5h14l3 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M11 15.5h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <span>仓库</span>
+    </button>
+    <button data-tab="art">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="4.5" y="4.5" width="19" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="10" r="1.9" fill="currentColor"/><circle cx="14" cy="10" r="1.9" fill="currentColor"/><circle cx="18" cy="14" r="1.9" fill="currentColor"/><circle cx="10" cy="18" r="1.9" fill="currentColor"/><circle cx="14" cy="18" r="1.9" fill="currentColor"/></svg>
+      <span>钉子画</span>
+    </button>
+  </nav>
+
+  <!-- 拼图 -->
+  <section class="play" id="play" hidden>
+    <canvas id="cv"></canvas>
+    <header class="play-head">
+      <button class="round-btn" id="backBtn" aria-label="返回"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="play-title">
+        <b id="lvTitle">第 1 关</b>
+        <div class="lv-bar"><i id="lvFill"></i></div>
+      </div>
+      <button class="round-btn" id="restartBtn" aria-label="重来这一关"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10a5.5 5.5 0 1 1-1.7-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M14.6 2.6v3.8h-3.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="got-pill" id="gotPill"><img id="gotIcon" alt=""><span id="gotN">0</span></div>
+    </header>
+    <footer class="skills" id="skills">
+      <button class="skill" id="skAdd">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="17" cy="21" r="9" fill="#C9CFDA"/><circle cx="17" cy="21" r="6" fill="#8D96A8"/><circle cx="17" cy="21" r="9" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="3 3"/><circle cx="29" cy="11" r="7" fill="#33C27A"/><path d="M29 7.5v7M25.5 11h7" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>加孔位</span>
+      </button>
+      <button class="skill" id="skClear">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="17" width="24" height="16" rx="4" fill="#5B8CFF"/><rect x="6" y="17" width="24" height="5" rx="2.5" fill="#86AAFF"/><path d="M13 17v-3.5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2V17" fill="none" stroke="#3A63C9" stroke-width="2.4"/><circle cx="30" cy="11" r="7" fill="#FFB21F"/><path d="M30 14.5V8M27 10.8l3-3 3 3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>清空孔位</span>
+      </button>
+      <button class="skill" id="skMelt">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 5c3 6 9 9 9 16a9 9 0 0 1-18 0c0-4 2-6 4-8 0 3 1 5 3 5-1-5 0-9 2-13z" fill="#FF6A2B"/><path d="M20 17c2 3 4 5 4 8a4 4 0 0 1-8 0c0-2 1-3 2-4 0 1 .5 2 1.5 2-.5-2 0-4 .5-6z" fill="#FFD25A"/><rect x="10" y="31" width="20" height="4" rx="2" fill="#9AD8F2"/></svg>
+        <span>熔玻璃</span>
+      </button>
+    </footer>
+    <div class="pick-tip" id="pickTip" hidden>点一个工具箱，把它收进仓库</div>
+    <div class="hint" id="hint" hidden><div class="hint-hand" id="hintHand"></div><div class="hint-text" id="hintText"></div></div>
+  </section>
+
+  <!-- 钉子画编辑器 -->
+  <section class="editor" id="editor" hidden>
+    <header class="ed-head">
+      <button class="round-btn" id="edBack" aria-label="返回"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="ed-title" id="edTitle"><b id="edName"></b><small id="edSize"></small></button>
+      <button class="round-btn" id="edRef" aria-label="底图"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 13l4-4 3 3 2-2 5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="13" cy="7" r="1.6" fill="currentColor"/></svg></button>
+      <button class="round-btn" id="edMore" aria-label="更多"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4.5" cy="10" r="1.7" fill="currentColor"/><circle cx="10" cy="10" r="1.7" fill="currentColor"/><circle cx="15.5" cy="10" r="1.7" fill="currentColor"/></svg></button>
+      <button class="ed-export" id="edExport">导出</button>
+    </header>
+    <div class="ed-stage" id="edStage"><canvas id="edCv"></canvas><div class="ed-zoom" id="edZoom"></div></div>
+    <div class="ed-tip" id="edTip"></div>
+    <footer class="palette" id="palette"></footer>
+  </section>
+
+  <!-- 弹窗 -->
+  <div class="card-wrap" id="cardWrap" hidden>
+    <div class="card" id="card">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-big" id="cardBig"></div>
+      <div class="card-meta" id="cardMeta"></div>
+      <div class="card-row">
+        <button class="card-btn ghost" id="cardAlt"></button>
+        <button class="card-btn" id="cardMain"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-wrap" id="sheetWrap" hidden>
+    <div class="sheet" id="sheet"></div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+  <input type="file" id="fileIn" accept="image/*" hidden>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
